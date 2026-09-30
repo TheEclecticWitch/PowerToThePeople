@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power to the People data</title>
+<style>
+  body { font: 16px/1.5 Georgia, serif; max-width: 42rem; margin: 2rem auto; padding: 0 16px; color: #222; background: #fdfcf8; }
+  code { font-size: 0.9em; }
+  @media (prefers-color-scheme: dark) { body { color: #ddd; background: #161616; } a { color: #9cf; } }
+</style>
+</head>
+<body>
+<h1>Power to the People data</h1>
+<p>Public records of the U.S. Congress, gathered every six hours for the Power to the People app.
+Everything here is copied from official sources as published, and each record links to its source.
+Nothing is scored, ranked or summarized.</p>
+<ul>
+  <li><a href="manifest.json"><code>manifest.json</code></a>: when the data was last updated, counts, and the list of sources</li>
+  <li><code>bills/{congress}/index.json</code>, <code>recent.json</code>, <code>{type}/{number}.json</code>: bills and resolutions</li>
+  <li><code>votes/{house|senate}/{congress}-{session}.json</code>, and one file per roll call vote</li>
+  <li><code>members/{bioguide id}.json</code>: each member's roll-call positions and sponsored bills</li>
+</ul>
+<p>The code that gathers the data is at
+<a href="https://github.com/TheEclecticWitch/PowerToThePeople">github.com/TheEclecticWitch/PowerToThePeople</a>
+(<code>tools/gather</code>).</p>
+</body>
+</html>
