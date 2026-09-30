@@ -67,12 +67,15 @@ def main():
             errors.append(f"{name}: {type(e).__name__}: {e}")
             return None
 
+    # Newest session first, and the Senate (a separate site) before the House, so no one source can
+    # use up a run's time before the others get a turn.
     senate_ids = votes.SenateIds(net)
-    for session, year in sessions_of(congress):
-        if year > today.year:
-            continue
-        step(f"House votes {congress}-{session}", votes.gather_house, net, store, congress, session, log)
+    sessions = [s for s, year in sessions_of(congress) if year <= today.year][::-1]
+    for session in sessions:
         step(f"Senate votes {congress}-{session}", votes.gather_senate, net, store, congress, session, senate_ids, log)
+    for session in sessions:
+        step(f"House votes {congress}-{session}", votes.gather_house, net, store, congress, session, log)
+    for session in sessions:
         for chamber in ("house", "senate"):
             votes.rebuild_list(store, chamber, congress, session)
 
@@ -103,10 +106,12 @@ def main():
             "'Yea'/'Nay', the Senate's words for the same votes; nothing else is changed.",
         ],
         "lastRun": {"log": lines, "errors": errors,
-                    "congressRequests": net.congress_requests, "otherRequests": net.other_requests},
+                    "congressRequests": net.congress_requests, "otherRequests": net.other_requests,
+                    "network": net.stats()},
     })
     print(f"Done: {net.congress_requests} Congress.gov requests, {net.other_requests} other, "
           f"{store.written} files written, {len(errors)} errors")
+    print(f"Network: {net.stats()}")
     for e in errors:
         print("ERROR", e)
     sys.exit(1 if errors else 0)
