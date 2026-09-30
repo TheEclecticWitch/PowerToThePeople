@@ -1,0 +1,8 @@
+<resources>
+    <!-- Compose draws everything; this only sets the window colour shown while it starts. -->
+    <style name="Theme.PowerToThePeople" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+    </style>
+    <color name="launch_background">#FFF6F1E4</color>
+    <color name="ic_launcher_background">#FF1F3A5F</color>
+</resources>

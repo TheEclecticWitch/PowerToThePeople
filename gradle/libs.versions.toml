@@ -1,0 +1,58 @@
+[versions]
+agp = "9.4.1"
+# Held at the Kotlin that Compose Multiplatform 1.12.0's iOS klibs were built with.
+# Kotlin/Native refuses a klib from a newer compiler, and Android never notices - so a
+# mismatch only shows up on the first Mac build. Bump the two together or not at all.
+kotlin = "2.3.20"
+composeMultiplatform = "1.12.0"
+# Compose Multiplatform's material3 keeps its own version line, well behind the core one.
+composeMpMaterial3 = "1.9.0"
+# Frozen upstream at 1.7.3; still the simplest way to get the core icon set on every platform.
+composeIcons = "1.7.3"
+# 0.7.x is the line that moved Clock and Instant into kotlin.time.
+datetime = "0.7.1"
+coroutines = "1.10.2"
+serialization = "1.8.0"
+navigationMp = "2.9.2"
+lifecycleMp = "2.11.0"
+activityCompose = "1.13.0"
+ktor = "3.6.0"
+# Coil 3.5+ publishes iOS klibs built by Kotlin 2.4, which a 2.3.20 compiler refuses.
+# 3.4.0 is ABI 2.3. Checked for Book of Shadows by reading each klib's manifest.
+coil3 = "3.4.0"
+okio = "3.18.2"
+
+[libraries]
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+compose-mp-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
+compose-mp-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
+compose-mp-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }
+compose-mp-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeMultiplatform" }
+compose-mp-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMpMaterial3" }
+compose-mp-icons-core = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "composeIcons" }
+compose-mp-desktop-currentOs = { group = "org.jetbrains.compose.desktop", name = "desktop-jvm", version.ref = "composeMultiplatform" }
+navigation-mp-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "navigationMp" }
+lifecycle-mp-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleMp" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "datetime" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { group = "io.ktor", name = "ktor-client-darwin", version.ref = "ktor" }
+ktor-client-java = { group = "io.ktor", name = "ktor-client-java", version.ref = "ktor" }
+ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
+coil3-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }
+coil3-network-ktor = { group = "io.coil-kt.coil3", name = "coil-network-ktor3", version.ref = "coil3" }
+okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+okio-fakefilesystem = { group = "com.squareup.okio", name = "okio-fakefilesystem", version.ref = "okio" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

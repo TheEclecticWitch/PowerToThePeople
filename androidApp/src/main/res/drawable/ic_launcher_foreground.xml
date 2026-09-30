@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A classical civic building - pediment, four columns, steps - in parchment on navy.
+     Drawn inside the adaptive icon's 66dp safe zone (21..87 of 108). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- pediment -->
+    <path android:fillColor="#F6F1E4" android:pathData="M54,30 L80,42 L28,42 Z" />
+    <!-- star in the pediment -->
+    <path android:fillColor="#1F3A5F" android:pathData="M54,33.6 L55.1,36.6 L58.2,36.6 L55.7,38.4 L56.6,41.3 L54,39.5 L51.4,41.3 L52.3,38.4 L49.8,36.6 L52.9,36.6 Z" />
+    <!-- entablature -->
+    <path android:fillColor="#F6F1E4" android:pathData="M29,43.5 h50 v3 h-50 z" />
+    <!-- columns -->
+    <path android:fillColor="#F6F1E4" android:pathData="M33,48 h5 v20 h-5 z M44,48 h5 v20 h-5 z M59,48 h5 v20 h-5 z M70,48 h5 v20 h-5 z" />
+    <!-- steps -->
+    <path android:fillColor="#F6F1E4" android:pathData="M29,69.5 h50 v3 h-50 z M26,74 h56 v3.5 h-56 z" />
+    <!-- gold base line -->
+    <path android:fillColor="#C9A44C" android:pathData="M26,79 h56 v1.5 h-56 z" />
+</vector>
