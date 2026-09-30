@@ -1,0 +1,53 @@
+# Gathers bills and votes every six hours and publishes them to GitHub Pages (the gh-pages branch),
+# where the app downloads them. Also runs on demand: Actions tab > Gather data > Run workflow.
+# Each run commits only the files that changed, so gh-pages history is a public record of every update.
+name: Gather data
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gather
+  cancel-in-progress: false
+
+jobs:
+  gather:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the data published so far
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Gather
+        env:
+          API_DATA_GOV_KEY: ${{ secrets.API_DATA_GOV_KEY }}
+        run: python tools/gather/gather.py --out site
+
+      # Runs even when a source failed, so whatever did arrive is still published.
+      - name: Publish
+        if: ${{ !cancelled() }}
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit --quiet -m "Data update $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push

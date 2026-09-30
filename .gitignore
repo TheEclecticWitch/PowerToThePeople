@@ -22,3 +22,4 @@ xcuserdata/
 # Signing keys never go in git.
 *.jks
 *.keystore
+__pycache__/
