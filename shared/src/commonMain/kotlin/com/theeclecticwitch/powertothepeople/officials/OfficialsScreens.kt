@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import coil3.compose.SubcomposeAsyncImage
+import com.theeclecticwitch.powertothepeople.congress.CongressNav
+import com.theeclecticwitch.powertothepeople.congress.MemberRecordCards
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.location.UserLocation
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
@@ -221,7 +223,7 @@ fun OfficialRow(official: Official, onClick: () -> Unit) {
 }
 
 @Composable
-fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Unit) {
+fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Unit, congressNav: CongressNav) {
     val mine by MyRecords.officialsFlow.collectAsState()
     val userEntered = mine.firstOrNull { it.id == id }
     var fromPublic by remember(id) { mutableStateOf<Official?>(null) }
@@ -267,6 +269,10 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                         official.servingSince?.let { Text("Serving since ${Format.date(it)}", style = MaterialTheme.typography.bodyMedium) }
                         official.termEnds?.let { Text("Current term ends ${Format.date(it)}", style = MaterialTheme.typography.bodyMedium) }
                     }
+                }
+                // Senators and representatives; the President and Vice President don't cast roll-call votes.
+                if (!official.userEntered && official.level == Level.Federal && !official.id.startsWith("exec:")) {
+                    MemberRecordCards(official.id, congressNav)
                 }
                 ContactCard(official)
                 if (official.districtOffices.isNotEmpty()) {

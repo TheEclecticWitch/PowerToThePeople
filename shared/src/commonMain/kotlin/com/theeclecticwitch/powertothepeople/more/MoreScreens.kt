@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.debt.TreasurySources
 import com.theeclecticwitch.powertothepeople.location.CensusGeocoder
 import com.theeclecticwitch.powertothepeople.location.LocationStore
@@ -84,6 +85,14 @@ fun SourcesScreen(onBack: () -> Unit) {
                         "official portraits from the Government Publishing Office.",
                     FederalOfficials.SOURCE_NAME,
                     FederalOfficials.SOURCE_URL,
+                )
+                Source(
+                    "Votes and bills",
+                    "Every roll-call vote in the House and Senate, and every bill and resolution, copied as published by " +
+                        "Congress.gov (Library of Congress), the Office of the Clerk of the House and the U.S. Senate. This app's " +
+                        "own gatherer collects them every six hours; each vote links to its official record.",
+                    CongressData.SOURCE_NAME,
+                    CongressData.SOURCE_URL,
                 )
                 Source(
                     "National debt",

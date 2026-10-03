@@ -40,6 +40,11 @@ import com.theeclecticwitch.powertothepeople.constitution.AmendmentScreen
 import com.theeclecticwitch.powertothepeople.constitution.ArticleScreen
 import com.theeclecticwitch.powertothepeople.constitution.ConstitutionScreen
 import com.theeclecticwitch.powertothepeople.constitution.SignaturesScreen
+import com.theeclecticwitch.powertothepeople.congress.BillScreen
+import com.theeclecticwitch.powertothepeople.congress.CongressNav
+import com.theeclecticwitch.powertothepeople.congress.MemberVotesScreen
+import com.theeclecticwitch.powertothepeople.congress.SponsoredBillsScreen
+import com.theeclecticwitch.powertothepeople.congress.VoteScreen
 import com.theeclecticwitch.powertothepeople.data.Http
 import com.theeclecticwitch.powertothepeople.debt.DebtScreen
 import com.theeclecticwitch.powertothepeople.home.HomeScreen
@@ -66,6 +71,10 @@ import kotlinx.serialization.Serializable
 @Serializable object LocationRoute
 @Serializable data class OfficialRoute(val id: String)
 @Serializable data class EditOfficialRoute(val id: String? = null, val level: String = "Local")
+@Serializable data class VoteRoute(val chamber: String, val session: Int, val roll: Int)
+@Serializable data class BillRoute(val id: String)
+@Serializable data class MemberVotesRoute(val id: String)
+@Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable object SourcesRoute
 @Serializable object AboutRoute
 
@@ -156,6 +165,13 @@ private fun goToTab(nav: NavHostController, tab: Tab) {
 @Composable
 private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
     val back: () -> Unit = { nav.popBackStack() }
+    val congressNav = CongressNav(
+        vote = { chamber, session, roll -> nav.navigate(VoteRoute(chamber, session, roll)) },
+        bill = { nav.navigate(BillRoute(it)) },
+        official = { nav.navigate(OfficialRoute(it)) },
+        memberVotes = { nav.navigate(MemberVotesRoute(it)) },
+        sponsoredBills = { nav.navigate(SponsoredBillsRoute(it)) },
+    )
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> {
             HomeScreen(
@@ -210,8 +226,16 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 id = entry.toRoute<OfficialRoute>().id,
                 onBack = back,
                 onEdit = { nav.navigate(EditOfficialRoute(id = it)) },
+                congressNav = congressNav,
             )
         }
+        composable<VoteRoute> { entry ->
+            val r = entry.toRoute<VoteRoute>()
+            VoteScreen(r.chamber, r.session, r.roll, back, congressNav)
+        }
+        composable<BillRoute> { entry -> BillScreen(entry.toRoute<BillRoute>().id, back, congressNav) }
+        composable<MemberVotesRoute> { entry -> MemberVotesScreen(entry.toRoute<MemberVotesRoute>().id, back, congressNav) }
+        composable<SponsoredBillsRoute> { entry -> SponsoredBillsScreen(entry.toRoute<SponsoredBillsRoute>().id, back, congressNav) }
         composable<EditOfficialRoute> { entry ->
             val route = entry.toRoute<EditOfficialRoute>()
             EditOfficialScreen(
