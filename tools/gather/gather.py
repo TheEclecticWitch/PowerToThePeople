@@ -29,6 +29,7 @@ import press  # noqa: E402
 import sessions as session_days  # noqa: E402
 import states  # noqa: E402
 import summaries  # noqa: E402
+import upcoming  # noqa: E402
 import votes  # noqa: E402
 from congress import current_congress, sessions_of  # noqa: E402
 from net import BudgetSpent, Net  # noqa: E402
@@ -47,6 +48,12 @@ SOURCES = [
      "covers": "Executive orders"},
     {"name": "Members' and the White House's own news feeds", "url": "https://www.whitehouse.gov/news/",
      "covers": "Press releases and office news, as published by each office"},
+    {"name": "Office of the Clerk and the Majority Leader, docs.house.gov", "url": "https://docs.house.gov/floor/",
+     "covers": "The House's weekly floor schedule"},
+    {"name": "U.S. Senate floor schedule", "url": "https://www.senate.gov/legislative/schedule/floor_schedule.htm",
+     "covers": "The Senate's next meeting"},
+    {"name": "Regulations.gov", "url": "https://www.regulations.gov/",
+     "covers": "Proposed federal rules open for public comment"},
     {"name": "Bulletin of the Atomic Scientists", "url": "https://thebulletin.org/doomsday-clock/",
      "covers": "The Doomsday Clock"},
     {"name": "Open States", "url": "https://github.com/openstates/people",
@@ -112,6 +119,7 @@ def main():
     step(f"Campaign money {congress}", finance.gather, net, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Executive orders", orders.gather, net, store, log)
+    step("Coming up", upcoming.gather, net, store, congress, log)
     step("Office news", press.gather, net, store, state, log)
     step("Contact pages", contacts.gather, net, store, state, log)
     step("State officials", states.gather, net, store, state, log)

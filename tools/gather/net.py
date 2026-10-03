@@ -71,6 +71,12 @@ class Net:
         url = f"{FEC_API}{path}?{urllib.parse.urlencode(params)}"
         return json.loads(self._get(url, {"X-Api-Key": self.key}, "fec"))
 
+    def regulations(self, url):
+        """GET a Regulations.gov API URL with the api.data.gov key (in a header, so it stays out of logs)."""
+        self.check_time()
+        self.other_requests += 1
+        return self._get(url, {"X-Api-Key": self.key}, "other")
+
     def text(self, url, browser=False):
         """GET any other public source. senate.gov turns away non-browser user agents."""
         self.check_time()

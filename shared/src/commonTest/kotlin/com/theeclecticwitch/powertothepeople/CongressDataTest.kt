@@ -3,6 +3,7 @@ package com.theeclecticwitch.powertothepeople
 import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberRecord
+import com.theeclecticwitch.powertothepeople.congress.Upcoming
 import com.theeclecticwitch.powertothepeople.congress.Action
 import com.theeclecticwitch.powertothepeople.congress.BillFilter
 import com.theeclecticwitch.powertothepeople.congress.BillSummary
@@ -147,5 +148,23 @@ class CongressDataTest {
         assertEquals("14036", ExecutiveOrders.search(all, "Executive Order 14036", null).single().number)
         assertEquals("14036", ExecutiveOrders.search(all, "competition", null).single().number)
         assertEquals(0, ExecutiveOrders.search(all, "competition", "Donald Trump").size)
+    }
+
+    @Test
+    fun readsWhatsComingUp() {
+        val u = Http.json.decodeFromString<Upcoming>(
+            """{"house": [{"week": "2026-09-14", "items": [{"number": "S. 283", "bill": "119/s/283",
+            "title": "To amend title 38", "how": "Items that may be considered under suspension of the rules"}],
+            "url": "https://docs.house.gov/floor/Default.aspx?date=2026-09-14"}],
+            "senate": {"next": "Monday, Oct 05, 2026", "plan": "Convene for a pro forma session at 4:00 p.m.", "previous": null},
+            "hearings": [{"id": "house/118000", "chamber": "house", "date": "2026-10-06T14:00:00Z", "title": "Markup",
+            "committees": ["Committee on Rules"], "bills": [], "updated": "2026-10-01T00:00:00Z"}],
+            "comments": [{"id": "EPA-HQ-OAR-2026-0001-0001", "title": "A rule", "agency": "EPA", "closes": "2026-10-10"}],
+            "checked": "2026-10-03T12:00:00Z"}""",
+        )
+        assertEquals("119/s/283", u.house.single().items.single().bill)
+        assertEquals("Monday, Oct 05, 2026", u.senate?.next)
+        assertEquals("Committee on Rules", u.hearings.single().committees.single())
+        assertEquals("2026-10-10", u.comments.single().closes)
     }
 }

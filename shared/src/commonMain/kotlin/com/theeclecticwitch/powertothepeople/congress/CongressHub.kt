@@ -75,6 +75,7 @@ fun CongressScreen(
     onDirectory: (chamber: String?) -> Unit,
     onSessions: () -> Unit,
     onLearn: () -> Unit,
+    onComingUp: () -> Unit,
     onOfficial: (String) -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
@@ -110,6 +111,8 @@ fun CongressScreen(
                         )
                         mine.forEach { OfficialRow(it) { onOfficial(it.id) } }
                     }
+                    // What's ahead first: speaking up matters most before a vote.
+                    if (chamber == null) ComingUpCard(onComingUp)
                     LatestVotesCard(nav, chamber)
                     ChamberSessionCard(chamber, onSessions)
                     if (chamber == null) {

@@ -45,6 +45,7 @@ import com.theeclecticwitch.powertothepeople.constitution.SignaturesScreen
 import com.theeclecticwitch.powertothepeople.civics.HowGovernmentWorksScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
+import com.theeclecticwitch.powertothepeople.congress.ComingUpScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressScreen
 import com.theeclecticwitch.powertothepeople.congress.LegislationScreen
 import com.theeclecticwitch.powertothepeople.congress.MemberVotesScreen
@@ -98,6 +99,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class DirectoryRoute(val chamber: String? = null)
 @Serializable object SettingsRoute
 @Serializable object VotingRoute
+@Serializable object ComingUpRoute
 @Serializable object HowGovernmentRoute
 @Serializable object LegislationRoute
 @Serializable data class StateLegislatorsRoute(val state: String)
@@ -208,6 +210,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
     // The gear on every main screen opens Settings.
     CompositionLocalProvider(LocalOpenSettings provides { nav.navigate(SettingsRoute) }) {
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
+        composable<ComingUpRoute> { ComingUpScreen(back, congressNav) }
         composable<VotingRoute> { VotingScreen(back) { nav.navigate(LocationRoute) } }
         composable<SettingsRoute> { SettingsScreen(back) { nav.navigate(LocationRoute) } }
         composable<HomeRoute> {
@@ -261,6 +264,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onDirectory = { nav.navigate(DirectoryRoute(it)) },
                 onSessions = { nav.navigate(SessionsRoute) },
                 onLearn = { goToTab(nav, tabs[1]) },
+                onComingUp = { nav.navigate(ComingUpRoute) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
             )
         }
