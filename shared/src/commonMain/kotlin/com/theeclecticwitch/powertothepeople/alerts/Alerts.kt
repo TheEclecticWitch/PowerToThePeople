@@ -203,7 +203,7 @@ object Alerts {
                 val d = FederalOfficials.forLocation(location)
                 (d.senators + listOfNotNull(d.representative)).forEach { put(it.id, it.name) }
             }
-            p.members.forEach { putIfAbsent(it.id, it.name) }
+            p.members.forEach { if (it.id !in this) put(it.id, it.name) }
         }
         // Only followed members' recent bills are kept, so the list doesn't grow without end.
         val memberBills = mutableMapOf<String, String>()

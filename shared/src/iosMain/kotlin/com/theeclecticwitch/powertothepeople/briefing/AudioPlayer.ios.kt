@@ -19,7 +19,9 @@ import platform.AVFoundation.currentTime
 import platform.AVFoundation.duration
 import platform.AVFoundation.pause
 import platform.AVFoundation.play
+import platform.AVFoundation.seekToTime
 import platform.CoreMedia.CMTimeGetSeconds
+import platform.CoreMedia.CMTimeMake
 import platform.Foundation.NSURL
 
 @OptIn(ExperimentalForeignApi::class)
@@ -67,7 +69,7 @@ actual object AudioPlayer {
                     playing = !done && _state.value.playing,
                 )
                 if (done) {
-                    p.seekToTime(platform.CoreMedia.CMTimeMake(0, 1))
+                    p.seekToTime(CMTimeMake(0, 1))
                     break
                 }
                 delay(500)
