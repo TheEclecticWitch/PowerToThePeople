@@ -1,5 +1,11 @@
 package com.theeclecticwitch.powertothepeople.civics
 
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -312,8 +318,8 @@ fun CommonQuestionsList(onArticle: (Int) -> Unit, onAmendment: (Int) -> Unit) {
     var open by remember { mutableStateOf(setOf<String>()) }
     val uri = LocalUriHandler.current
     val shown = CommonQuestions.search(query, topic)
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        item {
+    LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Adaptive(400.dp), contentPadding = PaddingValues(16.dp), verticalItemSpacing = 10.dp, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        item(span = StaggeredGridItemSpan.FullLine) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Questions many people have about how our government works, answered plainly. Each answer shows " +
@@ -370,6 +376,6 @@ fun CommonQuestionsList(onArticle: (Int) -> Unit, onAmendment: (Int) -> Unit) {
                 }
             }
         }
-        item { Spacer(Modifier.height(16.dp)) }
+        item(span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier.height(16.dp)) }
     }
 }

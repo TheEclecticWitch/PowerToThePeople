@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -146,17 +149,15 @@ fun SessionScreen(onBack: () -> Unit) {
     val houseColor = MaterialTheme.colorScheme.primary
     val senateColor = MaterialTheme.colorScheme.tertiary
     Scaffold(topBar = { AppTopBar("Days in session", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
+        PageColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox()
                 is Load.Failed -> ErrorBox(l.message, retry)
                 is Load.Done -> {
                     val byDate = l.value.associateBy { it.date }
                     val s = summarize(l.value, month.year)
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    CardPage(spacing = 12.dp) {
+                        InfoCard {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { month = month.minus(DatePeriod(months = 1)) }) {
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Previous month")
@@ -205,6 +206,7 @@ fun SessionScreen(onBack: () -> Unit) {
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Legend(houseColor, "House in session")
                             Legend(senateColor, "Senate in session")
+                        }
                         }
                         InfoCard(title = "${month.year} so far") {
                             Text("The House was in session ${s.house} days; the Senate ${s.senate} days.", style = MaterialTheme.typography.bodyLarge)

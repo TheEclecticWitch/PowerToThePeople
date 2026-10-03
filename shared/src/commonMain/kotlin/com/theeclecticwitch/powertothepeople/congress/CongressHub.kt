@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -81,14 +84,11 @@ fun CongressScreen(
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
     Scaffold(topBar = { AppTopBar("Congress") }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
+        PageColumn(Modifier.padding(padding)) {
             LoopingTabs(listOf("Congress", "Senate", "House"), Modifier.fillMaxSize()) { tab ->
                 val part = Civics.parts.first { it.id == listOf("congress", "senate", "house")[tab] }
                 val chamber = listOf(null, "senate", "house")[tab]
-                Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+                CardPage(spacing = 12.dp) {
                     // What this body is for, briefly, with the full explanation a tap away.
                     InfoCard(title = part.title, onClick = onLearn) {
                         Text(part.role, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)

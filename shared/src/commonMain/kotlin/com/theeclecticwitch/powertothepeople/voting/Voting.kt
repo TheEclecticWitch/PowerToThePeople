@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.voting
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -218,11 +221,8 @@ fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onElections: () 
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     Scaffold(topBar = { AppTopBar("Your Vote", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
                 InfoCard(title = "Election Day") {
                     Text(Format.date(day), style = MaterialTheme.typography.headlineSmall)
                     Text(

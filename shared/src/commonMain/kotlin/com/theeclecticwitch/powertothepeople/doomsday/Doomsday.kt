@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.doomsday
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

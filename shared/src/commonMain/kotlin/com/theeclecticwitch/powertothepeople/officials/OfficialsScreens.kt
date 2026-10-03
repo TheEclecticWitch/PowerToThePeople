@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.officials
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -123,11 +126,8 @@ fun OfficialsScreen(
     val (delegation, error, retry) = rememberDelegation(location)
     val (stateDelegation, stateError, stateRetry) = rememberStateDelegation(location)
     Scaffold(topBar = { AppTopBar("My Officials", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 10.dp) {
                 val loc = location
                 if (loc == null) {
                     InfoCard(title = "Start here") {
@@ -296,12 +296,9 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
             if (loaded) CenteredMessage("This official couldn't be found.") else LoadingBox()
             return@Scaffold
         }
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
+                Row(Modifier.fullWidth(), verticalAlignment = Alignment.CenterVertically) {
                     OfficialPhoto(official, 110)
                     Spacer(Modifier.width(16.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.elections
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -78,11 +81,8 @@ fun ElectionsScreen(onBack: () -> Unit, onRace: (String) -> Unit, onSetLocation:
         congressLoaded = true
     }
     Scaffold(topBar = { AppTopBar("Elections", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
                 InfoCard(title = "Election Day") {
                     Text(Format.date(day), style = MaterialTheme.typography.headlineSmall)
                     Text(
@@ -97,7 +97,7 @@ fun ElectionsScreen(onBack: () -> Unit, onRace: (String) -> Unit, onSetLocation:
                         Text("Set your location to see the races you can vote in.", style = MaterialTheme.typography.bodyMedium)
                         OutlinedButton(onClick = onSetLocation) { Text("Set my location") }
                     }
-                    return@Column
+                    return@CardPage
                 }
 
                 InfoCard(title = "Your ballot") {
@@ -219,22 +219,20 @@ fun RaceScreen(id: String, onBack: () -> Unit, onCandidate: (String) -> Unit) {
     val order = remember(r) { r?.candidates?.shuffled().orEmpty() }
     val notes by CandidateNotes.flow.collectAsState()
     Scaffold(topBar = { AppTopBar(r?.title ?: "Race", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
                 if (r == null) {
                     if (missing) Text("This race isn't available right now. Open Elections again to look it up.", style = MaterialTheme.typography.bodyLarge)
                     else LoadingBox("Loading…")
-                    return@Column
+                    return@CardPage
                 }
-                r.subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                Text(r.sourceNote, style = MaterialTheme.typography.bodyMedium)
+                r.subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fullWidth()) }
+                Text(r.sourceNote, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fullWidth())
                 Text(
                     "Listed in a random order, new each time you open this race.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fullWidth(),
                 )
                 val photos = order.isNotEmpty() && order.all { it.photo != null }
                 val statuses = order.all { it.status != null }
@@ -284,17 +282,14 @@ fun CandidateScreen(raceId: String, key: String, onBack: () -> Unit) {
     var draft by remember(key) { mutableStateOf(notes[key].orEmpty()) }
     val uri = LocalUriHandler.current
     Scaffold(topBar = { AppTopBar(c?.name ?: "Candidate", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
                 if (c != null) {
                     val r = race!!
-                    Text(c.name, style = MaterialTheme.typography.headlineSmall)
-                    Text(r.title, style = MaterialTheme.typography.bodyLarge)
-                    Text(c.party ?: "Party not listed", style = MaterialTheme.typography.bodyMedium)
-                    if (r.candidates.all { it.status != null }) statusLine(c.status)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                    Text(c.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fullWidth())
+                    Text(r.title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fullWidth())
+                    Text(c.party ?: "Party not listed", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fullWidth())
+                    if (r.candidates.all { it.status != null }) statusLine(c.status)?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fullWidth()) }
                     InfoCard(title = "Learn more") {
                         val links = listOfNotNull(
                             c.website?.let { "Campaign website" to it },

@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +121,7 @@ fun StateBillScreen(id: String, onBack: () -> Unit) {
     val (delegation, _, _) = rememberStateDelegation(location)
     val title = (load as? Load.Done)?.value?.let { "${it.state?.uppercase().orEmpty()} ${it.number}".trim() } ?: "State bill"
     Scaffold(topBar = { AppTopBar(title, onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
+        PageColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox("Loading the bill…")
                 is Load.Failed -> ErrorBox(l.message, retry)
@@ -128,10 +131,7 @@ fun StateBillScreen(id: String, onBack: () -> Unit) {
                     val mineToo = if (location?.stateAbbr.equals(b.state, true)) {
                         delegation?.let { it.senators + it.representatives }.orEmpty()
                     } else emptyList()
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    CardPage(spacing = 12.dp) {
                         Text(
                             listOfNotNull(
                                 b.state?.let { StateNames.of(it.uppercase()) },
@@ -140,10 +140,11 @@ fun StateBillScreen(id: String, onBack: () -> Unit) {
                             ).joinToString(" · "),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fullWidth(),
                         )
-                        Text(b.title ?: b.number, style = MaterialTheme.typography.headlineSmall)
+                        Text(b.title ?: b.number, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fullWidth())
                         if (b.subjects.isNotEmpty()) {
-                            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(Modifier.fullWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 b.subjects.take(6).forEach { Tag(it) }
                             }
                         }

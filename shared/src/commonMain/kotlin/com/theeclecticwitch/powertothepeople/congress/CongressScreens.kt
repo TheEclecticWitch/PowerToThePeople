@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import com.theeclecticwitch.powertothepeople.alerts.FollowBillButton
 import com.theeclecticwitch.powertothepeople.share.ShareButton
 import androidx.compose.material3.Button
@@ -831,24 +834,22 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
             FollowBillButton(id)
         }
     }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
+        PageColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox("Loading the bill…")
                 is Load.Failed -> ErrorBox(l.message, retry)
                 is Load.Done -> {
                     val (b, votes) = l.value
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    CardPage(spacing = 12.dp) {
                         Text(
                             listOfNotNull(BillNames.label(id), b.origin?.let { "from the $it" }, b.introduced?.let { "introduced ${Format.date(it)}" })
                                 .joinToString(" · "),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fullWidth(),
                         )
-                        Text(b.title ?: BillNames.label(id), style = MaterialTheme.typography.headlineSmall)
-                        b.policyArea?.let { Tag(it) }
+                        Text(b.title ?: BillNames.label(id), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fullWidth())
+                        b.policyArea?.let { Tag(it, Modifier.fullWidth()) }
                         ProgressCard(billProgress(b, votes))
                         b.laws.forEach { law ->
                             InfoCard { Text("Became ${law.type ?: "law"} ${law.number}", style = MaterialTheme.typography.titleMedium) }

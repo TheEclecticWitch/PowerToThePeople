@@ -1,5 +1,14 @@
 package com.theeclecticwitch.powertothepeople.civics
 
+import androidx.compose.foundation.layout.widthIn
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.FitText
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -269,23 +278,23 @@ fun HowGovernmentWorksScreen(
     onYourOfficials: () -> Unit,
     onPresident: () -> Unit,
 ) {
-    val listState = rememberLazyListState()
+    val listState = rememberLazyStaggeredGridState()
     val scope = rememberCoroutineScope()
     val uri = LocalUriHandler.current
     // The diagram and the intro come first, then one item per part, then checks and how a bill becomes law.
     val partIndex = { id: String -> 2 + Civics.parts.indexOfFirst { it.id == id } }
     Scaffold(topBar = { AppTopBar("How Our Government Works", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
+        PageColumn(Modifier.padding(padding)) {
           LoopingTabs(listOf("How it works", "Questions", "Take part", "Citizenship test")) { tab ->
             if (tab == 3) {
-                CitizenshipTestTab()
+                ReadingColumn { CitizenshipTestTab() }
             } else if (tab == 2) {
                 GuidesList(onArticle, onAmendment)
             } else if (tab == 1) {
                 CommonQuestionsList(onArticle, onAmendment)
             } else {
-            LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                item {
+            LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Adaptive(400.dp), state = listState, contentPadding = PaddingValues(16.dp), verticalItemSpacing = 12.dp, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                item(span = StaggeredGridItemSpan.FullLine) {
                     Text(
                         "The United States is a democratic republic: the people elect representatives, and everyone in " +
                             "government works under a written Constitution. Power is split three ways so that no one person " +
@@ -293,7 +302,14 @@ fun HowGovernmentWorksScreen(
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
-                item { Diagram { id -> scope.launch { listState.animateScrollToItem(partIndex(id)) } } }
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    // On its own card, in the chosen theme, and no wider than reads well as one picture.
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                        InfoCard(modifier = Modifier.widthIn(max = 900.dp)) {
+                            Diagram { id -> scope.launch { listState.animateScrollToItem(partIndex(id)) } }
+                        }
+                    }
+                }
                 itemsIndexed(Civics.parts) { _, part ->
                     PartCard(part, onArticle, onAmendment) {
                         when (part.id) {
@@ -318,7 +334,7 @@ fun HowGovernmentWorksScreen(
                         LinkLine("The full process, from Congress.gov", HOW_LAWS) { openSafely(uri, it) }
                     }
                 }
-                item {
+                item(span = StaggeredGridItemSpan.FullLine) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         SourceLine("The Constitution of the United States", "https://www.archives.gov/founding-docs/constitution-transcript")
                         SourceLine("USA.gov, Branches of the U.S. government", USA_GOV)
@@ -497,13 +513,13 @@ private fun Node(title: String, subtitle: String?, modifier: Modifier, strong: B
             .padding(horizontal = 6.dp, vertical = if (small) 6.dp else 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
+        // One word ("LEGISLATIVE") shrinks to fit rather than breaking mid-word; longer titles may take two lines.
+        FitText(
             title,
-            style = (if (small) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge)
-                .copy(fontFamily = if (strong) LocalAppFonts.current.caslon else null),
-            fontWeight = FontWeight.SemiBold,
+            (if (small) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge)
+                .copy(fontFamily = if (strong) LocalAppFonts.current.caslon else null, fontWeight = FontWeight.SemiBold),
             color = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
+            maxLines = if (' ' in title) 2 else 1,
         )
         subtitle?.let {
             Text(

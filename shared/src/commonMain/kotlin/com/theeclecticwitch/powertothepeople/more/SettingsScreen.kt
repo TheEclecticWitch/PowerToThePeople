@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.more
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,11 +53,8 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
     var confirmClear by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     Scaffold(topBar = { AppTopBar("Settings", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
                 InfoCard(title = "Your location") {
                     Text(location?.matchedAddress ?: "Not set yet", style = MaterialTheme.typography.bodyLarge)
                     Text(

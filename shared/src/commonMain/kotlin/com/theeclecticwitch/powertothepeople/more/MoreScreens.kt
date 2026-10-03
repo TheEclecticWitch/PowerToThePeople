@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.more
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,11 +43,8 @@ fun MoreScreen(
     onElections: () -> Unit,
 ) {
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 10.dp) {
                 InfoCard(title = "Your vote", onClick = onVoting) {
                     Text("Register, find where to vote, and see what's on your ballot.", style = MaterialTheme.typography.bodyLarge)
                 }
@@ -86,15 +86,13 @@ fun MoreScreen(
 @Composable
 fun SourcesScreen(onBack: () -> Unit) {
     Scaffold(topBar = { AppTopBar("Our Sources", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 10.dp) {
                 Text(
                     "This app reports facts and shows where each one came from. It doesn't rate, rank or take sides - " +
                         "what you make of the facts is up to you. Tap any source to check it for yourself.",
                     style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fullWidth(),
                 )
                 Source(
                     "The Constitution",
@@ -219,11 +217,8 @@ private fun Source(title: String, what: String, name: String, url: String?) {
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     Scaffold(topBar = { AppTopBar("About", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 10.dp) {
                 InfoCard(title = "Why this app exists") {
                     Text(
                         "Most people spend their days working and raising a family. Keeping up with what the government is doing - " +

@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.debt
 
+import com.theeclecticwitch.powertothepeople.ui.fullWidth
+import com.theeclecticwitch.powertothepeople.ui.PageColumn
+import com.theeclecticwitch.powertothepeople.ui.CardPage
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -119,11 +122,8 @@ fun DebtScreen(onBack: () -> Unit) {
     val (deficit, deficitError, retryDeficit) = rememberTreasury { Treasury.deficit(it) }
     val (history, historyError, retryHistory) = rememberTreasury { Treasury.history(it) }
     Scaffold(topBar = { AppTopBar("Debt & Deficit", onBack) }) { padding ->
-        ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        PageColumn(Modifier.padding(padding)) {
+            CardPage(spacing = 12.dp) {
                 InfoCard(title = "Total national debt") {
                     when {
                         debt != null -> DebtDetail(debt)
