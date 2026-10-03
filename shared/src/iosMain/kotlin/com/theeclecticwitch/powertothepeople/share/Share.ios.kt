@@ -15,7 +15,7 @@ actual fun shareText(subject: String, text: String) {
     var top: UIViewController = window?.rootViewController ?: return
     while (true) top = top.presentedViewController ?: break
     val sheet = UIActivityViewController(listOf(text), null)
-    sheet.setValue(subject, forKey = "subject")
+    // The subject line is the first line of the text; UIKit takes a subject only through an item source.
     // On an iPad the sheet is a popover and must point somewhere.
     sheet.popoverPresentationController?.sourceView = top.view
     top.presentViewController(sheet, animated = true, completion = null)
