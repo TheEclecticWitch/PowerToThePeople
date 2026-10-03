@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bills  # noqa: E402
 import contacts  # noqa: E402
+import disclosures  # noqa: E402
 import doomsday  # noqa: E402
 import finance  # noqa: E402
 import members  # noqa: E402
@@ -52,6 +53,8 @@ SOURCES = [
      "covers": "The House's weekly floor schedule"},
     {"name": "U.S. Senate floor schedule", "url": "https://www.senate.gov/legislative/schedule/floor_schedule.htm",
      "covers": "The Senate's next meeting"},
+    {"name": "Financial disclosures: the House Clerk and the Senate's eFD", "url": "https://disclosures-clerk.house.gov/FinancialDisclosure",
+     "covers": "Members' stock trade (STOCK Act) and annual financial disclosure reports, as filed"},
     {"name": "Regulations.gov", "url": "https://www.regulations.gov/",
      "covers": "Proposed federal rules open for public comment"},
     {"name": "Bulletin of the Atomic Scientists", "url": "https://thebulletin.org/doomsday-clock/",
@@ -120,6 +123,7 @@ def main():
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Executive orders", orders.gather, net, store, log)
     step("Coming up", upcoming.gather, net, store, congress, log)
+    step("Disclosures", disclosures.gather, net, store, congress, log)
     step("Office news", press.gather, net, store, state, log)
     step("Contact pages", contacts.gather, net, store, state, log)
     step("State officials", states.gather, net, store, state, log)

@@ -52,6 +52,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import coil3.compose.SubcomposeAsyncImage
 import com.theeclecticwitch.powertothepeople.congress.CampaignMoneyCard
+import com.theeclecticwitch.powertothepeople.congress.DisclosuresCard
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.MemberRecordCards
 import com.theeclecticwitch.powertothepeople.congress.OfficeNewsCard
@@ -320,6 +321,7 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                     MemberRecordCards(official.id, congressNav)
                     CommitteesCard(official.id)
                     CampaignMoneyCard(official.id)
+                    DisclosuresCard(official.id, if (official.office.contains("Senator")) "senate" else "house")
                     OfficeNewsCard(official.id, official.website)
                 }
                 if (official.id.startsWith("exec:")) WhiteHouseNewsCard()
