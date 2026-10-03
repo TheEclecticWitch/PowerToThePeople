@@ -19,7 +19,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -267,8 +273,18 @@ fun HowGovernmentWorksScreen(
     val uri = LocalUriHandler.current
     // The diagram and the intro come first, then one item per part, then checks and how a bill becomes law.
     val partIndex = { id: String -> 2 + Civics.parts.indexOfFirst { it.id == id } }
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(topBar = { AppTopBar("How Our Government Works", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
+          Column {
+            PrimaryTabRow(selectedTabIndex = tab) {
+                listOf("How it works", "Common questions").forEachIndexed { i, label ->
+                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
+                }
+            }
+            if (tab == 1) {
+                CommonQuestionsList(onArticle, onAmendment)
+            } else {
             LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item {
                     Text(
@@ -311,6 +327,8 @@ fun HowGovernmentWorksScreen(
                     }
                 }
             }
+            }
+          }
         }
     }
 }
