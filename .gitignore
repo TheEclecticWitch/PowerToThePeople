@@ -23,3 +23,6 @@ xcuserdata/
 *.jks
 *.keystore
 __pycache__/
+
+# Claude Code personal settings
+.claude/settings.local.json
