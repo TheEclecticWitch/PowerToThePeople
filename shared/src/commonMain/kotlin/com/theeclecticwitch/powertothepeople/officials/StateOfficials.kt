@@ -4,6 +4,8 @@ import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.data.CachedSource
 import com.theeclecticwitch.powertothepeople.data.Http
 import com.theeclecticwitch.powertothepeople.location.UserLocation
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.http.HttpStatusCode
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -46,6 +48,8 @@ data class StateDelegation(
     val representatives: List<Official>,
     /** False when the Census district names couldn't be matched to the state's own; the reader can browse instead. */
     val matched: Boolean,
+    /** False when this state's file hasn't been published yet, which is not a connection problem. */
+    val available: Boolean = true,
 )
 
 /**
@@ -74,7 +78,12 @@ object StateOfficials {
     }
 
     suspend fun forLocation(location: UserLocation, force: Boolean = false): StateDelegation {
-        val raw = load(location.stateAbbr, force)
+        val raw = try {
+            load(location.stateAbbr, force)
+        } catch (e: ClientRequestException) {
+            if (e.response.status != HttpStatusCode.NotFound) throw e
+            return StateDelegation(emptyList(), emptyList(), emptyList(), matched = true, available = false)
+        }
         val st = location.stateAbbr
         val senators = raw.legislators.filter { it.chamber != "lower" && districtMatches(location.stateSenateDistrict, it.district) }
         val reps = raw.legislators.filter { it.chamber == "lower" && districtMatches(location.stateHouseDistrict, it.district) }

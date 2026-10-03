@@ -171,6 +171,10 @@ fun OfficialsScreen(
                         Text("You're in ${stateDistricts.joinToString(" and ")}.", style = MaterialTheme.typography.bodyMedium)
                     }
                     when {
+                        stateDelegation != null && !stateDelegation.available -> Text(
+                            "Your governor and state legislators will appear here after the next data update.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                         stateDelegation != null -> {
                             val sd = stateDelegation
                             sd.executives.forEach { OfficialRow(it) { onOfficial(it.id) } }
