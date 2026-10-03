@@ -84,6 +84,13 @@ data class BillSummary(
     val latestAction: Action? = null,
 )
 
+/** A day the House, the Senate or both met, and that day's Congressional Record. */
+@Serializable
+data class SessionDay(val date: String, val house: Boolean = false, val senate: Boolean = false, val record: String? = null)
+
+@Serializable
+private class SessionDays(val days: List<SessionDay> = emptyList())
+
 @Serializable
 private class ContactForms(val forms: Map<String, String> = emptyMap())
 
@@ -214,6 +221,13 @@ object CongressData {
         Http.json.decodeFromString<ContactForms>(text("contacts.json", 7.days)).forms
     } catch (e: Exception) {
         emptyMap()
+    }
+
+    /** Every day either chamber met this Congress, oldest first. Empty until the gatherer has published it. */
+    suspend fun sessionDays(force: Boolean = false): List<SessionDay> = try {
+        Http.json.decodeFromString<SessionDays>(text("sessions/$CONGRESS.json", 6.hours, force)).days
+    } catch (e: ClientRequestException) {
+        if (e.response.status == HttpStatusCode.NotFound) emptyList() else throw e
     }
 
     fun tally(votes: List<MemberVote>): VoteTally {

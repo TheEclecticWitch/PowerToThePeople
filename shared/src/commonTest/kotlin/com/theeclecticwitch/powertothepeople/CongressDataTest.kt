@@ -4,6 +4,8 @@ import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberRecord
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.SessionDay
+import com.theeclecticwitch.powertothepeople.congress.summarize
 import com.theeclecticwitch.powertothepeople.congress.VoteDetail
 import com.theeclecticwitch.powertothepeople.congress.align
 import com.theeclecticwitch.powertothepeople.congress.constituentMessage
@@ -89,5 +91,19 @@ class CongressDataTest {
             "Dear Representative John Roe,\n\nAs your constituent in Columbus, OH, I oppose S. 9. I ask you to vote no on it.\n\nThank you.",
             constituentMessage(rep, "119/s/9", null, "Columbus, OH", supports = false),
         )
+    }
+
+    @Test
+    fun sessionDaysCountEachChamberSeparately() {
+        val days = listOf(
+            SessionDay("2025-12-18", house = true, senate = true),
+            SessionDay("2026-09-29", house = true, senate = true),
+            SessionDay("2026-09-30", house = false, senate = true),
+            SessionDay("2026-10-01", house = true, senate = false),
+        )
+        val s = summarize(days, 2026)
+        assertEquals(listOf(2, 2), listOf(s.house, s.senate))
+        assertEquals("2026-10-01", s.houseLast)
+        assertEquals("2026-09-30", s.senateLast)
     }
 }

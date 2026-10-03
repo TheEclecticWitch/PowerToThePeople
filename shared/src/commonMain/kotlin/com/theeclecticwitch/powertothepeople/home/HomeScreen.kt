@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.LatestVotesCard
+import com.theeclecticwitch.powertothepeople.congress.SessionCard
 import com.theeclecticwitch.powertothepeople.debt.DebtCard
 import com.theeclecticwitch.powertothepeople.doomsday.DoomsdayCard
 import com.theeclecticwitch.powertothepeople.location.LocationStore
@@ -37,6 +38,7 @@ import com.theeclecticwitch.powertothepeople.ui.theme.LocalAppFonts
 fun HomeScreen(
     onDebt: () -> Unit,
     onDoomsday: () -> Unit,
+    onSessions: () -> Unit,
     congressNav: CongressNav,
     onConstitution: () -> Unit,
     onOfficials: () -> Unit,
@@ -97,6 +99,8 @@ fun HomeScreen(
                 }
 
                 LatestVotesCard(congressNav)
+
+                SessionCard(onOpen = onSessions)
 
                 DebtCard(onOpen = onDebt)
 

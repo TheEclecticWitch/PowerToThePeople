@@ -69,7 +69,7 @@ class CongressNav(
     val setLocation: () -> Unit,
 )
 
-private sealed interface Load<out T> {
+internal sealed interface Load<out T> {
     data object Loading : Load<Nothing>
     data class Done<T>(val value: T) : Load<T>
     data class Failed(val message: String) : Load<Nothing>
@@ -77,7 +77,7 @@ private sealed interface Load<out T> {
 
 /** Runs [block] when [key] changes; "Try again" runs it once more, past the cache. */
 @Composable
-private fun <T> rememberLoad(key: Any?, failure: String, block: suspend (force: Boolean) -> T): Pair<Load<T>, () -> Unit> {
+internal fun <T> rememberLoad(key: Any?, failure: String, block: suspend (force: Boolean) -> T): Pair<Load<T>, () -> Unit> {
     var state by remember(key) { mutableStateOf<Load<T>>(Load.Loading) }
     var attempt by remember(key) { mutableIntStateOf(0) }
     LaunchedEffect(key, attempt) {
