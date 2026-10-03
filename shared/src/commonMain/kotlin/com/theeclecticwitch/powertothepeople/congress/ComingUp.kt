@@ -117,12 +117,12 @@ fun ComingUpCard(onOpen: () -> Unit) {
                 val u = l.value
                 val houseItems = u.house.sumOf { it.items.size }
                 Text(
-                    if (houseItems > 0) "House: $houseItems bills scheduled for the floor" else "House: no floor schedule posted for this week or next",
+                    if (houseItems == 1) "House: 1 bill scheduled for the floor" else if (houseItems > 0) "House: $houseItems bills scheduled for the floor" else "House: no floor schedule posted for this week or next",
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 u.senate?.next?.let { Text("Senate: meets ${it}${u.senate.plan?.let { p -> " · $p" } ?: ""}", style = MaterialTheme.typography.bodyLarge) }
-                if (u.hearings.isNotEmpty()) Text("${u.hearings.size} committee hearings and meetings ahead", style = MaterialTheme.typography.bodyMedium)
-                if (u.comments.isNotEmpty()) Text("${u.comments.size} proposed federal rules open for your comment", style = MaterialTheme.typography.bodyMedium)
+                if (u.hearings.isNotEmpty()) Text(if (u.hearings.size == 1) "1 committee hearing or meeting ahead" else "${u.hearings.size} committee hearings and meetings ahead", style = MaterialTheme.typography.bodyMedium)
+                if (u.comments.isNotEmpty()) Text(if (u.comments.size == 1) "1 proposed federal rule open for your comment" else "${u.comments.size} proposed federal rules open for your comment", style = MaterialTheme.typography.bodyMedium)
                 Text("See what's coming ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
             }
         }
