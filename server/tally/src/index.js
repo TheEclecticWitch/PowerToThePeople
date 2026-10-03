@@ -10,6 +10,8 @@
  *        from Open States. The Open States key stays here as a secret, never in the app.
  *   GET  /state-bill?id=ocd-bill/...         -> one state bill: its actions, sponsors and every recorded vote with
  *        how each legislator voted, from Open States.
+ *   GET  /lobbying?bill=119/s/2403            -> lobbying reports (Lobbying Disclosure Act) filed during that
+ *        Congress that name the bill, from lda.gov.
  *   GET  /elections                          -> upcoming elections (Google Civic Information)
  *   POST /voter-info {"address", "electionId"?} -> polling places, ballot contests and the state's official
  *        election links for an address. The address is passed to Google and not kept.
@@ -32,6 +34,7 @@ export default {
       if (request.method === "POST" && url.pathname === "/answer") return await recordAnswer(request, env);
       if (request.method === "GET" && url.pathname === "/state-bills") return await stateBills(request, url, env, ctx);
       if (request.method === "GET" && url.pathname === "/state-bill") return await stateBill(request, url, env, ctx);
+      if (request.method === "GET" && url.pathname === "/lobbying") return await lobbying(request, url, env, ctx);
       if (request.method === "GET" && url.pathname === "/elections") return await elections(env, ctx);
       if (request.method === "POST" && url.pathname === "/voter-info") return await voterInfo(request, env);
       if (request.method === "GET" && url.pathname === "/") {
@@ -233,6 +236,78 @@ async function stateBill(request, url, env, ctx) {
   };
   const response = new Response(JSON.stringify(body), {
     headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=21600" },
+  });
+  ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+  return response;
+}
+
+// --- Lobbying reports that name a bill, from the Lobbying Disclosure Act database (lda.gov) ---
+
+const BILL_KEY = /^(1\d\d)\/(hr|s|hres|sres|hjres|sjres|hconres|sconres)\/(\d{1,5})$/;
+const BILL_LABEL = { hr: "H.R.", s: "S.", hres: "H.Res.", sres: "S.Res.", hjres: "H.J.Res.", sjres: "S.J.Res.", hconres: "H.Con.Res.", sconres: "S.Con.Res." };
+
+async function lobbying(request, url, env, ctx) {
+  const m = (url.searchParams.get("bill") || "").match(BILL_KEY);
+  if (!m) return json({ error: "bad request" }, 400);
+  const [, congress, type, number] = m;
+  const cacheKey = new Request(`https://cache.ptp/lobbying?bill=${congress}/${type}/${number}`);
+  const hit = await caches.default.match(cacheKey);
+  if (hit) return hit;
+  if (env.LIMIT) {
+    const { success } = await env.LIMIT.limit({ key: request.headers.get("CF-Connecting-IP") || "unknown" });
+    if (!success) return json({ error: "too many requests, try again in a minute" }, 429);
+  }
+  const label = `${BILL_LABEL[type]} ${number}`;
+  // "S. 2403", "S.2403" or "S 2403", but not "H.R.S. 24031". Bill numbers start over each Congress, so only
+  // reports from this Congress's two years count.
+  const letters = BILL_LABEL[type].replace(/\./g, "").split("").join("\\.?\\s*");
+  const pattern = new RegExp(`(^|[^A-Za-z.])${letters}\\.?\\s*${number}(?!\\d)`, "i");
+  const firstYear = 1789 + 2 * (Number(congress) - 1);
+  const reports = [];
+  for (const year of [firstYear, firstYear + 1]) {
+    let next = `https://lda.gov/api/v1/filings/?filing_specific_lobbying_issues=${encodeURIComponent(label)}&filing_year=${year}&page_size=25`;
+    for (let page = 0; next && page < 4; page++) {
+      const r = await fetch(next, { headers: { Accept: "application/json" } });
+      if (r.status === 429) return json({ error: "the lobbying database has reached its limit for now; try again later" }, 503);
+      if (!r.ok) return json({ error: "the lobbying database didn't answer" }, 502);
+      const data = await r.json();
+      for (const f of data.results || []) {
+        const named = (f.lobbying_activities || []).filter((a) => pattern.test(a.description || ""));
+        if (!named.length) continue;
+        const text = named[0].description || "";
+        const at = text.search(pattern);
+        reports.push({
+          id: f.filing_uuid,
+          client: f.client?.name || null,
+          registrant: f.registrant?.name || null,
+          year: f.filing_year,
+          period: f.filing_period_display || f.filing_period,
+          type: f.filing_type_display || f.filing_type,
+          posted: (f.dt_posted || "").slice(0, 10) || null,
+          amount: f.income ?? f.expenses ?? null,
+          issues: [...new Set(named.map((a) => a.general_issue_code_display).filter(Boolean))],
+          excerpt: text.slice(Math.max(0, at - 160), at + 200).replace(/\s+/g, " ").trim(),
+          url: f.filing_document_url,
+        });
+      }
+      next = data.next;
+    }
+  }
+  // An amended report replaces its original: keep the latest for each filer, client and quarter.
+  const latest = new Map();
+  for (const r of reports) {
+    const key = `${r.registrant}|${r.client}|${r.year}|${r.period}`;
+    const seen = latest.get(key);
+    if (!seen || (r.posted || "") > (seen.posted || "")) latest.set(key, r);
+  }
+  const body = {
+    bill: `${congress}/${type}/${number}`,
+    label,
+    reports: [...latest.values()].sort((a, b) => (b.posted || "").localeCompare(a.posted || "")),
+    source: "https://lda.gov/",
+  };
+  const response = new Response(JSON.stringify(body), {
+    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=86400" },
   });
   ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
   return response;

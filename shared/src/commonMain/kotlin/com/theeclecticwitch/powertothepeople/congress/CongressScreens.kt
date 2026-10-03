@@ -885,6 +885,7 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
                                 )
                             }
                         }
+                        LobbyingCard(id)
                         InfoCard(title = "Roll-call votes") {
                             if (votes.isEmpty()) {
                                 Text(
