@@ -99,6 +99,15 @@ fun SourcesScreen(onBack: () -> Unit) {
                     CongressData.SOURCE_URL,
                 )
                 Source(
+                    "How app users answered",
+                    "Only if you turn on \"Add my answers to the app-wide count\": the roll call, your Yea or Nay, and a " +
+                        "random code for this copy of the app, so each phone counts once. The code is scrambled before it is " +
+                        "stored, differently for every vote, so no one can follow one person's answers. No name, address or " +
+                        "location is ever sent. Counts appear once 10 people have answered. The service's code is public.",
+                    "This app's own counting service (Cloudflare)",
+                    "https://github.com/TheEclecticWitch/PowerToThePeople/tree/main/server/tally",
+                )
+                Source(
                     "The Doomsday Clock",
                     "The setting announced by the Bulletin of the Atomic Scientists, who keep the clock. It is their " +
                         "judgment, shown as they state it; this app's gatherer checks their page for a new setting.",
@@ -163,15 +172,18 @@ fun AboutScreen(onBack: () -> Unit) {
                 }
                 InfoCard(title = "Free, for everyone") {
                     Text(
-                        "The app is free and has no paywall. It is built on free public data. If you'd like to help it grow, " +
-                            "a voluntary Supporter option will pay for more data sources in the future.",
+                        "Officials, votes, bills, the Constitution and everything else built on public data are free, with no " +
+                            "paywall. The one exception will be News: an optional subscription that pays for news sources, and " +
+                            "for the servers that count app users' answers on each vote. Today those counts run on a free server " +
+                            "plan with a daily limit; subscriptions will let them keep up as more people use the app.",
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
                 InfoCard(title = "Coming next") {
                     listOf(
                         "Bills in Congress that affect you, with official plain-English summaries",
-                        "How your members of Congress vote, with charts - and how often they vote the way you would",
+                        "How everyone who uses the app answered each vote, counted anonymously",
+                        "Charts of how your members of Congress vote",
                         "Days in session and days in recess",
                         "Your governor and state legislators, and bills in your state",
                         "Campaign donors and lobbying disclosures",

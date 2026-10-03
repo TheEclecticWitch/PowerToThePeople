@@ -1,0 +1,22 @@
+// The vote-count service. Deploy from this folder with `npx wrangler deploy`.
+// The SALT secret is set once with `npx wrangler secret put SALT` and never committed.
+{
+  "name": "ptp-tally",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ptp-tally",
+      "database_id": "6225cade-ead0-4db7-97f7-d52c12c76d03"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ]
+}

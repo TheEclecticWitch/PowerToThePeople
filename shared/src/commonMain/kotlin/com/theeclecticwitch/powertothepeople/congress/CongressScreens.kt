@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.Switch
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -328,6 +331,9 @@ fun VoteScreen(chamber: String, session: Int, roll: Int, onBack: () -> Unit, nav
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
     val uri = LocalUriHandler.current
+    var tallyRefresh by remember { mutableIntStateOf(0) }
+    // Catch up on any answer that couldn't be sent earlier.
+    LaunchedEffect(Unit) { AppTally.sync() }
     Scaffold(topBar = { AppTopBar("${chamberName(chamber)} roll call $roll", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             when (val l = load) {
@@ -364,7 +370,9 @@ fun VoteScreen(chamber: String, session: Int, roll: Int, onBack: () -> Unit, nav
                             }
                         }
                         if ("Yea" in groups || "Nay" in groups) {
-                            item { YourViewCard(MyPositions.key(chamber, session, roll)) }
+                            val key = MyPositions.key(chamber, session, roll)
+                            item { YourViewCard(key) { tallyRefresh++ } }
+                            item { AppTallyCard(key, tallyRefresh) }
                         }
                         if (mine.isNotEmpty()) {
                             item {
@@ -440,29 +448,92 @@ private fun PositionRow(p: Position, showVote: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** Lets the reader say how they would have voted. Stays on the device; used only for the member pages. */
+/**
+ * Lets the reader say how they would have voted, and - only if they turn it on - add that answer to the
+ * anonymous app-wide count. [onShared] runs after the server has the new answer, so the count can refresh.
+ */
 @Composable
-private fun YourViewCard(key: String) {
+private fun YourViewCard(key: String, onShared: () -> Unit) {
     val positions by MyPositions.flow.collectAsState()
+    val prefs by AppTally.prefsFlow.collectAsState()
+    val scope = rememberCoroutineScope()
     val current = positions[key]
+    fun syncThenRefresh() = scope.launch { AppTally.sync(); onShared() }
     InfoCard(title = "Your view") {
         Text("How would you have voted?", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf("Yea", "Nay").forEach { v ->
                 FilterChip(
                     selected = current == v,
-                    onClick = { MyPositions.set(key, if (current == v) null else v) },
+                    onClick = {
+                        MyPositions.set(key, if (current == v) null else v)
+                        syncThenRefresh()
+                    },
                     label = { Text(v) },
                 )
             }
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Add my answers to the app-wide count (anonymous)",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            Switch(checked = prefs.share, onCheckedChange = { AppTally.setSharing(it); syncThenRefresh() })
+        }
         Text(
-            if (current == null) {
-                "Answer, and your members' pages will show how often they voted the way you would have. " +
-                    "Private: kept only on this device."
-            } else {
-                "Saved on this device only. Tap your answer again to clear it."
+            when {
+                prefs.share -> "Your answers are counted with no name, address or location attached, and stay on this device " +
+                    "too. Turn this off to withdraw them from the count."
+                current == null -> "Answer, and your members' pages will show how often they voted the way you would have. " +
+                    "Kept only on this device unless you turn on the count above."
+                else -> "Saved on this device only. Tap your answer again to clear it."
             },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** How app users answered this roll call, once enough have that no one's answer can be guessed. */
+@Composable
+private fun AppTallyCard(key: String, refresh: Int) {
+    var tally by remember(key) { mutableStateOf<Tally?>(null) }
+    var failed by remember(key) { mutableStateOf(false) }
+    LaunchedEffect(key, refresh) {
+        try {
+            tally = AppTally.get(key)
+            failed = false
+        } catch (e: Exception) {
+            failed = true
+        }
+    }
+    val t = tally
+    InfoCard(title = "How app users answered") {
+        when {
+            t == null && failed -> Text("Couldn't load the app-wide count. Check your connection.", style = MaterialTheme.typography.bodyMedium)
+            t == null -> LoadingBox("Loading the count…")
+            t.yea != null && t.nay != null -> {
+                val pct = { n: Int -> Format.decimals(n * 100.0 / t.total, 0) }
+                Text(
+                    "Yea ${pct(t.yea)}% · Nay ${pct(t.nay)}%",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "${Format.commas(t.total.toLong())} people answered (${Format.commas(t.yea.toLong())} Yea, ${Format.commas(t.nay.toLong())} Nay)",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            t.total == 0 -> Text("No one has added an answer yet.", style = MaterialTheme.typography.bodyMedium)
+            else -> Text(
+                "${t.total} ${if (t.total == 1) "person has" else "people have"} answered so far. The count appears once " +
+                    "${t.minShown} have, so no one's answer can be guessed.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        Text(
+            "Not a poll: it counts only people who use this app and chose to add their answers.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -614,6 +685,15 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
     val (load, retry) = rememberLoad(id, "Couldn't load this bill. Check your connection.") {
         CongressData.bill(id) to CongressData.votesOnBill(id)
     }
+    var tallies by remember(id) { mutableStateOf<Map<String, Tally>>(emptyMap()) }
+    LaunchedEffect(load) {
+        val votes = (load as? Load.Done)?.value?.second ?: return@LaunchedEffect
+        tallies = try {
+            AppTally.getMany(votes.map { MyPositions.key(it.chamber, it.session, it.summary.roll) })
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
     val uri = LocalUriHandler.current
     Scaffold(topBar = { AppTopBar(BillNames.label(id), onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
@@ -671,6 +751,18 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
                                 if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 VoteRow(v.chamber, v.summary, v.summary.roll, emptyMap(), showBill = false) {
                                     nav.vote(v.chamber, v.session, v.summary.roll)
+                                }
+                                tallies[MyPositions.key(v.chamber, v.session, v.summary.roll)]?.let { t ->
+                                    Text(
+                                        if (t.yea != null && t.nay != null) {
+                                            "App users: Yea ${Format.decimals(t.yea * 100.0 / t.total, 0)}% · " +
+                                                "Nay ${Format.decimals(t.nay * 100.0 / t.total, 0)}% (${Format.commas(t.total.toLong())} people)"
+                                        } else {
+                                            "App users: ${t.total} answered so far (shown at ${t.minShown})"
+                                        },
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                    )
                                 }
                             }
                         }

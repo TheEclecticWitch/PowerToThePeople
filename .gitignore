@@ -26,3 +26,7 @@ __pycache__/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Cloudflare Wrangler working files
+.wrangler/
+node_modules/
