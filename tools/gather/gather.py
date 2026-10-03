@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bills  # noqa: E402
 import births  # noqa: E402
+import briefing  # noqa: E402
 import candidates  # noqa: E402
 import contacts  # noqa: E402
 import disclosures  # noqa: E402
@@ -129,6 +130,7 @@ def main():
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Executive orders", orders.gather, net, store, log)
     step("Coming up", upcoming.gather, net, store, congress, log)
+    step("This Week in Congress", briefing.gather, store, congress, log)
     step("Disclosures", disclosures.gather, net, store, congress, log)
     step("Office news", press.gather, net, store, state, log)
     step("Contact pages", contacts.gather, net, store, state, log)

@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.theeclecticwitch.powertothepeople.briefing.ThisWeekCard
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.alerts.FollowedBillsCard
 import com.theeclecticwitch.powertothepeople.congress.LatestVoteCard
@@ -164,6 +165,7 @@ fun HomeScreen(
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             findLegislation()
+                            ThisWeekCard()
                             LatestVoteCard(congressNav)
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -214,6 +216,7 @@ fun HomeScreen(
                         ElectionCard(onOpen = onVoting, onElections = onElections)
                         howItWorks()
                         findLegislation()
+                        ThisWeekCard()
                         LatestVoteCard(congressNav)
                         SessionCard(onOpen = onSessions)
                         DebtCard(onOpen = onDebt)

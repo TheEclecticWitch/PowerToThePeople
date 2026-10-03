@@ -32,13 +32,30 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The one library beyond Python's own: Open States keeps its state officials in YAML files.
-      - name: Install the YAML reader
-        run: pip install pyyaml==6.0.3
+      # Libraries beyond Python's own: Open States keeps its state officials in YAML files, and the weekly
+      # This Week in Congress briefing is read aloud by Piper and saved as an MP3.
+      - name: Install the YAML reader and the briefing voice
+        run: pip install pyyaml==6.0.3 piper-tts==1.8.0 lameenc==1.8.4
+
+      # The voice "Norman" (public domain, LibriVox recordings), kept between runs so it downloads once.
+      - name: Keep the voice between runs
+        uses: actions/cache@v6
+        with:
+          path: voices
+          key: piper-en_US-norman-medium
+
+      - name: Get the voice
+        run: |
+          mkdir -p voices
+          base=https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/norman/medium
+          for f in en_US-norman-medium.onnx en_US-norman-medium.onnx.json; do
+            [ -s voices/$f ] || curl -sfL --retry 5 -o voices/$f $base/$f || echo "Couldn't get $f; the briefing will have no audio this run."
+          done
 
       - name: Gather
         env:
           API_DATA_GOV_KEY: ${{ secrets.API_DATA_GOV_KEY }}
+          PIPER_VOICE: voices/en_US-norman-medium.onnx
         run: python tools/gather/gather.py --out site
 
       # Runs even when a source failed, so whatever did arrive is still published.
