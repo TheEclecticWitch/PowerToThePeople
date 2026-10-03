@@ -39,6 +39,7 @@ fun HomeScreen(
     onDebt: () -> Unit,
     onDoomsday: () -> Unit,
     onSessions: () -> Unit,
+    onLegislation: () -> Unit,
     congressNav: CongressNav,
     onConstitution: () -> Unit,
     onOfficials: () -> Unit,
@@ -96,6 +97,14 @@ fun HomeScreen(
                         }
                         Text("All my officials ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                     }
+                }
+
+                InfoCard(title = "Find legislation", onClick = onLegislation) {
+                    Text(
+                        "Heard about a bill or an executive order in the news? Look it up by number or name: Congress, the President, and your state.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text("Search ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
 
                 LatestVotesCard(congressNav)

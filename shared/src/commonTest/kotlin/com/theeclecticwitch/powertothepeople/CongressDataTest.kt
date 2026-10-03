@@ -3,7 +3,14 @@ package com.theeclecticwitch.powertothepeople
 import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberRecord
+import com.theeclecticwitch.powertothepeople.congress.Action
+import com.theeclecticwitch.powertothepeople.congress.BillFilter
+import com.theeclecticwitch.powertothepeople.congress.BillSummary
+import com.theeclecticwitch.powertothepeople.congress.ExecutiveOrder
+import com.theeclecticwitch.powertothepeople.congress.ExecutiveOrders
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.billKeyFromQuery
+import com.theeclecticwitch.powertothepeople.congress.searchBills
 import com.theeclecticwitch.powertothepeople.congress.SessionDay
 import com.theeclecticwitch.powertothepeople.congress.summarize
 import com.theeclecticwitch.powertothepeople.congress.VoteDetail
@@ -105,5 +112,40 @@ class CongressDataTest {
         assertEquals(listOf(2, 2), listOf(s.house, s.senate))
         assertEquals("2026-10-01", s.houseLast)
         assertEquals("2026-09-30", s.senateLast)
+    }
+
+    @Test
+    fun billNumbersAreFoundHoweverTheyAreTyped() {
+        assertEquals("119/hr/1", billKeyFromQuery("HR 1"))
+        assertEquals("119/hr/1", billKeyFromQuery("H.R.1"))
+        assertEquals("119/sjres/12", billKeyFromQuery("s.j.res. 12"))
+        assertEquals("119/s/9", billKeyFromQuery("S 9"))
+        assertNull(billKeyFromQuery("farm bill"))
+    }
+
+    @Test
+    fun billSearchNeedsEveryWordAndFiltersLaws() {
+        val index = mapOf(
+            "119/hr/1" to BillSummary(title = "One Big Beautiful Bill Act", latestAction = Action("2025-07-04", "Became Public Law No: 119-21.")),
+            "119/hr/2" to BillSummary(title = "Child Tax Credit Act", latestAction = Action("2026-01-01", "Referred to committee.")),
+            "119/s/3" to BillSummary(title = "Child Care Act", latestAction = Action("2026-02-01", "Read twice.")),
+        )
+        assertEquals(listOf("119/hr/2"), searchBills(index, "child tax").map { it.first })
+        assertEquals(listOf("119/s/3", "119/hr/2"), searchBills(index, "child").map { it.first })
+        assertEquals(listOf("119/hr/1"), searchBills(index, "", BillFilter.Law).map { it.first })
+        assertEquals(listOf("119/s/3"), searchBills(index, "child", BillFilter.Senate).map { it.first })
+        assertEquals(listOf("119/hr/1"), searchBills(index, "h.r. 1").map { it.first })
+    }
+
+    @Test
+    fun executiveOrdersByNumberOrWords() {
+        val all = listOf(
+            ExecutiveOrder(number = "14434", title = "Inaugurating the Era of Super Intelligence", president = "Donald Trump"),
+            ExecutiveOrder(number = "14036", title = "Promoting Competition in the American Economy", president = "Joseph R. Biden Jr."),
+        )
+        assertEquals("14434", ExecutiveOrders.search(all, "EO 14434", null).single().number)
+        assertEquals("14036", ExecutiveOrders.search(all, "Executive Order 14036", null).single().number)
+        assertEquals("14036", ExecutiveOrders.search(all, "competition", null).single().number)
+        assertEquals(0, ExecutiveOrders.search(all, "competition", "Donald Trump").size)
     }
 }

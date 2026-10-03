@@ -27,7 +27,14 @@ import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
 
 @Composable
-fun MoreScreen(onLocation: () -> Unit, onSources: () -> Unit, onAbout: () -> Unit, onDebt: () -> Unit, onDirectory: () -> Unit) {
+fun MoreScreen(
+    onLocation: () -> Unit,
+    onSources: () -> Unit,
+    onAbout: () -> Unit,
+    onDebt: () -> Unit,
+    onDirectory: () -> Unit,
+    onLegislation: () -> Unit,
+) {
     val location by LocationStore.location.collectAsState()
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
@@ -37,6 +44,9 @@ fun MoreScreen(onLocation: () -> Unit, onSources: () -> Unit, onAbout: () -> Uni
             ) {
                 InfoCard(title = "Your location", onClick = onLocation) {
                     Text(location?.matchedAddress ?: "Not set yet", style = MaterialTheme.typography.bodyLarge)
+                }
+                InfoCard(title = "Legislation", onClick = onLegislation) {
+                    Text("Find any bill in Congress, any executive order, or a bill in your state legislature.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "All of Congress", onClick = onDirectory) {
                     Text("Every senator and representative: their votes, bills and committees.", style = MaterialTheme.typography.bodyLarge)
@@ -111,6 +121,20 @@ fun SourcesScreen(onBack: () -> Unit) {
                         "Open States project's public data, kept from state government websites. Checked weekly.",
                     "Open States",
                     "https://github.com/openstates/people",
+                )
+                Source(
+                    "Executive orders",
+                    "Every executive order the Federal Register has published since 1994, the official record of " +
+                        "presidential documents. Each links to its full text.",
+                    "Federal Register",
+                    "https://www.federalregister.gov/presidential-documents/executive-orders",
+                )
+                Source(
+                    "State bills",
+                    "Bills in each state legislature, searched live at Open States through this app's own service, " +
+                        "which keeps recent searches for six hours.",
+                    "Open States",
+                    "https://openstates.org/",
                 )
                 Source(
                     "Days in session",

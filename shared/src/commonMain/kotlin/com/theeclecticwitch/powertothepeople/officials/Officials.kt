@@ -309,4 +309,7 @@ object StateNames {
     fun of(abbr: String?): String = names[abbr] ?: abbr ?: ""
 
     fun isAbbreviation(text: String): Boolean = text.uppercase() in names
+
+    /** Every state and territory, as (abbreviation, name), alphabetical by name. */
+    val all: List<Pair<String, String>> get() = names.entries.map { it.key to it.value }.sortedBy { it.second }
 }

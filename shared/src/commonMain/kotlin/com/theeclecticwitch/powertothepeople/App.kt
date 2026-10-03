@@ -42,6 +42,7 @@ import com.theeclecticwitch.powertothepeople.constitution.ConstitutionScreen
 import com.theeclecticwitch.powertothepeople.constitution.SignaturesScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
+import com.theeclecticwitch.powertothepeople.congress.LegislationScreen
 import com.theeclecticwitch.powertothepeople.congress.MemberVotesScreen
 import com.theeclecticwitch.powertothepeople.congress.RecentVotesScreen
 import com.theeclecticwitch.powertothepeople.congress.SessionScreen
@@ -83,6 +84,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable object DirectoryRoute
+@Serializable object LegislationRoute
 @Serializable data class StateLegislatorsRoute(val state: String)
 @Serializable object RecentVotesRoute
 @Serializable object SourcesRoute
@@ -190,6 +192,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onDebt = { nav.navigate(DebtRoute) },
                 onDoomsday = { nav.navigate(DoomsdayRoute) },
                 onSessions = { nav.navigate(SessionsRoute) },
+                onLegislation = { nav.navigate(LegislationRoute) },
                 congressNav = congressNav,
                 onConstitution = { goToTab(nav, tabs[1]) },
                 onOfficials = { goToTab(nav, tabs[2]) },
@@ -277,12 +280,14 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onAbout = { nav.navigate(AboutRoute) },
                 onDebt = { nav.navigate(DebtRoute) },
                 onDirectory = { nav.navigate(DirectoryRoute) },
+                onLegislation = { nav.navigate(LegislationRoute) },
             )
         }
         composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
         composable<StateLegislatorsRoute> { entry ->
             StateLegislatorsScreen(entry.toRoute<StateLegislatorsRoute>().state, back) { nav.navigate(OfficialRoute(it)) }
         }
+        composable<LegislationRoute> { LegislationScreen(back, congressNav) }
         composable<DirectoryRoute> { DirectoryScreen(back) { nav.navigate(OfficialRoute(it)) } }
         composable<SourcesRoute> { SourcesScreen(back) }
         composable<AboutRoute> { AboutScreen(back) }

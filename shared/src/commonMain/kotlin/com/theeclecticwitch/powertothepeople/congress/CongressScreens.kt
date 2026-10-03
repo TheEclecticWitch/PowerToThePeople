@@ -219,7 +219,7 @@ private fun VoteRow(
 }
 
 @Composable
-private fun BillRow(id: String, s: BillSummary?, onClick: () -> Unit) {
+internal fun BillRow(id: String, s: BillSummary?, onClick: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
