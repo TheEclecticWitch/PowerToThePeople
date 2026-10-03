@@ -1,5 +1,11 @@
 package com.theeclecticwitch.powertothepeople
 
+import androidx.compose.foundation.background
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavGraphBuilder
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -113,6 +119,20 @@ import kotlinx.serialization.Serializable
 @Serializable object RecentVotesRoute
 @Serializable object SourcesRoute
 @Serializable object AboutRoute
+@Serializable object DetailEmptyRoute
+
+/** The list column beside the detail pane on a wide window. */
+private val ListPaneWidth = 440.dp
+
+/**
+ * On a wide window these screens are lists: they keep a column on the left, and what the reader opens from
+ * them (a vote, a bill, a member, an article) shows on the right. Overview stays a full-width dashboard.
+ */
+private val splitRoutes = listOf(
+    CongressRoute::class, LegislationRoute::class, ComingUpRoute::class, RecentVotesRoute::class,
+    DirectoryRoute::class, OfficialsRoute::class, StateLegislatorsRoute::class, AlertsRoute::class,
+    ConstitutionRoute::class, BillOfRightsRoute::class, MemberVotesRoute::class, SponsoredBillsRoute::class,
+)
 
 private data class Tab(val label: String, val icon: ImageVector, val route: Any)
 
@@ -140,6 +160,13 @@ fun App() {
             // A phone gets a bar along the bottom; a tablet or desktop window gets a rail down the side.
             val wide = maxWidth >= 720.dp
             if (wide) {
+                val detail = rememberNavController()
+                val mainEntry by nav.currentBackStackEntryAsState()
+                val split = mainEntry?.destination?.let { d -> splitRoutes.any { d.hasRoute(it) } } == true
+                // A new list, or a new tab, starts with an empty detail pane.
+                LaunchedEffect(mainEntry?.id) {
+                    if (detail.currentBackStackEntry != null) detail.popBackStack(DetailEmptyRoute, inclusive = false)
+                }
                 Row(Modifier.fillMaxSize()) {
                     NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         val selected = selectedTab(nav)
@@ -148,8 +175,15 @@ fun App() {
                             NavigationRailItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium, Modifier.width(76.dp)) })
                         }
                     }
-                    Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
-                        AppNavHost(nav, Modifier.padding(padding).consumeWindowInsets(padding))
+                    Scaffold(
+                        modifier = if (split) Modifier.width(ListPaneWidth) else Modifier.weight(1f),
+                        contentWindowInsets = WindowInsets(0),
+                    ) { padding ->
+                        AppNavHost(nav, Modifier.padding(padding).consumeWindowInsets(padding), detail = { if (split) detail else null })
+                    }
+                    if (split) {
+                        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Box(Modifier.weight(1f).background(MaterialTheme.colorScheme.background)) { DetailNavHost(detail, nav) }
                     }
                 }
             } else {
@@ -206,14 +240,19 @@ private fun goToTab(nav: NavHostController, tab: Tab) {
 }
 
 @Composable
-private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
+private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () -> NavHostController? = { null }) {
     val back: () -> Unit = { nav.popBackStack() }
+    // Beside a list on a wide window, a page opens in the detail pane, replacing whatever was there.
+    val open: (Any) -> Unit = { route ->
+        val pane = detail()
+        if (pane != null) pane.navigate(route) { popUpTo(DetailEmptyRoute) } else nav.navigate(route)
+    }
     val congressNav = CongressNav(
-        vote = { chamber, session, roll -> nav.navigate(VoteRoute(chamber, session, roll)) },
-        bill = { nav.navigate(BillRoute(it)) },
-        official = { nav.navigate(OfficialRoute(it)) },
-        memberVotes = { nav.navigate(MemberVotesRoute(it)) },
-        sponsoredBills = { nav.navigate(SponsoredBillsRoute(it)) },
+        vote = { chamber, session, roll -> open(VoteRoute(chamber, session, roll)) },
+        bill = { open(BillRoute(it)) },
+        official = { open(OfficialRoute(it)) },
+        memberVotes = { open(MemberVotesRoute(it)) },
+        sponsoredBills = { open(SponsoredBillsRoute(it)) },
         recentVotes = { nav.navigate(RecentVotesRoute) },
         setLocation = { nav.navigate(LocationRoute) },
     )
@@ -239,12 +278,13 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
                 onAlerts = { nav.navigate(AlertsRoute) },
+                onComingUp = { nav.navigate(ComingUpRoute) },
             )
         }
         composable<ConstitutionRoute> {
             ConstitutionScreen(
-                onArticle = { nav.navigate(ArticleRoute(it)) },
-                onAmendment = { nav.navigate(AmendmentRoute(it)) },
+                onArticle = { open(ArticleRoute(it)) },
+                onAmendment = { open(AmendmentRoute(it)) },
                 onSignatures = { nav.navigate(SignaturesRoute) },
                 onOriginal = { nav.navigate(OriginalRoute(it)) },
                 onHowGovernment = { goToTab(nav, tabs[1]) },
@@ -252,8 +292,8 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
         }
         composable<BillOfRightsRoute> {
             ConstitutionScreen(
-                onArticle = { nav.navigate(ArticleRoute(it)) },
-                onAmendment = { nav.navigate(AmendmentRoute(it)) },
+                onArticle = { open(ArticleRoute(it)) },
+                onAmendment = { open(AmendmentRoute(it)) },
                 onSignatures = { nav.navigate(SignaturesRoute) },
                 onOriginal = { nav.navigate(OriginalRoute(it)) },
                 startAtBillOfRights = true,
@@ -277,9 +317,69 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onSessions = { nav.navigate(SessionsRoute) },
                 onLearn = { goToTab(nav, tabs[1]) },
                 onComingUp = { nav.navigate(ComingUpRoute) },
-                onOfficial = { nav.navigate(OfficialRoute(it)) },
+                onOfficial = { open(OfficialRoute(it)) },
             )
         }
+        pageScreens(nav, congressNav, main = nav)
+        composable<SignaturesRoute> { SignaturesScreen(back) }
+        composable<DebtRoute> { DebtScreen(back) }
+        composable<DoomsdayRoute> { DoomsdayScreen(back) }
+        composable<SessionsRoute> { SessionScreen(back) }
+        composable<LocationRoute> {
+            LocationScreen(onBack = back, onDone = { nav.popBackStack() })
+        }
+        composable<OfficialsRoute> {
+            OfficialsScreen(
+                onBack = back,
+                onOfficial = { open(OfficialRoute(it)) },
+                onDirectory = { nav.navigate(DirectoryRoute()) },
+                onStateLegislators = { nav.navigate(StateLegislatorsRoute(it)) },
+                onSetLocation = { nav.navigate(LocationRoute) },
+                onAddOfficial = { nav.navigate(EditOfficialRoute(level = it.name)) },
+            )
+        }
+        composable<MoreRoute> {
+            MoreScreen(
+                onOfficials = { nav.navigate(OfficialsRoute) },
+                onSources = { nav.navigate(SourcesRoute) },
+                onAbout = { nav.navigate(AboutRoute) },
+                onDebt = { nav.navigate(DebtRoute) },
+                onDoomsday = { nav.navigate(DoomsdayRoute) },
+                onVoting = { nav.navigate(VotingRoute) },
+                onDirectory = { nav.navigate(DirectoryRoute()) },
+                onLegislation = { nav.navigate(LegislationRoute) },
+                onAlerts = { nav.navigate(AlertsRoute) },
+            )
+        }
+        composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
+        composable<StateLegislatorsRoute> { entry ->
+            StateLegislatorsScreen(entry.toRoute<StateLegislatorsRoute>().state, back) { open(OfficialRoute(it)) }
+        }
+        composable<LegislationRoute> { LegislationScreen(back, congressNav) }
+        composable<HowGovernmentRoute> {
+            HowGovernmentWorksScreen(
+                onBack = null,
+                onArticle = { nav.navigate(ArticleRoute(it)) },
+                onAmendment = { nav.navigate(AmendmentRoute(it)) },
+                onYourOfficials = { nav.navigate(OfficialsRoute) },
+                onPresident = { nav.navigate(OfficialRoute("exec:prez")) },
+            )
+        }
+        composable<DirectoryRoute> { entry ->
+            DirectoryScreen(back, { open(OfficialRoute(it)) }, entry.toRoute<DirectoryRoute>().chamber)
+        }
+        composable<SourcesRoute> { SourcesScreen(back) }
+        composable<AboutRoute> { AboutScreen(back) }
+    }
+    }
+}
+
+/**
+ * The pages a list opens: a vote, a bill, a member, an article. On a phone they fill the screen; on a wide
+ * window, opened from a list, they show in the detail pane, and their own links stay in that pane.
+ */
+private fun NavGraphBuilder.pageScreens(nav: NavHostController, congressNav: CongressNav, main: NavHostController) {
+    val back: () -> Unit = { nav.popBackStack() }
         composable<ArticleRoute> { entry ->
             // Moving to the next or previous article replaces this page rather than stacking up.
             ArticleScreen(
@@ -295,23 +395,6 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onBack = back,
                 onAmendment = { nav.navigate(AmendmentRoute(it)) { popUpTo<AmendmentRoute> { inclusive = true } } },
                 onArticle = { nav.navigate(ArticleRoute(it)) { popUpTo<AmendmentRoute> { inclusive = true } } },
-            )
-        }
-        composable<SignaturesRoute> { SignaturesScreen(back) }
-        composable<DebtRoute> { DebtScreen(back) }
-        composable<DoomsdayRoute> { DoomsdayScreen(back) }
-        composable<SessionsRoute> { SessionScreen(back) }
-        composable<LocationRoute> {
-            LocationScreen(onBack = back, onDone = { nav.popBackStack() })
-        }
-        composable<OfficialsRoute> {
-            OfficialsScreen(
-                onBack = back,
-                onOfficial = { nav.navigate(OfficialRoute(it)) },
-                onDirectory = { nav.navigate(DirectoryRoute()) },
-                onStateLegislators = { nav.navigate(StateLegislatorsRoute(it)) },
-                onSetLocation = { nav.navigate(LocationRoute) },
-                onAddOfficial = { nav.navigate(EditOfficialRoute(level = it.name)) },
             )
         }
         composable<OfficialRoute> { entry ->
@@ -344,38 +427,30 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 },
             )
         }
-        composable<MoreRoute> {
-            MoreScreen(
-                onOfficials = { nav.navigate(OfficialsRoute) },
-                onSources = { nav.navigate(SourcesRoute) },
-                onAbout = { nav.navigate(AboutRoute) },
-                onDebt = { nav.navigate(DebtRoute) },
-                onDoomsday = { nav.navigate(DoomsdayRoute) },
-                onVoting = { nav.navigate(VotingRoute) },
-                onDirectory = { nav.navigate(DirectoryRoute()) },
-                onLegislation = { nav.navigate(LegislationRoute) },
-                onAlerts = { nav.navigate(AlertsRoute) },
-            )
+}
+
+/** The right-hand pane on a wide window: empty until the reader opens something from the list. */
+@Composable
+private fun DetailNavHost(detail: NavHostController, main: NavHostController) {
+    val congressNav = CongressNav(
+        vote = { chamber, session, roll -> detail.navigate(VoteRoute(chamber, session, roll)) },
+        bill = { detail.navigate(BillRoute(it)) },
+        official = { detail.navigate(OfficialRoute(it)) },
+        memberVotes = { detail.navigate(MemberVotesRoute(it)) },
+        sponsoredBills = { detail.navigate(SponsoredBillsRoute(it)) },
+        recentVotes = { main.navigate(RecentVotesRoute) },
+        setLocation = { main.navigate(LocationRoute) },
+    )
+    NavHost(detail, startDestination = DetailEmptyRoute) {
+        composable<DetailEmptyRoute> {
+            Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                Text(
+                    "Choose something on the left to see it here.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
-        composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
-        composable<StateLegislatorsRoute> { entry ->
-            StateLegislatorsScreen(entry.toRoute<StateLegislatorsRoute>().state, back) { nav.navigate(OfficialRoute(it)) }
-        }
-        composable<LegislationRoute> { LegislationScreen(back, congressNav) }
-        composable<HowGovernmentRoute> {
-            HowGovernmentWorksScreen(
-                onBack = null,
-                onArticle = { nav.navigate(ArticleRoute(it)) },
-                onAmendment = { nav.navigate(AmendmentRoute(it)) },
-                onYourOfficials = { nav.navigate(OfficialsRoute) },
-                onPresident = { nav.navigate(OfficialRoute("exec:prez")) },
-            )
-        }
-        composable<DirectoryRoute> { entry ->
-            DirectoryScreen(back, { nav.navigate(OfficialRoute(it)) }, entry.toRoute<DirectoryRoute>().chamber)
-        }
-        composable<SourcesRoute> { SourcesScreen(back) }
-        composable<AboutRoute> { AboutScreen(back) }
-    }
+        pageScreens(detail, congressNav, main)
     }
 }
