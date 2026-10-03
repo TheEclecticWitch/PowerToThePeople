@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -146,14 +147,14 @@ private fun AnswerBlock(q: TestQuestion, updates: String) {
 @Composable
 fun CitizenshipTestTab() {
     val test = produceState<CivicsTest?>(null) { value = CitizenshipTest.load() }.value
-    var mode by remember { mutableStateOf<String?>(null) }
+    var mode by rememberSaveable { mutableStateOf<String?>(null) }
     if (test == null) {
         LoadingBox()
         return
     }
     when (mode) {
-        "practice" -> PracticeTest(test, senior = false) { mode = null }
-        "senior" -> PracticeTest(test, senior = true) { mode = null }
+        "practice" -> PracticeTest(test, senior = false) { mode = null; PracticeSession.clear() }
+        "senior" -> PracticeTest(test, senior = true) { mode = null; PracticeSession.clear() }
         "study" -> StudyAll(test) { mode = null }
         else -> TestHome(test) { mode = it }
     }
@@ -193,15 +194,43 @@ private fun TestHome(test: CivicsTest, onStart: (String) -> Unit) {
     }
 }
 
+/**
+ * A practice test in progress. Kept outside the screen so swiping to another Civics tab and back, or
+ * scrolling the tabs round, doesn't lose your place.
+ */
+private object PracticeSession {
+    var senior by mutableStateOf(false)
+    var questions by mutableStateOf<List<TestQuestion>>(emptyList())
+    var index by mutableStateOf(0)
+    var shown by mutableStateOf(false)
+    var right by mutableStateOf(0)
+    var missed by mutableStateOf(listOf<TestQuestion>())
+    var finished by mutableStateOf(false)
+
+    fun ensure(test: CivicsTest, forSeniors: Boolean) {
+        if (questions.isEmpty() || senior != forSeniors) {
+            clear()
+            senior = forSeniors
+            questions = CitizenshipTest.practice(test, forSeniors)
+        }
+    }
+
+    fun clear() {
+        questions = emptyList(); index = 0; shown = false; right = 0; missed = emptyList(); finished = false
+    }
+}
+
 @Composable
 private fun PracticeTest(test: CivicsTest, senior: Boolean, onDone: () -> Unit) {
-    val questions = remember { CitizenshipTest.practice(test, senior) }
+    PracticeSession.ensure(test, senior)
+    val session = PracticeSession
+    val questions = session.questions
     val needed = if (senior) test.seniorToPass else test.toPass
-    var index by remember { mutableStateOf(0) }
-    var shown by remember { mutableStateOf(false) }
-    var right by remember { mutableStateOf(0) }
-    var missed by remember { mutableStateOf(listOf<TestQuestion>()) }
-    var finished by remember { mutableStateOf(false) }
+    var index by session::index
+    var shown by session::shown
+    var right by session::right
+    var missed by session::missed
+    var finished by session::finished
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),

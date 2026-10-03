@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.officials.StateNames
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
+import com.theeclecticwitch.powertothepeople.ui.LoopingTabs
 import com.theeclecticwitch.powertothepeople.ui.ErrorBox
 import com.theeclecticwitch.powertothepeople.ui.Format
 import com.theeclecticwitch.powertothepeople.ui.LoadingBox
@@ -69,15 +70,9 @@ private const val PAGE = 100
  */
 @Composable
 fun LegislationScreen(onBack: () -> Unit, nav: CongressNav) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(topBar = { AppTopBar("Legislation", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
-            Column(Modifier.fillMaxSize()) {
-                PrimaryTabRow(selectedTabIndex = tab) {
-                    listOf("Congress", "President", "States").forEachIndexed { i, label ->
-                        Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
-                    }
-                }
+            LoopingTabs(listOf("Congress", "President", "States"), Modifier.fillMaxSize()) { tab ->
                 when (tab) {
                     0 -> CongressBills(nav)
                     1 -> PresidentOrders()

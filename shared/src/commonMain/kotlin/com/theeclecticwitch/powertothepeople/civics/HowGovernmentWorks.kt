@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
+import com.theeclecticwitch.powertothepeople.ui.LoopingTabs
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
@@ -273,15 +274,9 @@ fun HowGovernmentWorksScreen(
     val uri = LocalUriHandler.current
     // The diagram and the intro come first, then one item per part, then checks and how a bill becomes law.
     val partIndex = { id: String -> 2 + Civics.parts.indexOfFirst { it.id == id } }
-    var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(topBar = { AppTopBar("How Our Government Works", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
-          Column {
-            PrimaryTabRow(selectedTabIndex = tab) {
-                listOf("How it works", "Questions", "Citizenship test").forEachIndexed { i, label ->
-                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
-                }
-            }
+          LoopingTabs(listOf("How it works", "Questions", "Citizenship test")) { tab ->
             if (tab == 2) {
                 CitizenshipTestTab()
             } else if (tab == 1) {

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.officials.rememberDelegation
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
+import com.theeclecticwitch.powertothepeople.ui.LoopingTabs
 import com.theeclecticwitch.powertothepeople.ui.Format
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.LoadingBox
@@ -76,17 +77,11 @@ fun CongressScreen(
     onLearn: () -> Unit,
     onOfficial: (String) -> Unit,
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
     Scaffold(topBar = { AppTopBar("Congress") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
-            Column(Modifier.fillMaxSize()) {
-                PrimaryTabRow(selectedTabIndex = tab) {
-                    listOf("Congress", "Senate", "House").forEachIndexed { i, label ->
-                        Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
-                    }
-                }
+            LoopingTabs(listOf("Congress", "Senate", "House"), Modifier.fillMaxSize()) { tab ->
                 val part = Civics.parts.first { it.id == listOf("congress", "senate", "house")[tab] }
                 val chamber = listOf(null, "senate", "house")[tab]
                 Column(
