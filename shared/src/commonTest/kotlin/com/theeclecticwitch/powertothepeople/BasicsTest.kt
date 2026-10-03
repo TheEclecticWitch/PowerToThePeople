@@ -5,6 +5,8 @@ import com.theeclecticwitch.powertothepeople.doomsday.Doomsday
 import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.congressOn
 import com.theeclecticwitch.powertothepeople.officials.districtMatches
+import com.theeclecticwitch.powertothepeople.voting.nextFederalElection
+import com.theeclecticwitch.powertothepeople.voting.voteGovRegister
 import com.theeclecticwitch.powertothepeople.ui.Format
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,6 +64,18 @@ class BasicsTest {
         assertEquals("De La Cruz", Format.surname("Monica De La Cruz"))
         assertEquals("Trump", Format.surname("Donald Trump"))
         assertEquals("Moore", Format.surname("Moore"))
+    }
+
+    @Test
+    fun electionDayIsTheTuesdayAfterTheFirstMondayInNovember() {
+        assertEquals(LocalDate(2026, 11, 3), nextFederalElection(LocalDate(2026, 10, 3)))
+        assertEquals(LocalDate(2026, 11, 3), nextFederalElection(LocalDate(2026, 11, 3)))
+        assertEquals(LocalDate(2028, 11, 7), nextFederalElection(LocalDate(2026, 11, 4)))
+        assertEquals(LocalDate(2026, 11, 3), nextFederalElection(LocalDate(2025, 1, 1)))
+        // November 1, 2022 was a Tuesday, but the election was the 8th: it must follow a Monday in November.
+        assertEquals(LocalDate(2022, 11, 8), nextFederalElection(LocalDate(2022, 10, 1)))
+        assertEquals("https://vote.gov/register/new-hampshire", voteGovRegister("NH"))
+        assertEquals("https://vote.gov/register/district-of-columbia", voteGovRegister("DC"))
     }
 
     @Test

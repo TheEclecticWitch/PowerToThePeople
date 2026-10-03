@@ -60,6 +60,7 @@ import com.theeclecticwitch.powertothepeople.location.LocationScreen
 import com.theeclecticwitch.powertothepeople.more.AboutScreen
 import com.theeclecticwitch.powertothepeople.more.MoreScreen
 import com.theeclecticwitch.powertothepeople.more.SettingsScreen
+import com.theeclecticwitch.powertothepeople.voting.VotingScreen
 import com.theeclecticwitch.powertothepeople.more.SourcesScreen
 import com.theeclecticwitch.powertothepeople.ui.LocalOpenSettings
 import androidx.compose.runtime.CompositionLocalProvider
@@ -96,6 +97,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable data class DirectoryRoute(val chamber: String? = null)
 @Serializable object SettingsRoute
+@Serializable object VotingRoute
 @Serializable object HowGovernmentRoute
 @Serializable object LegislationRoute
 @Serializable data class StateLegislatorsRoute(val state: String)
@@ -206,6 +208,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
     // The gear on every main screen opens Settings.
     CompositionLocalProvider(LocalOpenSettings provides { nav.navigate(SettingsRoute) }) {
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
+        composable<VotingRoute> { VotingScreen(back) { nav.navigate(LocationRoute) } }
         composable<SettingsRoute> { SettingsScreen(back) { nav.navigate(LocationRoute) } }
         composable<HomeRoute> {
             HomeScreen(
@@ -217,6 +220,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onConstitution = { goToTab(nav, tabs[3]) },
                 onBillOfRights = { nav.navigate(BillOfRightsRoute) },
                 onAllCongress = { nav.navigate(DirectoryRoute()) },
+                onVoting = { nav.navigate(VotingRoute) },
                 onHowGovernment = { goToTab(nav, tabs[1]) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
@@ -331,6 +335,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onAbout = { nav.navigate(AboutRoute) },
                 onDebt = { nav.navigate(DebtRoute) },
                 onDoomsday = { nav.navigate(DoomsdayRoute) },
+                onVoting = { nav.navigate(VotingRoute) },
                 onDirectory = { nav.navigate(DirectoryRoute()) },
                 onLegislation = { nav.navigate(LegislationRoute) },
             )

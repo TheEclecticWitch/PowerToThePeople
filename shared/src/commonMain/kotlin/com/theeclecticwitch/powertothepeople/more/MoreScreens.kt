@@ -33,6 +33,7 @@ fun MoreScreen(
     onAbout: () -> Unit,
     onDebt: () -> Unit,
     onDoomsday: () -> Unit,
+    onVoting: () -> Unit,
     onDirectory: () -> Unit,
     onLegislation: () -> Unit,
 ) {
@@ -42,6 +43,9 @@ fun MoreScreen(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                InfoCard(title = "Your vote", onClick = onVoting) {
+                    Text("Register, find where to vote, and see what's on your ballot.", style = MaterialTheme.typography.bodyLarge)
+                }
                 InfoCard(title = "My officials", onClick = onOfficials) {
                     Text(
                         "Everyone who represents you, federal, state and local, with contact details, your notes and their promises.",

@@ -8,6 +8,9 @@
  *   POST /answer {"vote":..., "install":"<random code>", "answer":"Yea"|"Nay"|null}
  *   GET  /state-bills?state=md&q=paid leave  -> a state's bills matching words or a number ("HB 123"),
  *        from Open States. The Open States key stays here as a secret, never in the app.
+ *   GET  /elections                          -> upcoming elections (Google Civic Information)
+ *   POST /voter-info {"address", "electionId"?} -> polling places, ballot contests and the state's official
+ *        election links for an address. The address is passed to Google and not kept.
  *
  * Counts under MIN_SHOWN are reported as a total only: with three answers, someone who knows who uses the
  * app could guess how each of them voted.
@@ -26,6 +29,8 @@ export default {
       if (request.method === "GET" && url.pathname === "/tally") return await readTallies(url, env);
       if (request.method === "POST" && url.pathname === "/answer") return await recordAnswer(request, env);
       if (request.method === "GET" && url.pathname === "/state-bills") return await stateBills(request, url, env, ctx);
+      if (request.method === "GET" && url.pathname === "/elections") return await elections(env, ctx);
+      if (request.method === "POST" && url.pathname === "/voter-info") return await voterInfo(request, env);
       if (request.method === "GET" && url.pathname === "/") {
         return json({ service: "Power to the People vote counts", source: "https://github.com/TheEclecticWitch/PowerToThePeople" });
       }
@@ -171,4 +176,91 @@ async function stateBills(request, url, env, ctx) {
   });
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
+}
+
+// --- Elections, polling places and ballots, from Google's Civic Information API (voterInfoQuery) ---
+// The Google key stays here as a secret. A reader's address is passed through to Google once per lookup and is
+// never stored or logged here; elections lists are cached, address lookups are not.
+
+const GOOGLE = "https://www.googleapis.com/civicinfo/v2";
+
+async function elections(env, ctx) {
+  if (!env.GOOGLE_CIVIC_KEY) return json({ error: "election information isn't set up yet" }, 503);
+  const cacheKey = new Request("https://cache.ptp/elections");
+  const hit = await caches.default.match(cacheKey);
+  if (hit) return hit;
+  const r = await fetch(`${GOOGLE}/elections?key=${env.GOOGLE_CIVIC_KEY}`);
+  if (!r.ok) return json({ error: "the election service didn't answer" }, 502);
+  const data = await r.json();
+  const body = { elections: (data.elections || []).filter((e) => e.id !== "2000") };  // 2000 is Google's test election
+  const response = new Response(JSON.stringify(body), {
+    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=21600" },
+  });
+  ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+  return response;
+}
+
+const place = (p) => ({
+  name: p.address?.locationName || null,
+  address: [p.address?.line1, p.address?.line2, p.address?.line3, [p.address?.city, p.address?.state, p.address?.zip].filter(Boolean).join(" ")]
+    .filter(Boolean).join(", "),
+  hours: p.pollingHours || null,
+  notes: p.notes || null,
+  start: p.startDate || null,
+  end: p.endDate || null,
+});
+
+async function voterInfo(request, env) {
+  if (!env.GOOGLE_CIVIC_KEY) return json({ error: "election information isn't set up yet" }, 503);
+  if (env.LIMIT) {
+    const { success } = await env.LIMIT.limit({ key: request.headers.get("CF-Connecting-IP") || "unknown" });
+    if (!success) return json({ error: "too many lookups, try again in a minute" }, 429);
+  }
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "bad request" }, 400); }
+  const address = String(body?.address || "").slice(0, 200);
+  if (address.length < 5) return json({ error: "bad request" }, 400);
+  const url = new URL(`${GOOGLE}/voterinfo`);
+  url.searchParams.set("key", env.GOOGLE_CIVIC_KEY);
+  url.searchParams.set("address", address);
+  if (/^\d{1,6}$/.test(String(body?.electionId || ""))) url.searchParams.set("electionId", body.electionId);
+  const r = await fetch(url);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    // Google answers 400 when it has no election data for that address yet.
+    const reason = data?.error?.message || "";
+    return json({ error: /election unknown|no information|not found/i.test(reason)
+      ? "There's no election information for your address yet. It usually appears a few weeks before an election."
+      : "the election service didn't answer" }, r.status === 400 ? 404 : 502);
+  }
+  const admin = (data.state || [])[0]?.electionAdministrationBody || {};
+  return json({
+    election: data.election ? { id: data.election.id, name: data.election.name, day: data.election.electionDay } : null,
+    mailOnly: !!data.mailOnly,
+    polling: (data.pollingLocations || []).map(place),
+    early: (data.earlyVoteSites || []).map(place),
+    dropOff: (data.dropOffLocations || []).map(place),
+    contests: (data.contests || []).map((c) => ({
+      office: c.office || null,
+      district: c.district?.name || null,
+      level: (c.level || [])[0] || null,
+      type: c.type || null,
+      candidates: (c.candidates || []).map((p) => ({ name: p.name, party: p.party || null, url: p.candidateUrl || null })),
+      measure: c.referendumTitle ? {
+        title: c.referendumTitle, subtitle: c.referendumSubtitle || null, text: c.referendumText || null,
+        url: c.referendumUrl || null, choices: c.referendumBallotResponses || [],
+      } : null,
+    })),
+    links: {
+      info: admin.electionInfoUrl || null,
+      register: admin.electionRegistrationUrl || null,
+      checkRegistration: admin.electionRegistrationConfirmationUrl || null,
+      absentee: admin.absenteeVotingInfoUrl || null,
+      findPollingPlace: admin.votingLocationFinderUrl || null,
+      ballot: admin.ballotInfoUrl || null,
+      rules: admin.electionRulesUrl || null,
+    },
+    office: admin.name || null,
+    source: "Google Civic Information API, from state and local election offices",
+  });
 }

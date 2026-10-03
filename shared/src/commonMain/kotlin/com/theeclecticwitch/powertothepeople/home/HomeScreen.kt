@@ -46,6 +46,7 @@ import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SettingsButton
 import com.theeclecticwitch.powertothepeople.ui.theme.LocalAppFonts
+import com.theeclecticwitch.powertothepeople.voting.ElectionCard
 
 /**
  * Today: the founding documents beside the President and Vice President, then the reader's own officials,
@@ -61,6 +62,7 @@ fun HomeScreen(
     onConstitution: () -> Unit,
     onBillOfRights: () -> Unit,
     onAllCongress: () -> Unit,
+    onVoting: () -> Unit,
     onHowGovernment: () -> Unit,
     onOfficial: (String) -> Unit,
     onSetLocation: () -> Unit,
@@ -129,6 +131,8 @@ fun HomeScreen(
                         }
                     }
                 }
+
+                ElectionCard(onOpen = onVoting)
 
                 InfoCard(title = "How our government works", onClick = onHowGovernment) {
                     Text(
