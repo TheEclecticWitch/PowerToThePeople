@@ -195,8 +195,8 @@ private fun FloorTab(u: Upcoming, nav: CongressNav) {
             item {
                 InfoCard(title = "The House") {
                     Text(
-                        "No House floor schedule is posted for this week or next. The House is usually away from Washington " +
-                            "in the weeks before an election.",
+                        "No House floor schedule is posted for this week or next. The House may be in a district work period, " +
+                            "when members are home in their districts, or the schedule may not be out yet.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     SourceLine("docs.house.gov, the House floor schedule", "https://docs.house.gov/floor/")
