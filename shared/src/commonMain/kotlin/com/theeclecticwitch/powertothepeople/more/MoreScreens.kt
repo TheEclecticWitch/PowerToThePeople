@@ -34,6 +34,7 @@ fun MoreScreen(
     onDebt: () -> Unit,
     onDirectory: () -> Unit,
     onLegislation: () -> Unit,
+    onHowGovernment: () -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
@@ -44,6 +45,9 @@ fun MoreScreen(
             ) {
                 InfoCard(title = "Your location", onClick = onLocation) {
                     Text(location?.matchedAddress ?: "Not set yet", style = MaterialTheme.typography.bodyLarge)
+                }
+                InfoCard(title = "How our government works", onClick = onHowGovernment) {
+                    Text("The three branches, what each does, and how a bill becomes a law.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "Legislation", onClick = onLegislation) {
                     Text("Find any bill in Congress, any executive order, or a bill in your state legislature.", style = MaterialTheme.typography.bodyLarge)

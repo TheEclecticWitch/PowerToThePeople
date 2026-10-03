@@ -58,6 +58,7 @@ fun HomeScreen(
     congressNav: CongressNav,
     onConstitution: () -> Unit,
     onBillOfRights: () -> Unit,
+    onHowGovernment: () -> Unit,
     onOfficial: (String) -> Unit,
     onSetLocation: () -> Unit,
 ) {
@@ -112,6 +113,15 @@ fun HomeScreen(
                         people.forEach { o -> PersonTile(o, roleOf(o), Modifier.weight(1f), onOfficial) }
                         repeat(4 - people.size) { Spacer(Modifier.weight(1f)) }
                     }
+                }
+
+                InfoCard(title = "How our government works", onClick = onHowGovernment) {
+                    Text(
+                        "What Congress, the Senate, the House, the President and the courts each do, who answers to whom, " +
+                            "and how a bill becomes a law, in plain words.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text("Learn ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
 
                 LatestVoteCard(congressNav)

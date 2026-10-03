@@ -42,6 +42,7 @@ import com.theeclecticwitch.powertothepeople.constitution.ArticleScreen
 import com.theeclecticwitch.powertothepeople.constitution.ConstitutionScreen
 import com.theeclecticwitch.powertothepeople.constitution.OriginalScreen
 import com.theeclecticwitch.powertothepeople.constitution.SignaturesScreen
+import com.theeclecticwitch.powertothepeople.civics.HowGovernmentWorksScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.CongressScreen
@@ -90,6 +91,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable object DirectoryRoute
+@Serializable object HowGovernmentRoute
 @Serializable object LegislationRoute
 @Serializable data class StateLegislatorsRoute(val state: String)
 @Serializable object RecentVotesRoute
@@ -203,6 +205,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 congressNav = congressNav,
                 onConstitution = { goToTab(nav, tabs[3]) },
                 onBillOfRights = { nav.navigate(BillOfRightsRoute) },
+                onHowGovernment = { nav.navigate(HowGovernmentRoute) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
             )
@@ -213,6 +216,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onAmendment = { nav.navigate(AmendmentRoute(it)) },
                 onSignatures = { nav.navigate(SignaturesRoute) },
                 onOriginal = { nav.navigate(OriginalRoute(it)) },
+                onHowGovernment = { nav.navigate(HowGovernmentRoute) },
             )
         }
         composable<BillOfRightsRoute> {
@@ -316,6 +320,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onDebt = { nav.navigate(DebtRoute) },
                 onDirectory = { nav.navigate(DirectoryRoute) },
                 onLegislation = { nav.navigate(LegislationRoute) },
+                onHowGovernment = { nav.navigate(HowGovernmentRoute) },
             )
         }
         composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
@@ -323,6 +328,15 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
             StateLegislatorsScreen(entry.toRoute<StateLegislatorsRoute>().state, back) { nav.navigate(OfficialRoute(it)) }
         }
         composable<LegislationRoute> { LegislationScreen(back, congressNav) }
+        composable<HowGovernmentRoute> {
+            HowGovernmentWorksScreen(
+                onBack = back,
+                onArticle = { nav.navigate(ArticleRoute(it)) },
+                onAmendment = { nav.navigate(AmendmentRoute(it)) },
+                onYourOfficials = { goToTab(nav, tabs[2]) },
+                onPresident = { nav.navigate(OfficialRoute("exec:prez")) },
+            )
+        }
         composable<DirectoryRoute> { DirectoryScreen(back) { nav.navigate(OfficialRoute(it)) } }
         composable<SourcesRoute> { SourcesScreen(back) }
         composable<AboutRoute> { AboutScreen(back) }

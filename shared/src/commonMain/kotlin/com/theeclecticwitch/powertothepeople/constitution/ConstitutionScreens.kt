@@ -64,6 +64,7 @@ fun ConstitutionScreen(
     onAmendment: (Int) -> Unit,
     onSignatures: () -> Unit,
     onOriginal: (Int) -> Unit,
+    onHowGovernment: () -> Unit = {},
     /** Opened from the Bill of Rights card on Today: start at the Bill of Rights. */
     startAtBillOfRights: Boolean = false,
     onBack: (() -> Unit)? = null,
@@ -72,8 +73,8 @@ fun ConstitutionScreen(
     var query by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     LaunchedEffect(doc, startAtBillOfRights) {
-        // Rows before it: search, the documents card, the Preamble, the Articles heading, each Article, the signatures.
-        if (doc != null && startAtBillOfRights) listState.scrollToItem(5 + doc.articles.size)
+        // Rows before it: search, the documents card, the government card, the Preamble, the Articles heading, each Article, the signatures.
+        if (doc != null && startAtBillOfRights) listState.scrollToItem(6 + doc.articles.size)
     }
     Scaffold(topBar = { AppTopBar(if (startAtBillOfRights) "The Bill of Rights" else "The Constitution", onBack) }) { padding ->
         if (doc == null) {
@@ -122,6 +123,14 @@ fun ConstitutionScreen(
                     return@LazyColumn
                 }
                 item { OriginalsCard(onOriginal) }
+                item {
+                    InfoCard(title = "How our government works", onClick = onHowGovernment) {
+                        Text(
+                            "The government the Constitution creates: the three branches, what each does, and how they check one another.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
                 item { PreambleCard(doc) }
                 item { GroupHeading("The Articles", "The original Constitution, signed ${doc.signed}") }
                 items(doc.articles) { a ->
