@@ -21,6 +21,9 @@ object MyPositions {
 
     fun key(chamber: String, session: Int, roll: Int, congress: Int = CongressData.CONGRESS) = "$congress/$chamber/$session/$roll"
 
+    /** The reader's view of a bill itself: "Yea" here means they support it, "Nay" that they oppose it. */
+    fun billKey(bill: String) = "bill/$bill"
+
     fun set(key: String, vote: String?) = positions.update { if (vote == null) it - key else it + (key to vote) }
 }
 

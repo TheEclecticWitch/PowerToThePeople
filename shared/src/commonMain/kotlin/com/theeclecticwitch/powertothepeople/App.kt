@@ -178,6 +178,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
         memberVotes = { nav.navigate(MemberVotesRoute(it)) },
         sponsoredBills = { nav.navigate(SponsoredBillsRoute(it)) },
         recentVotes = { nav.navigate(RecentVotesRoute) },
+        setLocation = { nav.navigate(LocationRoute) },
     )
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> {

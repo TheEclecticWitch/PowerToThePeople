@@ -2,7 +2,7 @@
 -- the roll call and a server secret, so the same install looks unrelated on every vote: the table holds
 -- no names, no addresses, no IP addresses, and no way to follow one person's answers across votes.
 CREATE TABLE IF NOT EXISTS answers (
-  vote   TEXT NOT NULL,          -- "119/senate/2/256": congress/chamber/session/roll
+  vote   TEXT NOT NULL,          -- "119/senate/2/256" (a roll call) or "bill/119/hr/1" (Yea = support)
   voter  TEXT NOT NULL,
   answer TEXT NOT NULL CHECK (answer IN ('Yea', 'Nay')),
   PRIMARY KEY (vote, voter)

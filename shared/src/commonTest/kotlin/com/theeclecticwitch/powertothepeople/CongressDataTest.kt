@@ -6,6 +6,9 @@ import com.theeclecticwitch.powertothepeople.congress.MemberRecord
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
 import com.theeclecticwitch.powertothepeople.congress.VoteDetail
 import com.theeclecticwitch.powertothepeople.congress.align
+import com.theeclecticwitch.powertothepeople.congress.constituentMessage
+import com.theeclecticwitch.powertothepeople.officials.Level
+import com.theeclecticwitch.powertothepeople.officials.Official
 import com.theeclecticwitch.powertothepeople.congress.voteLabel
 import com.theeclecticwitch.powertothepeople.data.Http
 import kotlin.test.Test
@@ -71,5 +74,20 @@ class CongressDataTest {
         assertEquals(listOf(1, 1, 1), listOf(a.same, a.different, a.memberDidNotTakeSide))
         assertEquals(0.5, a.sameShare)
         assertNull(align(votes, emptyMap(), 119).sameShare)
+    }
+
+    @Test
+    fun constituentMessageSaysWhereTheyLiveAndWhatTheyWant() {
+        val senator = Official("X1", "Jane Doe", "Senior U.S. Senator for Ohio", Level.Federal)
+        val rep = Official("X2", "John Roe", "U.S. Representative, Ohio District 3", Level.Federal)
+        assertEquals(
+            "Dear Senator Jane Doe,\n\nAs your constituent in Columbus, OH, I support H.R. 1, An act to provide for " +
+                "reconciliation. I ask you to vote yes on it.\n\nThank you.",
+            constituentMessage(senator, "119/hr/1", "An act to provide for reconciliation", "Columbus, OH", supports = true),
+        )
+        assertEquals(
+            "Dear Representative John Roe,\n\nAs your constituent in Columbus, OH, I oppose S. 9. I ask you to vote no on it.\n\nThank you.",
+            constituentMessage(rep, "119/s/9", null, "Columbus, OH", supports = false),
+        )
     }
 }

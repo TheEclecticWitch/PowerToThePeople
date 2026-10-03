@@ -1,5 +1,9 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import androidx.compose.material3.Button
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalClipboardManager
+import com.theeclecticwitch.powertothepeople.officials.Official
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.Switch
@@ -62,6 +66,7 @@ class CongressNav(
     val memberVotes: (id: String) -> Unit,
     val sponsoredBills: (id: String) -> Unit,
     val recentVotes: () -> Unit,
+    val setLocation: () -> Unit,
 )
 
 private sealed interface Load<out T> {
@@ -123,6 +128,8 @@ fun MemberRecordCards(id: String, nav: CongressNav) {
                 return
             }
             val tally = CongressData.tally(record.votes)
+            // How they voted compared with the reader comes first: it is the part about the reader.
+            AlignmentCard(record, cast, titles, nav)
             InfoCard(title = "Voting record") {
                 Text(
                     "${Format.commas(tally.total.toLong())} roll-call votes in the ${Format.ordinal(record.congress)} Congress",
@@ -141,7 +148,6 @@ fun MemberRecordCards(id: String, nav: CongressNav) {
                 }
                 CongressSource()
             }
-            AlignmentCard(record, cast, titles, nav)
             InfoCard(title = "Bills sponsored") {
                 val n = record.sponsored.size
                 Text(
@@ -453,23 +459,31 @@ private fun PositionRow(p: Position, showVote: Boolean, onClick: () -> Unit) {
  * anonymous app-wide count. [onShared] runs after the server has the new answer, so the count can refresh.
  */
 @Composable
-private fun YourViewCard(key: String, onShared: () -> Unit) {
+private fun YourViewCard(
+    key: String,
+    question: String = "How would you have voted?",
+    yes: String = "Yea",
+    no: String = "Nay",
+    usedFor: String = "your members' pages will show how often they voted the way you would have",
+    onShared: () -> Unit,
+) {
     val positions by MyPositions.flow.collectAsState()
     val prefs by AppTally.prefsFlow.collectAsState()
     val scope = rememberCoroutineScope()
     val current = positions[key]
     fun syncThenRefresh() = scope.launch { AppTally.sync(); onShared() }
     InfoCard(title = "Your view") {
-        Text("How would you have voted?", style = MaterialTheme.typography.titleMedium)
+        Text(question, style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            listOf("Yea", "Nay").forEach { v ->
+            // Stored as Yea / Nay either way; on a bill they mean support / oppose.
+            listOf("Yea" to yes, "Nay" to no).forEach { (v, label) ->
                 FilterChip(
                     selected = current == v,
                     onClick = {
                         MyPositions.set(key, if (current == v) null else v)
                         syncThenRefresh()
                     },
-                    label = { Text(v) },
+                    label = { Text(label) },
                 )
             }
         }
@@ -486,8 +500,7 @@ private fun YourViewCard(key: String, onShared: () -> Unit) {
             when {
                 prefs.share -> "Your answers are counted with no name, address or location attached, and stay on this device " +
                     "too. Turn this off to withdraw them from the count."
-                current == null -> "Answer, and your members' pages will show how often they voted the way you would have. " +
-                    "Kept only on this device unless you turn on the count above."
+                current == null -> "Answer, and $usedFor. Kept only on this device unless you turn on the count above."
                 else -> "Saved on this device only. Tap your answer again to clear it."
             },
             style = MaterialTheme.typography.bodySmall,
@@ -498,7 +511,7 @@ private fun YourViewCard(key: String, onShared: () -> Unit) {
 
 /** How app users answered this roll call, once enough have that no one's answer can be guessed. */
 @Composable
-private fun AppTallyCard(key: String, refresh: Int) {
+private fun AppTallyCard(key: String, refresh: Int, yes: String = "Yea", no: String = "Nay") {
     var tally by remember(key) { mutableStateOf<Tally?>(null) }
     var failed by remember(key) { mutableStateOf(false) }
     LaunchedEffect(key, refresh) {
@@ -517,11 +530,11 @@ private fun AppTallyCard(key: String, refresh: Int) {
             t.yea != null && t.nay != null -> {
                 val pct = { n: Int -> Format.decimals(n * 100.0 / t.total, 0) }
                 Text(
-                    "Yea ${pct(t.yea)}% · Nay ${pct(t.nay)}%",
+                    "$yes ${pct(t.yea)}% · $no ${pct(t.nay)}%",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    "${Format.commas(t.total.toLong())} people answered (${Format.commas(t.yea.toLong())} Yea, ${Format.commas(t.nay.toLong())} Nay)",
+                    "${Format.commas(t.total.toLong())} people answered (${Format.commas(t.yea.toLong())} $yes, ${Format.commas(t.nay.toLong())} $no)",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -678,6 +691,115 @@ fun RecentVotesScreen(onBack: () -> Unit, nav: CongressNav) {
     }
 }
 
+/**
+ * A short, plain message to a member about a bill, in the reader's own position. The reader can edit it
+ * before it goes anywhere; nothing is sent by the app itself.
+ */
+internal fun constituentMessage(member: Official, bill: String, billTitle: String?, place: String, supports: Boolean): String {
+    val title = if (member.office.contains("Senator")) "Senator" else "Representative"
+    val label = BillNames.label(bill)
+    val named = billTitle?.let { "$label, $it" } ?: label
+    return "Dear $title ${member.name},\n\n" +
+        "As your constituent in $place, I ${if (supports) "support" else "oppose"} $named. " +
+        "I ask you to vote ${if (supports) "yes" else "no"} on it.\n\n" +
+        "Thank you."
+}
+
+/**
+ * Lets the reader contact the members who represent them about this bill: call their Washington office, or
+ * copy a ready message and open their official contact form. Members of Congress only take messages from
+ * their own constituents, which is why it lists the reader's own members rather than the bill's sponsors.
+ */
+@Composable
+private fun TellYourMembersCard(billId: String, bill: Bill, nav: CongressNav) {
+    val location by LocationStore.location.collectAsState()
+    val (delegation, _, _) = rememberDelegation(location)
+    val positions by MyPositions.flow.collectAsState()
+    val stance = positions[MyPositions.billKey(billId)]
+    val uri = LocalUriHandler.current
+    val clipboard = LocalClipboardManager.current
+    var copiedFor by remember { mutableStateOf<String?>(null) }
+    var forms by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(Unit) { forms = CongressData.contactForms() }
+    InfoCard(title = "Tell your members") {
+        val loc = location
+        if (loc == null) {
+            Text(
+                "Set your location to see who represents you, and contact them about this bill in a tap.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            OutlinedButton(onClick = nav.setLocation) { Text("Set my location") }
+            return@InfoCard
+        }
+        val d = delegation
+        if (d == null) {
+            LoadingBox("Finding your members…")
+            return@InfoCard
+        }
+        val members = d.senators + listOfNotNull(d.representative)
+        Text(
+            when (stance) {
+                "Yea" -> "Let them know you support ${BillNames.label(billId)}. Pick who to contact:"
+                "Nay" -> "Let them know you oppose ${BillNames.label(billId)}. Pick who to contact:"
+                else -> "Choose Support or Oppose above and a short message will be written for you. Or just call:"
+            },
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        val place = "${loc.cityOrCounty}, ${loc.stateAbbr}"
+        Text(
+            "Your representative votes on bills in the House; your senators vote in the Senate. Calling? Give your name, " +
+                "say you live in $place, and that you ${when (stance) { "Yea" -> "support"; "Nay" -> "oppose"; else -> "have a view on" }} " +
+                "${BillNames.label(billId)}.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        members.forEachIndexed { i, m ->
+            if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Text(m.name, style = MaterialTheme.typography.titleSmall)
+            Text(m.office, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                m.phone?.let { phone ->
+                    OutlinedButton(onClick = { openSafely(uri, "tel:${phone.filter { it.isDigit() }}") }) { Text("Call") }
+                }
+                // A checked contact form if there is one; otherwise their website, labelled as such.
+                val form = forms[m.id] ?: m.contactForm
+                val page = form ?: m.website
+                if (page != null && stance != null) {
+                    Button(onClick = {
+                        clipboard.setText(AnnotatedString(constituentMessage(m, billId, bill.title, place, stance == "Yea")))
+                        copiedFor = m.id
+                        openSafely(uri, page)
+                    }) { Text(if (form != null) "Write" else "Website") }
+                }
+            }
+            if (copiedFor == m.id) {
+                Text(
+                    if (forms[m.id] ?: m.contactForm != null) {
+                        "Message copied. Paste it into the message box on their form, along with your name and address, " +
+                            "which offices ask for to confirm you live in their district."
+                    } else {
+                        "Message copied. Their contact page couldn't be found, so this opened their website: look for " +
+                            "\"Contact\", or call instead."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+        }
+        if (stance != null) {
+            Text(
+                "What Write copies, addressed to each member by name. You can change it on their form before sending:",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                constituentMessage(members.firstOrNull() ?: return@InfoCard, billId, bill.title, place, stance == "Yea"),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
 // --- One bill ---
 
 @Composable
@@ -686,6 +808,8 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
         CongressData.bill(id) to CongressData.votesOnBill(id)
     }
     var tallies by remember(id) { mutableStateOf<Map<String, Tally>>(emptyMap()) }
+    var billTallyRefresh by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { AppTally.sync() }
     LaunchedEffect(load) {
         val votes = (load as? Load.Done)?.value?.second ?: return@LaunchedEffect
         tallies = try {
@@ -723,6 +847,13 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
                                 a.text?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                             }
                         }
+                        val viewKey = MyPositions.billKey(id)
+                        YourViewCard(
+                            viewKey, "Do you support this bill?", "Support", "Oppose",
+                            usedFor = "a short message to your members will be written for you below",
+                        ) { billTallyRefresh++ }
+                        AppTallyCard(viewKey, billTallyRefresh, "Support", "Oppose")
+                        TellYourMembersCard(id, b, nav)
                         InfoCard(title = if (b.sponsors.size == 1) "Sponsor" else "Sponsors") {
                             b.sponsors.forEach { s ->
                                 Text(

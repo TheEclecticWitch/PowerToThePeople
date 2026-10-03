@@ -18,6 +18,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bills  # noqa: E402
+import contacts  # noqa: E402
 import doomsday  # noqa: E402
 import members  # noqa: E402
 import votes  # noqa: E402
@@ -91,6 +92,7 @@ def main():
 
     member_count = step("Members", members.build, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
+    step("Contact pages", contacts.gather, net, store, state, log)
 
     store.write("state.json", state)
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

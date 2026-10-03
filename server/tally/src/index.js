@@ -3,6 +3,7 @@
  * the app sends an answer only when the reader ticks "add my answer to the app-wide count".
  *
  *   GET  /tally?vote=119/senate/2/256        -> {"vote":..., "total":12, "yea":7, "nay":5}
+ *   GET  /tally?vote=bill/119/hr/1           -> the same, for support (yea) and opposition (nay) to a bill
  *   GET  /tally?votes=119/senate/2/256,...   -> {"tallies":[...]} (up to 50 at once)
  *   POST /answer {"vote":..., "install":"<random code>", "answer":"Yea"|"Nay"|null}
  *
@@ -11,7 +12,9 @@
  */
 
 const MIN_SHOWN = 10;
-const VOTE_KEY = /^1\d\d\/(house|senate)\/[12]\/\d{1,4}$/;
+// A roll call ("119/senate/2/256") or a bill itself ("bill/119/hr/1"). On a bill, Yea means the reader
+// supports it and Nay that they oppose it.
+const VOTE_KEY = /^(1\d\d\/(house|senate)\/[12]\/\d{1,4}|bill\/1\d\d\/(hr|s|hres|sres|hjres|sjres|hconres|sconres)\/\d{1,5})$/;
 const INSTALL = /^[0-9a-f-]{32,40}$/i;
 
 export default {

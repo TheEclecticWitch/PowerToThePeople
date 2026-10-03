@@ -85,6 +85,9 @@ data class BillSummary(
 )
 
 @Serializable
+private class ContactForms(val forms: Map<String, String> = emptyMap())
+
+@Serializable
 private class BillList(val bills: Map<String, BillSummary>)
 
 @Serializable
@@ -202,6 +205,16 @@ object CongressData {
     }
 
     suspend fun bill(id: String): Bill = Http.json.decodeFromString(text("bills/$id.json", 1.days))
+
+    /**
+     * Each member's contact form, from the gatherer's weekly check that the page loads (contacts.json).
+     * Members missing here have only their main website. Empty if the file can't be had.
+     */
+    suspend fun contactForms(): Map<String, String> = try {
+        Http.json.decodeFromString<ContactForms>(text("contacts.json", 7.days)).forms
+    } catch (e: Exception) {
+        emptyMap()
+    }
 
     fun tally(votes: List<MemberVote>): VoteTally {
         var yea = 0; var nay = 0; var present = 0; var notVoting = 0; var other = 0
