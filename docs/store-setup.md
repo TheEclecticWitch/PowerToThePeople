@@ -15,11 +15,11 @@ Everything needed to put Power to the People in testers' hands. Answers here mat
 
 **Short description (Google Play, 80 characters max)**
 
-> Your government in plain words: officials, votes, bills, elections, the Constitution.
+> Officials, votes, bills, elections and the Constitution, in plain words.
 
 **Subtitle (Apple, 30 characters max)**
 
-> Your government, in plain words
+> Your government in plain words
 
 **Full description (both stores)**
 
