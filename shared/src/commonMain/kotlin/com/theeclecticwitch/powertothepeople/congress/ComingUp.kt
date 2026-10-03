@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,12 +15,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +90,19 @@ data class Upcoming(
     val checked: String? = null,
 )
 
+/**
+ * Notices about one aircraft model, one airport's airspace or one stretch of water: real rules, but technical and
+ * local. They're tucked behind a switch by kind of notice, never by topic or agency, so nothing is hidden for a view.
+ */
+private val routineKinds = listOf(
+    "Airworthiness Directives", "Airspace Designations", "Special Conditions:", "Safety Zone", "Safety Zones",
+    "Drawbridge Operation", "Special Local Regulation", "Anchorage", "Regulated Navigation Area",
+)
+private val routineAirspace = Regex("""^(Amendment|Establishment|Revocation|Modification) of .*Airspace""")
+
+val OpenRule.isRoutine: Boolean
+    get() = routineKinds.any { title.startsWith(it, ignoreCase = true) } || routineAirspace.containsMatchIn(title)
+
 object ComingUp {
     private val source = CachedSource("pd_upcoming.json", 3.hours) { Http.getText("${CongressData.BASE}/upcoming.json") }
 
@@ -122,7 +140,8 @@ fun ComingUpCard(onOpen: () -> Unit) {
                 )
                 u.senate?.next?.let { Text("Senate: meets ${it}${u.senate.plan?.let { p -> " · $p" } ?: ""}", style = MaterialTheme.typography.bodyLarge) }
                 if (u.hearings.isNotEmpty()) Text(if (u.hearings.size == 1) "1 committee hearing or meeting ahead" else "${u.hearings.size} committee hearings and meetings ahead", style = MaterialTheme.typography.bodyMedium)
-                if (u.comments.isNotEmpty()) Text(if (u.comments.size == 1) "1 proposed federal rule open for your comment" else "${u.comments.size} proposed federal rules open for your comment", style = MaterialTheme.typography.bodyMedium)
+                val rules = u.comments.count { !it.isRoutine }
+                if (rules > 0) Text(if (rules == 1) "1 proposed federal rule open for your comment" else "$rules proposed federal rules open for your comment", style = MaterialTheme.typography.bodyMedium)
                 Text("See what's coming ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
             }
         }
@@ -271,6 +290,9 @@ private fun HearingsTab(u: Upcoming, nav: CongressNav) {
 @Composable
 private fun CommentTab(u: Upcoming) {
     var shown by remember { mutableIntStateOf(50) }
+    var showRoutine by rememberSaveable { mutableStateOf(false) }
+    val routine = u.comments.count { it.isRoutine }
+    val rules = if (showRoutine) u.comments else u.comments.filterNot { it.isRoutine }
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             Text(
@@ -283,7 +305,23 @@ private fun CommentTab(u: Upcoming) {
         if (u.comments.isEmpty()) {
             item { Text("The list of rules open for comment will appear after the next data update.", style = MaterialTheme.typography.bodyMedium) }
         }
-        items(u.comments.take(shown), key = { it.id }) { r ->
+        if (routine > 0) {
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Show routine technical notices ($routine)", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Safety orders for one aircraft model, airspace at one airport, and Coast Guard notices for one " +
+                                "stretch of water.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(checked = showRoutine, onCheckedChange = { showRoutine = it })
+                }
+            }
+        }
+        items(rules.take(shown), key = { it.id }) { r ->
             InfoCard {
                 Text(
                     listOfNotNull(r.agency, r.closes?.let { "comments close ${Format.date(it)}" }).joinToString(" · "),
@@ -294,7 +332,7 @@ private fun CommentTab(u: Upcoming) {
                 Link("Read it and comment on Regulations.gov", r.comment ?: r.url)
             }
         }
-        if (u.comments.size > shown) item { OutlinedButton(onClick = { shown += 50 }) { Text("Show more") } }
+        if (rules.size > shown) item { OutlinedButton(onClick = { shown += 50 }) { Text("Show more") } }
         item {
             Spacer(Modifier.height(4.dp))
             SourceLine("Regulations.gov", "https://www.regulations.gov/")

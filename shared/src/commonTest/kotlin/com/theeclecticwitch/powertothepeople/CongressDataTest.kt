@@ -4,6 +4,8 @@ import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberRecord
 import com.theeclecticwitch.powertothepeople.congress.Upcoming
+import com.theeclecticwitch.powertothepeople.congress.OpenRule
+import com.theeclecticwitch.powertothepeople.congress.isRoutine
 import com.theeclecticwitch.powertothepeople.congress.Action
 import com.theeclecticwitch.powertothepeople.congress.BillFilter
 import com.theeclecticwitch.powertothepeople.congress.BillSummary
@@ -166,5 +168,16 @@ class CongressDataTest {
         assertEquals("Monday, Oct 05, 2026", u.senate?.next)
         assertEquals("Committee on Rules", u.hearings.single().committees.single())
         assertEquals("2026-10-10", u.comments.single().closes)
+    }
+
+    @Test
+    fun tucksAwayOnlyRoutineTechnicalNotices() {
+        fun routine(title: String) = OpenRule(id = title, title = title).isRoutine
+        assertEquals(true, routine("Airworthiness Directives: The Boeing Company Airplanes"))
+        assertEquals(true, routine("Amendment of Class E Airspace; Twin Falls, ID"))
+        assertEquals(true, routine("Safety Zone; Fireworks, Lake Michigan"))
+        assertEquals(false, routine("Fingerprint and Photograph Requirements for Firearms Applications"))
+        assertEquals(false, routine("Air Quality State Implementation Plans; Arkansas"))
+        assertEquals(false, routine("Removal of FAA Third-Class Medical Certificate Requirement for Pilots"))
     }
 }
