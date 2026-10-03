@@ -292,6 +292,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () ->
                 onSetLocation = { nav.navigate(LocationRoute) },
                 onAlerts = { nav.navigate(AlertsRoute) },
                 onComingUp = { nav.navigate(ComingUpRoute) },
+                onElections = { nav.navigate(ElectionsRoute) },
             )
         }
         composable<ConstitutionRoute> {

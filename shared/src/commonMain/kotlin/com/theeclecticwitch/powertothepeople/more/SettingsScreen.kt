@@ -81,6 +81,19 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                InfoCard(title = "The flag") {
+                    val display by TextSize.flow.collectAsState()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Show the flag behind the app", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                        Spacer(Modifier.width(8.dp))
+                        Switch(checked = display.flag, onCheckedChange = { TextSize.setFlag(it) })
+                    }
+                    Text(
+                        "Turn it off for a plain background, which some people find easier to read.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 InfoCard(title = "Your answers on votes and bills") {
                     Text(
                         "You've answered ${answers.size} vote${if (answers.size == 1) "" else "s"} and bill${if (answers.size == 1) "" else "s"}. " +

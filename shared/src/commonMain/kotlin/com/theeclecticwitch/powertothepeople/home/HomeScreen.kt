@@ -74,6 +74,7 @@ fun HomeScreen(
     onSetLocation: () -> Unit,
     onAlerts: () -> Unit,
     onComingUp: () -> Unit,
+    onElections: () -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
@@ -153,7 +154,7 @@ fun HomeScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             if (location == null) setLocationCard()
-                            ElectionCard(onOpen = onVoting)
+                            ElectionCard(onOpen = onVoting, onElections = onElections)
                             ComingUpCard(onComingUp)
                             FollowedBillsCard(congressNav, onAlerts = onAlerts, onLegislation = onLegislation)
                         }
@@ -205,7 +206,7 @@ fun HomeScreen(
                             }
                         }
 
-                        ElectionCard(onOpen = onVoting)
+                        ElectionCard(onOpen = onVoting, onElections = onElections)
                         howItWorks()
                         findLegislation()
                         LatestVoteCard(congressNav)

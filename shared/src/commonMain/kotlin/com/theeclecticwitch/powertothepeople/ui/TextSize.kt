@@ -13,12 +13,18 @@ object TextSize {
     val names = listOf("Smaller", "Standard", "Large", "Larger", "Largest")
 
     @Serializable
-    data class Prefs(val scale: Float = 1f)
+    data class Prefs(
+        val scale: Float = 1f,
+        /** The flag behind the app. On unless the reader turns it off. */
+        val flag: Boolean = true,
+    )
 
     private val prefs = JsonFileState("display_prefs.json", Prefs.serializer(), Prefs())
     val flow: StateFlow<Prefs> = prefs.flow
 
     fun set(scale: Float) = prefs.update { it.copy(scale = scale) }
+
+    fun setFlag(on: Boolean) = prefs.update { it.copy(flag = on) }
 
     fun nameOf(scale: Float): String = names[steps.indexOfFirst { it >= scale - 0.01f }.coerceAtLeast(0)]
 }

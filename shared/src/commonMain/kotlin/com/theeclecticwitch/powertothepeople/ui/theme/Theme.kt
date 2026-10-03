@@ -7,6 +7,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.theeclecticwitch.powertothepeople.ui.FlagBackground
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalDensity
@@ -141,15 +146,21 @@ fun PowerTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () ->
     )
     val scale by TextSize.flow.collectAsState()
     val density = LocalDensity.current
+    val scheme = if (dark) DarkColors else LightColors
+    // With the flag on, screens are see-through so it shows behind them, and cards let a little of it through.
+    val colors = if (scale.flag) {
+        scheme.copy(background = Color.Transparent, surfaceContainerLow = scheme.surfaceContainerLow.copy(alpha = if (dark) 0.88f else 0.86f))
+    } else scheme
     CompositionLocalProvider(
         LocalAppFonts provides AppFonts(caslon, display),
         LocalDensity provides Density(density.density, density.fontScale * scale.scale),
     ) {
-        MaterialTheme(
-            colorScheme = if (dark) DarkColors else LightColors,
-            typography = typography,
-            content = content,
-        )
+        MaterialTheme(colorScheme = colors, typography = typography) {
+            Box(Modifier.fillMaxSize().background(scheme.background)) {
+                if (scale.flag) FlagBackground(wash = scheme.background.copy(alpha = if (dark) 0.80f else 0.74f))
+                content()
+            }
+        }
     }
 }
 

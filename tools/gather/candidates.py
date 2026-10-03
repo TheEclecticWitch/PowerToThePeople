@@ -12,6 +12,8 @@ import datetime
 import re
 
 STALE_DAYS = 7
+# Bumped when the file's contents change shape or cleanup, so the next run rebuilds it at once.
+VERSION = 2
 SMALL_WORDS = {"de", "la", "van", "von", "der", "da", "del", "di"}
 
 
@@ -41,8 +43,8 @@ def display_name(fec_name):
     if m:
         suffix = " " + (m.group(1).upper() if m.group(1).upper() in ("II", "III", "IV") else m.group(1).capitalize() + ".")
         rest = rest[:m.start()].strip()
-    for title in ("MR.", "MRS.", "MS.", "DR.", "HON."):
-        rest = re.sub(rf"\b{re.escape(title)}\s*", "", rest, flags=re.I)
+    # Titles some filers put in their name: "CORNYN, JOHN SEN", "SMITH, DR. JANE".
+    rest = re.sub(r"\b(MR|MRS|MS|DR|HON|SEN|SENATOR|REP|REPRESENTATIVE|CONGRESSMAN|CONGRESSWOMAN)\b\.?\s*", "", rest, flags=re.I).strip()
     first = " ".join(_word(w, True) for w in rest.split())
     last = " ".join(_word(w, i == 0) for i, w in enumerate(last.split()))
     return f"{first} {last}{suffix}".strip()
@@ -61,7 +63,7 @@ def gather(net, store, log):
     path = f"candidates/{cycle}.json"
     saved = store.read(path, {})
     checked = saved.get("checked")
-    if checked and (today - datetime.date.fromisoformat(checked[:10])).days < STALE_DAYS:
+    if checked and saved.get("version") == VERSION and (today - datetime.date.fromisoformat(checked[:10])).days < STALE_DAYS:
         log(f"Candidates {cycle}: {sum(len(r) for r in saved.get('races', {}).values())} (checked {checked[:10]})")
         return
     races = {}
@@ -85,6 +87,7 @@ def gather(net, store, log):
                 break
             page += 1
     store.write(path, {
+        "version": VERSION,
         "cycle": cycle,
         "races": races,
         "checked": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

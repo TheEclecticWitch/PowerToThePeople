@@ -162,7 +162,7 @@ object Voting {
 
 /** On Overview: the next federal Election Day and how far off it is. */
 @Composable
-fun ElectionCard(onOpen: () -> Unit) {
+fun ElectionCard(onOpen: () -> Unit, onElections: (() -> Unit)? = null) {
     val now = today()
     val day = nextFederalElection(now)
     val days = day.toEpochDays() - now.toEpochDays()
@@ -180,8 +180,20 @@ fun ElectionCard(onOpen: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
         )
         Text("Get ready to vote ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+        // In the last three months before Election Day, who's running matters most, so it comes to the front page.
+        if (onElections != null && days <= ELECTIONS_ON_FRONT_DAYS) {
+            Text(
+                "See who's running ›",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.clickable(onClick = onElections).padding(vertical = 4.dp),
+            )
+        }
     }
 }
+
+/** How close to Election Day the front page links straight to the candidates. */
+const val ELECTIONS_ON_FRONT_DAYS = 90L
 
 @Composable
 private fun LinkLine(label: String, url: String?) {
