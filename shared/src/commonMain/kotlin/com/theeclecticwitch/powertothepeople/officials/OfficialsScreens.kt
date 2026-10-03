@@ -54,6 +54,8 @@ import coil3.compose.SubcomposeAsyncImage
 import com.theeclecticwitch.powertothepeople.congress.CampaignMoneyCard
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.MemberRecordCards
+import com.theeclecticwitch.powertothepeople.congress.OfficeNewsCard
+import com.theeclecticwitch.powertothepeople.congress.WhiteHouseNewsCard
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.UserLocation
@@ -317,7 +319,9 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                     MemberRecordCards(official.id, congressNav)
                     CommitteesCard(official.id)
                     CampaignMoneyCard(official.id)
+                    OfficeNewsCard(official.id, official.website)
                 }
+                if (official.id.startsWith("exec:")) WhiteHouseNewsCard()
                 ContactCard(official)
                 if (official.districtOffices.isNotEmpty()) {
                     InfoCard(title = "Offices back home") {
@@ -327,6 +331,16 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                             Text(o.address, style = MaterialTheme.typography.bodyMedium)
                             o.phone?.let { LinkText(it, "tel:${it.filter { c -> c.isDigit() }}") }
                         }
+                    }
+                }
+                if (official.social.isNotEmpty()) {
+                    InfoCard(title = "On social media") {
+                        official.social.forEach { LinkText(it.label, it.url) }
+                        Text(
+                            "Opens in the app or website. Power to the People doesn't show posts; follow them there if you'd like.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
                 if (official.links.isNotEmpty()) {

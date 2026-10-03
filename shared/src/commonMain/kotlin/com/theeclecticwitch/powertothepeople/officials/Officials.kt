@@ -44,6 +44,8 @@ data class Official(
     val termEnds: String? = null,
     val districtOffices: List<DistrictOffice> = emptyList(),
     val links: List<Link> = emptyList(),
+    /** Their accounts elsewhere, as links out. The app never shows posts; see Social. */
+    val social: List<Link> = emptyList(),
     val sourceName: String? = null,
     val sourceUrl: String? = null,
     /** True for officials the reader added; they can edit and delete these. */
@@ -105,6 +107,9 @@ private class RawTerm(
 )
 
 @Serializable
+private class RawSocial(val id: RawIds, val social: Map<String, String> = emptyMap())
+
+@Serializable
 private class RawOffices(val id: RawIds, val offices: List<RawOffice> = emptyList())
 
 @Serializable
@@ -137,11 +142,15 @@ object FederalOfficials {
     private val executiveSource = CachedSource("cache_executive.json", 7.days) {
         Http.getText("$BASE/executive.json")
     }
+    private val socialSource = CachedSource("cache_social_media.json", 7.days) {
+        Http.getText("$BASE/legislators-social-media.json")
+    }
 
     private val lock = Mutex()
     private var legislators: List<RawPerson>? = null
     private var offices: Map<String, List<RawOffice>> = emptyMap()
     private var executive: List<RawPerson>? = null
+    private var social: Map<String, Map<String, String>> = emptyMap()
     private var fetchedAt: Instant? = null
     private var stale = false
 
@@ -161,6 +170,12 @@ object FederalOfficials {
             Http.json.decodeFromString<List<RawPerson>>(executiveSource.get(force).text)
         } catch (e: Exception) {
             emptyList()
+        }
+        social = try {
+            Http.json.decodeFromString<List<RawSocial>>(socialSource.get(force).text)
+                .mapNotNull { s -> s.id.bioguide?.let { it to s.social } }.toMap()
+        } catch (e: Exception) {
+            emptyMap()
         }
     }
 
@@ -231,6 +246,7 @@ object FederalOfficials {
             links = listOfNotNull(
                 person.id.wikipedia?.let { Link("Wikipedia", "https://en.wikipedia.org/wiki/" + it.replace(' ', '_')) },
             ),
+            social = Social.executive(isPresident, person.name.display),
             sourceName = SOURCE_NAME,
             sourceUrl = SOURCE_URL,
         )
@@ -284,6 +300,7 @@ object FederalOfficials {
                 id.ballotpedia?.let { Link("Ballotpedia", "https://ballotpedia.org/" + it.replace(' ', '_')) },
                 id.wikipedia?.let { Link("Wikipedia", "https://en.wikipedia.org/wiki/" + it.replace(' ', '_')) },
             ),
+            social = Social.links(social[bioguide].orEmpty()),
             sourceName = SOURCE_NAME,
             sourceUrl = SOURCE_URL,
         )

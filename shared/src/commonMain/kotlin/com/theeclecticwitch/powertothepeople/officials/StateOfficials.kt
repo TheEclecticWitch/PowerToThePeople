@@ -31,6 +31,7 @@ private class RawStatePerson(
     val website: String? = null,
     val contactForm: String? = null,
     val districtOffice: RawStateOffice? = null,
+    val social: Map<String, String> = emptyMap(),
 )
 
 @Serializable
@@ -133,6 +134,7 @@ object StateOfficials {
                     o.address?.let { DistrictOffice(city = "District office", address = it, phone = o.phone) }
                 },
             ),
+            social = Social.links(social),
             sourceName = SOURCE_NAME,
             sourceUrl = SOURCE_URL,
         )

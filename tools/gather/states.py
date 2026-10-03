@@ -62,6 +62,10 @@ def _person(data, role, title, state):
         "website": website,
         "contactForm": form,
     }
+    ids = data.get("ids") or {}
+    social = {k: ids[k] for k in ("twitter", "facebook", "instagram", "youtube") if ids.get(k)}
+    if social:
+        out["social"] = social
     if district and (district.get("address") or district.get("voice")):
         out["districtOffice"] = {"address": (district.get("address") or "").replace("; ", "\n") or None,
                                  "phone": district.get("voice")}
