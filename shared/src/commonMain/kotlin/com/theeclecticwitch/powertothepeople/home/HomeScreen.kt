@@ -3,6 +3,7 @@ package com.theeclecticwitch.powertothepeople.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -59,6 +60,7 @@ fun HomeScreen(
     congressNav: CongressNav,
     onConstitution: () -> Unit,
     onBillOfRights: () -> Unit,
+    onAllCongress: () -> Unit,
     onHowGovernment: () -> Unit,
     onOfficial: (String) -> Unit,
     onSetLocation: () -> Unit,
@@ -113,10 +115,18 @@ fun HomeScreen(
                 } else {
                     val d = delegation
                     val governor = state?.executives?.firstOrNull { it.office.startsWith("Governor") }
-                    val people = (d?.senators.orEmpty() + listOfNotNull(d?.representative, governor)).take(4)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        people.forEach { o -> PersonTile(o, roleOf(o), Modifier.weight(1f), onOfficial) }
-                        repeat(4 - people.size) { Spacer(Modifier.weight(1f)) }
+                    // The Congress tiles stay together (senators, representative, all of Congress); the
+                    // governor follows. Four to a row, like the row above.
+                    val tiles: List<Official?> = d?.senators.orEmpty() + listOfNotNull(d?.representative) + null + listOfNotNull(governor)
+                    tiles.chunked(4).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // null marks the All Congress tile.
+                            row.forEach { o ->
+                                if (o == null) AllCongressTile(Modifier.weight(1f), onAllCongress)
+                                else PersonTile(o, roleOf(o), Modifier.weight(1f), onOfficial)
+                            }
+                            repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
                     }
                 }
 
@@ -175,6 +185,33 @@ private fun PersonTile(o: Official?, role: String, modifier: Modifier, onOfficia
         )
         Text(
             role,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** Everyone in Congress, as a tile beside the reader's own members. */
+@Composable
+private fun AllCongressTile(modifier: Modifier, onOpen: () -> Unit) {
+    Column(
+        modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .clickable(onClick = onOpen).padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("535", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        }
+        Text("All Congress", style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        Text(
+            "Directory",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,

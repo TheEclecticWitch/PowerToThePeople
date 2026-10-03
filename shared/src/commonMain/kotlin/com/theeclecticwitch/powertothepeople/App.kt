@@ -181,10 +181,13 @@ private fun goToTab(nav: NavHostController, tab: Tab) {
         nav.popBackStack(tab.route, inclusive = false)
         return
     }
+    // Every tab returns to where the reader left it, except More, which always opens at its menu (Rod's choice):
+    // it is a list of places, not a place, so coming back to it should show the list.
+    val leavingMore = tabOf(nav.currentBackStack.value.map { it.destination })?.route == MoreRoute
     nav.navigate(tab.route) {
-        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+        popUpTo(nav.graph.findStartDestination().id) { saveState = !leavingMore }
         launchSingleTop = true
-        restoreState = true
+        restoreState = tab.route != MoreRoute
     }
 }
 
@@ -213,6 +216,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 congressNav = congressNav,
                 onConstitution = { goToTab(nav, tabs[3]) },
                 onBillOfRights = { nav.navigate(BillOfRightsRoute) },
+                onAllCongress = { nav.navigate(DirectoryRoute()) },
                 onHowGovernment = { goToTab(nav, tabs[1]) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
