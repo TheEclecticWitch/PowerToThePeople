@@ -381,7 +381,15 @@ async function voterInfo(request, env) {
       district: c.district?.name || null,
       level: (c.level || [])[0] || null,
       type: c.type || null,
-      candidates: (c.candidates || []).map((p) => ({ name: p.name, party: p.party || null, url: p.candidateUrl || null })),
+      candidates: (c.candidates || []).map((p) => ({
+        name: p.name,
+        party: p.party || null,
+        url: p.candidateUrl || null,
+        phone: p.phone || null,
+        email: p.email || null,
+        photo: p.photoUrl || null,
+        channels: (p.channels || []).map((ch) => ({ type: ch.type, id: ch.id })).filter((ch) => ch.type && ch.id),
+      })),
       measure: c.referendumTitle ? {
         title: c.referendumTitle, subtitle: c.referendumSubtitle || null, text: c.referendumText || null,
         url: c.referendumUrl || null, choices: c.referendumBallotResponses || [],

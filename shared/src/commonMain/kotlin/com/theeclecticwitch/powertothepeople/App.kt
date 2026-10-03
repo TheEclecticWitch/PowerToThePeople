@@ -55,6 +55,9 @@ import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.ComingUpScreen
 import com.theeclecticwitch.powertothepeople.congress.StateBillScreen
+import com.theeclecticwitch.powertothepeople.elections.CandidateScreen
+import com.theeclecticwitch.powertothepeople.elections.ElectionsScreen
+import com.theeclecticwitch.powertothepeople.elections.RaceScreen
 import com.theeclecticwitch.powertothepeople.alerts.Alerts
 import com.theeclecticwitch.powertothepeople.alerts.AlertsScreen
 import com.theeclecticwitch.powertothepeople.alerts.Notifications
@@ -110,6 +113,9 @@ import kotlinx.serialization.Serializable
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable data class StateBillRoute(val id: String)
+@Serializable object ElectionsRoute
+@Serializable data class RaceRoute(val id: String)
+@Serializable data class CandidateRoute(val raceId: String, val key: String)
 @Serializable data class DirectoryRoute(val chamber: String? = null)
 @Serializable object SettingsRoute
 @Serializable object VotingRoute
@@ -134,6 +140,7 @@ private val splitRoutes = listOf(
     CongressRoute::class, LegislationRoute::class, ComingUpRoute::class, RecentVotesRoute::class,
     DirectoryRoute::class, OfficialsRoute::class, StateLegislatorsRoute::class, AlertsRoute::class,
     ConstitutionRoute::class, BillOfRightsRoute::class, MemberVotesRoute::class, SponsoredBillsRoute::class,
+    ElectionsRoute::class,
 )
 
 private data class Tab(val label: String, val icon: ImageVector, val route: Any)
@@ -264,7 +271,10 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () ->
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<ComingUpRoute> { ComingUpScreen(back, congressNav) }
         composable<AlertsRoute> { AlertsScreen(back, congressNav, onLegislation = { nav.navigate(LegislationRoute) }) }
-        composable<VotingRoute> { VotingScreen(back) { nav.navigate(LocationRoute) } }
+        composable<ElectionsRoute> {
+            ElectionsScreen(back, onRace = { open(RaceRoute(it)) }, onSetLocation = { nav.navigate(LocationRoute) })
+        }
+        composable<VotingRoute> { VotingScreen(back, { nav.navigate(LocationRoute) }, onElections = { nav.navigate(ElectionsRoute) }) }
         composable<SettingsRoute> { SettingsScreen(back) { nav.navigate(LocationRoute) } }
         composable<HomeRoute> {
             HomeScreen(
@@ -352,6 +362,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () ->
                 onDirectory = { nav.navigate(DirectoryRoute()) },
                 onLegislation = { nav.navigate(LegislationRoute) },
                 onAlerts = { nav.navigate(AlertsRoute) },
+                onElections = { nav.navigate(ElectionsRoute) },
             )
         }
         composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
@@ -414,6 +425,14 @@ private fun NavGraphBuilder.pageScreens(nav: NavHostController, congressNav: Con
         }
         composable<BillRoute> { entry -> BillScreen(entry.toRoute<BillRoute>().id, back, congressNav) }
         composable<StateBillRoute> { entry -> StateBillScreen(entry.toRoute<StateBillRoute>().id, back) }
+        composable<RaceRoute> { entry ->
+            val id = entry.toRoute<RaceRoute>().id
+            RaceScreen(id, back) { key -> nav.navigate(CandidateRoute(id, key)) }
+        }
+        composable<CandidateRoute> { entry ->
+            val r = entry.toRoute<CandidateRoute>()
+            CandidateScreen(r.raceId, r.key, back)
+        }
         composable<MemberVotesRoute> { entry -> MemberVotesScreen(entry.toRoute<MemberVotesRoute>().id, back, congressNav) }
         composable<SponsoredBillsRoute> { entry -> SponsoredBillsScreen(entry.toRoute<SponsoredBillsRoute>().id, back, congressNav) }
         composable<EditOfficialRoute> { entry ->

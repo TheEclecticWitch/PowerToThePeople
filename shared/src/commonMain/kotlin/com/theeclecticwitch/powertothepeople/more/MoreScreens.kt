@@ -37,6 +37,7 @@ fun MoreScreen(
     onDirectory: () -> Unit,
     onLegislation: () -> Unit,
     onAlerts: () -> Unit,
+    onElections: () -> Unit,
 ) {
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
@@ -46,6 +47,9 @@ fun MoreScreen(
             ) {
                 InfoCard(title = "Your vote", onClick = onVoting) {
                     Text("Register, find where to vote, and see what's on your ballot.", style = MaterialTheme.typography.bodyLarge)
+                }
+                InfoCard(title = "Elections", onClick = onElections) {
+                    Text("Who's running in your races, every candidate shown equally, with your own private notes.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "My officials", onClick = onOfficials) {
                     Text(

@@ -82,7 +82,18 @@ fun voteGovRegister(state: String): String {
 data class Place(val name: String? = null, val address: String = "", val hours: String? = null, val notes: String? = null, val start: String? = null, val end: String? = null)
 
 @Serializable
-data class Candidate(val name: String, val party: String? = null, val url: String? = null)
+data class Candidate(
+    val name: String,
+    val party: String? = null,
+    val url: String? = null,
+    val phone: String? = null,
+    val email: String? = null,
+    val photo: String? = null,
+    val channels: List<Channel> = emptyList(),
+)
+
+@Serializable
+data class Channel(val type: String, val id: String)
 
 @Serializable
 data class Measure(val title: String, val subtitle: String? = null, val text: String? = null, val url: String? = null, val choices: List<String> = emptyList())
@@ -186,7 +197,7 @@ private fun LinkLine(label: String, url: String?) {
 }
 
 @Composable
-fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit) {
+fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onElections: () -> Unit = {}) {
     val location by LocationStore.location.collectAsState()
     val now = today()
     val day = nextFederalElection(now)
@@ -208,6 +219,10 @@ fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit) {
                             "state and local offices. Many states also let you vote early or by mail.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                }
+                InfoCard(title = "Who's running", onClick = onElections) {
+                    Text("Every candidate in your races, shown equally, with room for your own notes.", style = MaterialTheme.typography.bodyMedium)
+                    Text("See the candidates ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
                 val loc = location
                 InfoCard(title = "Are you registered?") {

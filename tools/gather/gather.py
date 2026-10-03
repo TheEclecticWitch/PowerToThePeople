@@ -20,6 +20,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bills  # noqa: E402
+import candidates  # noqa: E402
 import contacts  # noqa: E402
 import disclosures  # noqa: E402
 import doomsday  # noqa: E402
@@ -44,7 +45,7 @@ SOURCES = [
     {"name": "U.S. Senate roll call votes", "url": "https://www.senate.gov/legislative/votes_new.htm",
      "covers": "Senate roll-call votes"},
     {"name": "Federal Election Commission (OpenFEC API)", "url": "https://www.fec.gov/data/",
-     "covers": "Campaign money raised and spent by members' campaign committees"},
+     "covers": "Campaign money raised and spent by members' campaign committees, and this cycle's registered candidates"},
     {"name": "Federal Register", "url": "https://www.federalregister.gov/presidential-documents/executive-orders",
      "covers": "Executive orders"},
     {"name": "Members' and the White House's own news feeds", "url": "https://www.whitehouse.gov/news/",
@@ -119,6 +120,7 @@ def main():
 
     step(f"Session days {congress}", session_days.gather, net, store, congress, log)
     member_count = step("Members", members.build, store, congress, log)
+    step("Candidates", candidates.gather, net, store, log)
     step(f"Campaign money {congress}", finance.gather, net, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Executive orders", orders.gather, net, store, log)
