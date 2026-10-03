@@ -1,13 +1,16 @@
 package com.theeclecticwitch.powertothepeople.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -18,22 +21,34 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
-import com.theeclecticwitch.powertothepeople.congress.LatestVotesCard
+import com.theeclecticwitch.powertothepeople.congress.LatestVoteCard
 import com.theeclecticwitch.powertothepeople.congress.SessionCard
+import com.theeclecticwitch.powertothepeople.constitution.Originals
 import com.theeclecticwitch.powertothepeople.debt.DebtCard
 import com.theeclecticwitch.powertothepeople.doomsday.DoomsdayCard
 import com.theeclecticwitch.powertothepeople.location.LocationStore
+import com.theeclecticwitch.powertothepeople.location.today
+import com.theeclecticwitch.powertothepeople.officials.Official
 import com.theeclecticwitch.powertothepeople.officials.OfficialPhoto
 import com.theeclecticwitch.powertothepeople.officials.rememberDelegation
+import com.theeclecticwitch.powertothepeople.officials.rememberStateDelegation
+import com.theeclecticwitch.powertothepeople.ui.Format
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
-import com.theeclecticwitch.powertothepeople.ui.LoadingBox
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
-import com.theeclecticwitch.powertothepeople.ui.theme.CaslonFeatures
 import com.theeclecticwitch.powertothepeople.ui.theme.LocalAppFonts
 
+/**
+ * Today: the founding documents beside the President and Vice President, then the reader's own officials,
+ * then what Congress has been doing. Everything else is a tab or a tap away.
+ */
 @Composable
 fun HomeScreen(
     onDebt: () -> Unit,
@@ -42,62 +57,66 @@ fun HomeScreen(
     onLegislation: () -> Unit,
     congressNav: CongressNav,
     onConstitution: () -> Unit,
-    onOfficials: () -> Unit,
+    onBillOfRights: () -> Unit,
     onOfficial: (String) -> Unit,
     onSetLocation: () -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
+    val (state, _, _) = rememberStateDelegation(location)
+    val now = today()
     Scaffold { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(Modifier.padding(top = 8.dp, bottom = 4.dp)) {
+                Column(Modifier.padding(top = 8.dp)) {
                     Text(
-                        "Power to the People",
+                        "Today",
                         style = MaterialTheme.typography.headlineLarge.copy(fontFamily = LocalAppFonts.current.caslonDisplay),
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        "Your government, in plain view.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontStyle = FontStyle.Italic,
+                        listOfNotNull(
+                            "${now.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}, ${Format.date(now)}",
+                            location?.let { "${it.cityOrCounty}, ${it.stateAbbr}" },
+                        ).joinToString(" · "),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
-                val loc = location
-                if (loc == null) {
+                // The founding documents beside the nation's two highest offices.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DocumentTile("Constitution", Originals.pages.first().thumbnail, Modifier.weight(1f), onConstitution)
+                    PersonTile(delegation?.president, "President", Modifier.weight(1f), onOfficial)
+                    PersonTile(delegation?.vicePresident, "Vice President", Modifier.weight(1f), onOfficial)
+                    DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, Modifier.weight(1f), onBillOfRights)
+                }
+
+                // Everyone else who represents the reader.
+                if (location == null) {
                     InfoCard(title = "Who represents you?") {
                         Text(
-                            "Enter your address once to see your members of Congress, your districts, and how to reach them.",
+                            "Enter your address once to see your members of Congress, your governor, your districts, and how to reach them.",
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Button(onClick = onSetLocation) { Text("Set my location") }
                     }
                 } else {
-                    InfoCard(title = "Your representatives in Washington", onClick = onOfficials) {
-                        Text("${loc.cityOrCounty}, ${loc.stateAbbr} · ${loc.congressionalDistrictLabel}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        val d = delegation
-                        if (d == null) {
-                            LoadingBox("Finding your representatives…")
-                        } else {
-                            (d.senators + listOfNotNull(d.representative)).forEach { o ->
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                                    OfficialPhoto(o, 44)
-                                    Spacer(Modifier.width(12.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(o.name, style = MaterialTheme.typography.titleSmall)
-                                        Text(o.office, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
-                            }
-                        }
-                        Text("All my officials ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                    val d = delegation
+                    val governor = state?.executives?.firstOrNull { it.office.startsWith("Governor") }
+                    val people = (d?.senators.orEmpty() + listOfNotNull(d?.representative, governor)).take(4)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        people.forEach { o -> PersonTile(o, roleOf(o), Modifier.weight(1f), onOfficial) }
+                        repeat(4 - people.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
+
+                LatestVoteCard(congressNav)
+
+                SessionCard(onOpen = onSessions)
 
                 InfoCard(title = "Find legislation", onClick = onLegislation) {
                     Text(
@@ -107,28 +126,71 @@ fun HomeScreen(
                     Text("Search ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
 
-                LatestVotesCard(congressNav)
-
-                SessionCard(onOpen = onSessions)
-
                 DebtCard(onOpen = onDebt)
 
                 DoomsdayCard(onOpen = onDoomsday)
-
-                InfoCard(title = "The Constitution", onClick = onConstitution) {
-                    Text(
-                        "We the People of the United States, in Order to form a more perfect Union…",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontFamily = LocalAppFonts.current.caslon, fontFeatureSettings = CaslonFeatures),
-                        fontStyle = FontStyle.Italic,
-                    )
-                    Text(
-                        "The full text, all 27 amendments, and plain-English summaries. Works without a connection.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text("Read it ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
-                }
             }
         }
+    }
+}
+
+private fun roleOf(o: Official): String = when {
+    o.office.contains("Senator") -> "Senator"
+    o.office.startsWith("Governor") -> "Governor"
+    o.office.contains("Delegate") -> "Delegate"
+    else -> "Representative"
+}
+
+/** A face, a surname and a role; tap for their page. */
+@Composable
+private fun PersonTile(o: Official?, role: String, modifier: Modifier, onOfficial: (String) -> Unit) {
+    Column(
+        modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .clickable(enabled = o != null) { o?.let { onOfficial(it.id) } }.padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (o != null) OfficialPhoto(o, 52) else Spacer(Modifier.size(52.dp))
+        Text(
+            o?.name?.let(Format::surname) ?: "…",
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            role,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** One of the founding documents, shown as its own first page. */
+@Composable
+private fun DocumentTile(title: String, image: String, modifier: Modifier, onOpen: () -> Unit) {
+    Column(
+        modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .clickable(onClick = onOpen).padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        AsyncImage(
+            model = image,
+            contentDescription = "The original $title",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(width = 42.dp, height = 52.dp).clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        )
+        Text(
+            title,
+            style = MaterialTheme.typography.labelLarge.copy(fontFamily = LocalAppFonts.current.caslon),
+            fontStyle = FontStyle.Italic,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
+        )
     }
 }

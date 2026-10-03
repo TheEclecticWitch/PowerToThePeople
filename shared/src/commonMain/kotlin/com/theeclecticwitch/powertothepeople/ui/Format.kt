@@ -74,4 +74,17 @@ object Format {
         }
         return "$n$suffix"
     }
+
+    private val particles = setOf("van", "von", "de", "del", "della", "der", "la", "le", "du", "di", "da", "st.", "mac")
+    private val suffixes = setOf("jr.", "jr", "sr.", "sr", "ii", "iii", "iv")
+
+    /** "Chris Van Hollen" -> "Van Hollen", "Thomas R. Suozzi Jr." -> "Suozzi": how a name is said on its own. */
+    fun surname(fullName: String): String {
+        val parts = fullName.replace(",", "").split(' ').filter { it.isNotBlank() }.toMutableList()
+        while (parts.size > 1 && parts.last().lowercase() in suffixes) parts.removeAt(parts.lastIndex)
+        if (parts.isEmpty()) return fullName
+        var start = parts.lastIndex
+        while (start > 1 && parts[start - 1].lowercase() in particles) start--
+        return parts.subList(start, parts.size).joinToString(" ")
+    }
 }

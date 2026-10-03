@@ -12,6 +12,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 enum class Level(val label: String) { Federal("Federal"), State("State"), Local("Local") }
 
@@ -76,6 +79,7 @@ private class RawIds(
     val govtrack: Int? = null,
     val wikipedia: String? = null,
     val ballotpedia: String? = null,
+    val wikidata: String? = null,
 )
 
 @Serializable
@@ -151,6 +155,7 @@ object FederalOfficials {
     private var offices: Map<String, List<RawOffice>> = emptyMap()
     private var executive: List<RawPerson>? = null
     private var social: Map<String, Map<String, String>> = emptyMap()
+    private var portraits: Map<String, String> = emptyMap()
     private var fetchedAt: Instant? = null
     private var stale = false
 
@@ -171,11 +176,34 @@ object FederalOfficials {
         } catch (e: Exception) {
             emptyList()
         }
+        // The President's and Vice President's official portraits, by way of Wikidata, which records each
+        // person's portrait file on Wikimedia Commons. Official portraits are public domain.
+        portraits = executive.orEmpty().takeLast(4).mapNotNull { p ->
+            val qid = p.id.wikidata ?: return@mapNotNull null
+            try {
+                val claims = Http.json.parseToJsonElement(
+                    portraitSource(qid).get(force).text,
+                ).jsonObject["claims"]?.jsonObject?.get("P18")?.jsonArray
+                val file = claims?.firstOrNull()?.jsonObject?.get("mainsnak")?.jsonObject?.get("datavalue")
+                    ?.jsonObject?.get("value")?.jsonPrimitive?.content
+                file?.let { qid to "https://commons.wikimedia.org/wiki/Special:FilePath/${it.replace(' ', '_')}?width=330" }
+            } catch (e: Exception) {
+                null
+            }
+        }.toMap()
         social = try {
             Http.json.decodeFromString<List<RawSocial>>(socialSource.get(force).text)
                 .mapNotNull { s -> s.id.bioguide?.let { it to s.social } }.toMap()
         } catch (e: Exception) {
             emptyMap()
+        }
+    }
+
+    private val portraitSources = mutableMapOf<String, CachedSource>()
+
+    private fun portraitSource(qid: String) = portraitSources.getOrPut(qid) {
+        CachedSource("cache_portrait_$qid.json", 30.days) {
+            Http.getText("https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=$qid&property=P18&format=json")
         }
     }
 
@@ -236,6 +264,7 @@ object FederalOfficials {
             name = person.name.display,
             office = if (isPresident) "President of the United States" else "Vice President of the United States",
             level = Level.Federal,
+            photoUrl = person.id.wikidata?.let { portraits[it] },
             party = term.party,
             phone = if (isPresident) "202-456-1111" else null,
             address = "The White House, 1600 Pennsylvania Avenue NW, Washington, DC 20500",

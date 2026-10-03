@@ -67,8 +67,10 @@ fun summarize(days: List<SessionDay>, year: Int): SessionSummary {
     )
 }
 
-private const val RECORD_NOTE = "From the daily Congressional Record. A day counts when the chamber met at all, " +
-    "including brief \"pro forma\" sessions held to avoid a formal recess. The Record is published the day after."
+private const val RECORD_NOTE = "A day in session is a day the House or Senate convened on its floor to do business: " +
+    "debating, voting, or receiving bills. Much of members' other work, such as committee hearings and meetings with " +
+    "people back home, happens on other days and isn't counted here. Some session days are brief \"pro forma\" " +
+    "meetings held so a chamber isn't formally in recess. Counted from the daily Congressional Record, published the next day."
 
 @Composable
 private fun SessionSource() {
@@ -78,21 +80,21 @@ private fun SessionSource() {
 @Composable
 fun SessionCard(onOpen: () -> Unit) {
     val (load, _) = rememberSessionDays()
-    InfoCard(title = "When Congress met", onClick = onOpen) {
+    InfoCard(title = "Days in session", onClick = onOpen) {
         when (val l = load) {
             Load.Loading -> LoadingBox("Loading…")
             is Load.Failed -> Text(l.message, style = MaterialTheme.typography.bodyMedium)
             is Load.Done -> if (l.value.isEmpty()) {
-                Text("The days each chamber met will appear after the next data update.", style = MaterialTheme.typography.bodyMedium)
+                Text("How many days the House and Senate have been in session will appear after the next data update.", style = MaterialTheme.typography.bodyMedium)
             } else {
                 val s = summarize(l.value, today().year)
+                // Plain words: a "session day" is a day the chamber convened to do business.
+                Text("So far in ${s.year}:", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("The House has been in session ${s.house} days.", style = MaterialTheme.typography.titleMedium)
+                Text("The Senate has been in session ${s.senate} days.", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Last met: House ${s.houseLast?.let { Format.date(it) } ?: "—"} · Senate ${s.senateLast?.let { Format.date(it) } ?: "—"}",
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    "So far in ${s.year}: the House met ${s.house} days, the Senate ${s.senate}.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    "Most recently: the House on ${s.houseLast?.let { Format.date(it) } ?: "—"}, the Senate on ${s.senateLast?.let { Format.date(it) } ?: "—"}.",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text("See the calendar ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
@@ -115,7 +117,7 @@ fun SessionScreen(onBack: () -> Unit) {
     val uri = LocalUriHandler.current
     val houseColor = MaterialTheme.colorScheme.primary
     val senateColor = MaterialTheme.colorScheme.tertiary
-    Scaffold(topBar = { AppTopBar("When Congress met", onBack) }) { padding ->
+    Scaffold(topBar = { AppTopBar("Days in session", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox()
@@ -173,11 +175,11 @@ fun SessionScreen(onBack: () -> Unit) {
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Legend(houseColor, "House met")
-                            Legend(senateColor, "Senate met")
+                            Legend(houseColor, "House in session")
+                            Legend(senateColor, "Senate in session")
                         }
                         InfoCard(title = "${month.year} so far") {
-                            Text("The House met ${s.house} days; the Senate met ${s.senate} days.", style = MaterialTheme.typography.bodyLarge)
+                            Text("The House was in session ${s.house} days; the Senate ${s.senate} days.", style = MaterialTheme.typography.bodyLarge)
                             Text(RECORD_NOTE, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("Tap a day to open that day's Record.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }

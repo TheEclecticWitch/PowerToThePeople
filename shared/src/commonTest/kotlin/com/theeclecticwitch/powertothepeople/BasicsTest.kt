@@ -55,6 +55,16 @@ class BasicsTest {
     }
 
     @Test
+    fun surnamesKeepTheirParticlesAndDropSuffixes() {
+        assertEquals("Van Hollen", Format.surname("Chris Van Hollen"))
+        assertEquals("Hoyer", Format.surname("Steny H. Hoyer"))
+        assertEquals("Suozzi", Format.surname("Thomas R. Suozzi Jr."))
+        assertEquals("De La Cruz", Format.surname("Monica De La Cruz"))
+        assertEquals("Trump", Format.surname("Donald Trump"))
+        assertEquals("Moore", Format.surname("Moore"))
+    }
+
+    @Test
     fun moneyReadsTheWayPeopleSayIt() {
         assertEquals("$40,102,185,696,865", Format.dollars(40102185696865.37))
         assertEquals("$1.97 trillion", Format.dollarsShort(1965591017473.53))

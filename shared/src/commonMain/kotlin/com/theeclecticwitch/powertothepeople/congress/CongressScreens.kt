@@ -93,7 +93,7 @@ internal fun <T> rememberLoad(key: Any?, failure: String, block: suspend (force:
 
 /** Bill titles, once they arrive. Screens show without them first, since the list is large. */
 @Composable
-private fun rememberBillTitles(): Map<String, BillSummary> {
+internal fun rememberBillTitles(): Map<String, BillSummary> {
     var bills by remember { mutableStateOf<Map<String, BillSummary>>(emptyMap()) }
     LaunchedEffect(Unit) {
         bills = try { CongressData.billList() } catch (e: Exception) { emptyMap() }
@@ -184,7 +184,7 @@ private fun TallyLine(t: VoteTally) {
 
 /** One roll call: when, what was asked, on what bill, how it came out - and, given, how someone voted. */
 @Composable
-private fun VoteRow(
+internal fun VoteRow(
     chamber: String,
     summary: VoteSummary?,
     roll: Int,
@@ -595,7 +595,7 @@ private fun AlignmentCard(record: MemberRecord, cast: List<CastVote>, titles: Ma
                 nav.vote(c.vote.chamber, c.vote.session, c.vote.roll)
             }
             Text(
-                "You: ${c.mine} · ${record.name.substringAfterLast(' ')}: ${voteLabel(c.vote.vote)}",
+                "You: ${c.mine} · ${Format.surname(record.name)}: ${voteLabel(c.vote.vote)}",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.secondary,
             )
@@ -609,7 +609,7 @@ private fun AlignmentCard(record: MemberRecord, cast: List<CastVote>, titles: Ma
 // --- The latest roll calls in both chambers ---
 
 /** Newest first across both chambers. */
-private suspend fun latestVotes(force: Boolean): List<BillVote> =
+internal suspend fun latestVotes(force: Boolean): List<BillVote> =
     CongressData.voteLists(force).flatMap { (key, votes) ->
         val (chamber, session) = key.split('/')
         votes.map { BillVote(chamber, session.toInt(), it) }

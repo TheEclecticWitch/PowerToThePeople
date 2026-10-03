@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -62,10 +63,19 @@ fun ConstitutionScreen(
     onArticle: (Int) -> Unit,
     onAmendment: (Int) -> Unit,
     onSignatures: () -> Unit,
+    onOriginal: (Int) -> Unit,
+    /** Opened from the Bill of Rights card on Today: start at the Bill of Rights. */
+    startAtBillOfRights: Boolean = false,
+    onBack: (() -> Unit)? = null,
 ) {
     val doc = rememberConstitution()
     var query by remember { mutableStateOf("") }
-    Scaffold(topBar = { AppTopBar("The Constitution") }) { padding ->
+    val listState = rememberLazyListState()
+    LaunchedEffect(doc, startAtBillOfRights) {
+        // Rows before it: search, the documents card, the Preamble, the Articles heading, each Article, the signatures.
+        if (doc != null && startAtBillOfRights) listState.scrollToItem(5 + doc.articles.size)
+    }
+    Scaffold(topBar = { AppTopBar(if (startAtBillOfRights) "The Bill of Rights" else "The Constitution", onBack) }) { padding ->
         if (doc == null) {
             LoadingBox()
             return@Scaffold
@@ -73,6 +83,7 @@ fun ConstitutionScreen(
         val hits = remember(doc, query) { doc.search(query) }
         ReadingColumn(Modifier.padding(padding)) {
             LazyColumn(
+                state = listState,
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -110,6 +121,7 @@ fun ConstitutionScreen(
                     }
                     return@LazyColumn
                 }
+                item { OriginalsCard(onOriginal) }
                 item { PreambleCard(doc) }
                 item { GroupHeading("The Articles", "The original Constitution, signed ${doc.signed}") }
                 items(doc.articles) { a ->

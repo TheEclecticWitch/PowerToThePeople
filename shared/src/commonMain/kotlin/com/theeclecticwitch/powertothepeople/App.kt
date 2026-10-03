@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -39,9 +40,11 @@ import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.theeclecticwitch.powertothepeople.constitution.AmendmentScreen
 import com.theeclecticwitch.powertothepeople.constitution.ArticleScreen
 import com.theeclecticwitch.powertothepeople.constitution.ConstitutionScreen
+import com.theeclecticwitch.powertothepeople.constitution.OriginalScreen
 import com.theeclecticwitch.powertothepeople.constitution.SignaturesScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
+import com.theeclecticwitch.powertothepeople.congress.CongressScreen
 import com.theeclecticwitch.powertothepeople.congress.LegislationScreen
 import com.theeclecticwitch.powertothepeople.congress.MemberVotesScreen
 import com.theeclecticwitch.powertothepeople.congress.RecentVotesScreen
@@ -68,6 +71,9 @@ import kotlinx.serialization.Serializable
 // The places the app can go. Type-safe routes: each carries exactly what its screen needs.
 @Serializable object HomeRoute
 @Serializable object ConstitutionRoute
+@Serializable object CongressRoute
+@Serializable object BillOfRightsRoute
+@Serializable data class OriginalRoute(val index: Int)
 @Serializable object OfficialsRoute
 @Serializable object MoreRoute
 @Serializable data class ArticleRoute(val number: Int)
@@ -93,9 +99,10 @@ import kotlinx.serialization.Serializable
 private data class Tab(val label: String, val icon: ImageVector, val route: Any)
 
 private val tabs = listOf(
-    Tab("Home", Icons.Default.Home, HomeRoute),
-    Tab("Constitution", Icons.Default.Star, ConstitutionRoute),
+    Tab("Today", Icons.Default.Home, HomeRoute),
+    Tab("Congress", Icons.AutoMirrored.Filled.List, CongressRoute),
     Tab("Officials", Icons.Default.Person, OfficialsRoute),
+    Tab("Constitution", Icons.Default.Star, ConstitutionRoute),
     Tab("More", Icons.Default.Menu, MoreRoute),
 )
 
@@ -194,8 +201,8 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onSessions = { nav.navigate(SessionsRoute) },
                 onLegislation = { nav.navigate(LegislationRoute) },
                 congressNav = congressNav,
-                onConstitution = { goToTab(nav, tabs[1]) },
-                onOfficials = { goToTab(nav, tabs[2]) },
+                onConstitution = { goToTab(nav, tabs[3]) },
+                onBillOfRights = { nav.navigate(BillOfRightsRoute) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
             )
@@ -205,6 +212,34 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onArticle = { nav.navigate(ArticleRoute(it)) },
                 onAmendment = { nav.navigate(AmendmentRoute(it)) },
                 onSignatures = { nav.navigate(SignaturesRoute) },
+                onOriginal = { nav.navigate(OriginalRoute(it)) },
+            )
+        }
+        composable<BillOfRightsRoute> {
+            ConstitutionScreen(
+                onArticle = { nav.navigate(ArticleRoute(it)) },
+                onAmendment = { nav.navigate(AmendmentRoute(it)) },
+                onSignatures = { nav.navigate(SignaturesRoute) },
+                onOriginal = { nav.navigate(OriginalRoute(it)) },
+                startAtBillOfRights = true,
+                onBack = back,
+            )
+        }
+        composable<OriginalRoute> { entry ->
+            OriginalScreen(entry.toRoute<OriginalRoute>().index, back) { page ->
+                // The typed text of the same part: the Bill of Rights opens at the First Amendment.
+                when {
+                    page.document == "The Bill of Rights" -> nav.navigate(AmendmentRoute(1))
+                    else -> nav.navigate(ArticleRoute(listOf(1, 1, 2, 6)[page.page - 1]))
+                }
+            }
+        }
+        composable<CongressRoute> {
+            CongressScreen(
+                nav = congressNav,
+                onLegislation = { nav.navigate(LegislationRoute) },
+                onDirectory = { nav.navigate(DirectoryRoute) },
+                onSessions = { nav.navigate(SessionsRoute) },
             )
         }
         composable<ArticleRoute> { entry ->
