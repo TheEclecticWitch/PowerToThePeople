@@ -5,6 +5,7 @@ import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.ComingUp
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.SponsoredStep
 import com.theeclecticwitch.powertothepeople.congress.TopicMove
 import com.theeclecticwitch.powertothepeople.congress.chamberName
 import com.theeclecticwitch.powertothepeople.congress.voteLabel
@@ -35,7 +36,13 @@ data class AlertPrefs(
     val topics: List<String> = emptyList(),
     /** Also tell about bills in those subjects that were only introduced or sent to committee. Most go no further. */
     val topicsIncludeNew: Boolean = false,
+    /** Members of Congress the reader follows: their votes, and the bills they sponsor. */
+    val members: List<FollowedMember> = emptyList(),
 )
+
+/** A member of Congress the reader follows, by bioguide id, with the name to show. */
+@Serializable
+data class FollowedMember(val id: String, val name: String)
 
 /** One thing that happened. [bill] or [vote] ("senate/2/256") says where tapping it leads. */
 @Serializable
@@ -69,6 +76,10 @@ data class Seen(
     val topicsBaselined: Set<String> = emptySet(),
     /** The day of the last topic check, "2026-10-03". */
     val topicsChecked: String? = null,
+    /** A followed member's sponsored bill -> its latest action seen, "date|text". */
+    val memberBills: Map<String, String> = emptyMap(),
+    /** Followed members whose sponsored bills have had their first, silent look. */
+    val membersBaselined: Set<String> = emptySet(),
 )
 
 fun voteKey(v: MemberVote) = "${v.chamber}/${v.session}/${v.roll}"
@@ -80,6 +91,13 @@ fun newVotes(votesNewestFirst: List<MemberVote>, seen: String): List<MemberVote>
 }
 
 fun actionKey(a: Action?): String? = a?.let { "${it.date}|${it.text}" }
+
+/**
+ * A followed member's sponsored bills that are new or took a step since the last look. [seen] is null on the
+ * first look at this member, which only notes where things stand.
+ */
+fun memberBillSteps(recent: List<SponsoredStep>, seen: Map<String, String>?): List<SponsoredStep> =
+    if (seen == null) emptyList() else recent.filter { s -> actionKey(s.action)?.let { it != seen[s.bill] } == true }
 
 /**
  * The bills in followed [topics] that took a new step since the last look, and what to remember next time.
@@ -157,6 +175,14 @@ object Alerts {
 
     fun setTopicsIncludeNew(on: Boolean) = prefsState.update { it.copy(topicsIncludeNew = on) }
 
+    fun followMember(id: String, name: String) {
+        // A fresh, silent first look, so following again doesn't bring what happened in between.
+        seenState.update { it.copy(membersBaselined = it.membersBaselined - id) }
+        prefsState.update { p -> if (p.members.any { it.id == id }) p else p.copy(members = p.members + FollowedMember(id, name)) }
+    }
+
+    fun unfollowMember(id: String) = prefsState.update { p -> p.copy(members = p.members.filterNot { it.id == id }) }
+
     fun clearHistory() = historyState.update { emptyList() }
 
     /**
@@ -170,14 +196,40 @@ object Alerts {
         val found = mutableListOf<AlertItem>()
         val now = Clock.System.now().toString()
 
-        if (p.myMembers) {
-            runCatching {
+        // The reader's own members (when that's on) and the members they follow, each once.
+        val watched = buildMap<String, String> {
+            if (p.myMembers) runCatching {
                 val location = LocationStore.location.value ?: return@runCatching
                 val d = FederalOfficials.forLocation(location)
-                for (m in d.senators + listOfNotNull(d.representative)) {
-                    val record = CongressData.member(m.id, force = true) ?: continue
+                (d.senators + listOfNotNull(d.representative)).forEach { put(it.id, it.name) }
+            }
+            p.members.forEach { putIfAbsent(it.id, it.name) }
+        }
+        // Only followed members' recent bills are kept, so the list doesn't grow without end.
+        val memberBills = mutableMapOf<String, String>()
+        if (watched.isNotEmpty()) {
+            runCatching {
+                for ((id, name) in watched) {
+                    val record = CongressData.member(id, force = true) ?: continue
+                    if (p.members.any { it.id == id }) {
+                        // Their sponsored bills: new ones, and steps by older ones. The first look is silent.
+                        val firstLook = id !in seen.membersBaselined
+                        for (s in memberBillSteps(record.recentSponsored, if (firstLook) null else seen.memberBills)) {
+                            found += AlertItem(
+                                at = now,
+                                title = "$name: ${BillNames.label(s.bill)}",
+                                text = listOfNotNull(
+                                    s.title,
+                                    listOfNotNull(s.action?.date?.let { Format.date(it) }, s.action?.text).joinToString(": ").ifEmpty { null },
+                                ).joinToString(" · "),
+                                bill = s.bill,
+                            )
+                        }
+                        memberBills += record.recentSponsored.mapNotNull { s -> actionKey(s.action)?.let { s.bill to it } }
+                        seen = seen.copy(membersBaselined = seen.membersBaselined + id)
+                    }
                     val newest = record.votes.firstOrNull() ?: continue
-                    val last = seen.memberVotes[m.id]
+                    val last = seen.memberVotes[id]
                     if (last != null) {
                         for (v in newVotes(record.votes, last).take(20).reversed()) {
                             val s = CongressData.voteSummary(v.chamber, v.session, v.roll)
@@ -188,15 +240,17 @@ object Alerts {
                             }
                             found += AlertItem(
                                 at = now,
-                                title = "${m.name} voted ${voteLabel(v.vote)}",
+                                title = "$name voted ${voteLabel(v.vote)}",
                                 text = listOfNotNull(s?.question, about?.takeIf { it != s?.question }, s?.result)
                                     .joinToString(" · ").ifEmpty { "${chamberName(v.chamber)} roll call ${v.roll}" },
                                 vote = voteKey(v),
                             )
                         }
                     }
-                    seen = seen.copy(memberVotes = seen.memberVotes + (m.id to voteKey(newest)))
+                    seen = seen.copy(memberVotes = seen.memberVotes + (id to voteKey(newest)))
                 }
+                // Replaced only after every member was read, so a failed download doesn't forget what was seen.
+                seen = seen.copy(memberBills = memberBills)
             }
         }
 

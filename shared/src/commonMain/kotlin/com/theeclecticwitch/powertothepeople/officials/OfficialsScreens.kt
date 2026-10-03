@@ -1,5 +1,6 @@
 package com.theeclecticwitch.powertothepeople.officials
 
+import com.theeclecticwitch.powertothepeople.alerts.FollowMemberButton
 import com.theeclecticwitch.powertothepeople.ui.fullWidth
 import com.theeclecticwitch.powertothepeople.ui.PageColumn
 import com.theeclecticwitch.powertothepeople.ui.CardPage
@@ -305,6 +306,9 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                         Text(official.name, style = MaterialTheme.typography.headlineSmall)
                         Text(official.office, style = MaterialTheme.typography.bodyLarge)
                         official.party?.takeIf { it.isNotBlank() }?.let { Tag(it) }
+                        if (!official.userEntered && official.level == Level.Federal && !official.id.startsWith("exec:")) {
+                            FollowMemberButton(official.id, official.name)
+                        }
                     }
                 }
                 if (official.servingSince != null || official.termEnds != null) {

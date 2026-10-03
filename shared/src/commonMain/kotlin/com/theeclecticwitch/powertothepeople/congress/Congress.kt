@@ -74,7 +74,13 @@ data class MemberRecord(
     val congress: Int,
     val sponsored: List<String> = emptyList(),
     val votes: List<MemberVote> = emptyList(),
+    /** The ten sponsored bills that saw action most recently, newest first. */
+    val recentSponsored: List<SponsoredStep> = emptyList(),
 )
+
+/** A sponsored bill and the latest thing that happened to it. */
+@Serializable
+data class SponsoredStep(val bill: String, val title: String? = null, val action: Action? = null)
 
 @Serializable
 data class BillSummary(

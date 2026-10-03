@@ -3,11 +3,13 @@ package com.theeclecticwitch.powertothepeople
 import com.theeclecticwitch.powertothepeople.alerts.Seen
 import com.theeclecticwitch.powertothepeople.alerts.actionKey
 import com.theeclecticwitch.powertothepeople.alerts.latelyInTopics
+import com.theeclecticwitch.powertothepeople.alerts.memberBillSteps
 import com.theeclecticwitch.powertothepeople.alerts.topicAlerts
 import com.theeclecticwitch.powertothepeople.alerts.newVotes
 import com.theeclecticwitch.powertothepeople.alerts.voteKey
 import com.theeclecticwitch.powertothepeople.congress.Action
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.SponsoredStep
 import com.theeclecticwitch.powertothepeople.congress.TopicMove
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -94,5 +96,21 @@ class AlertsTest {
         val onlyNew = listOf(move("119/hr/9", "Animals", "2026-10-01", "Referred to the Committee on Agriculture.", early = true))
         assertEquals(listOf("119/hr/9"), latelyInTopics(onlyNew, listOf("Animals"), includeNew = false).map { it.bill })
         assertEquals(emptyList(), latelyInTopics(onlyNew, listOf("Health"), includeNew = false))
+    }
+
+    @Test
+    fun aFollowedMembersBillsReportNewOnesAndStepsOnly() {
+        val recent = listOf(
+            SponsoredStep("119/hr/10", "New bill", Action("2026-10-02", "Referred to the Committee on Oversight.")),
+            SponsoredStep("119/hr/9", "Older bill", Action("2026-10-01", "Passed House by voice vote.")),
+            SponsoredStep("119/hr/8", "Quiet bill", Action("2026-09-01", "Referred to the Committee on Rules.")),
+        )
+        // The first look only notes where things stand.
+        assertEquals(emptyList(), memberBillSteps(recent, null))
+        val seen = mapOf(
+            "119/hr/9" to actionKey(Action("2026-09-20", "Referred to the Committee on Oversight."))!!,
+            "119/hr/8" to actionKey(recent[2].action)!!,
+        )
+        assertEquals(listOf("119/hr/10", "119/hr/9"), memberBillSteps(recent, seen).map { it.bill })
     }
 }

@@ -41,6 +41,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.InputChip
 import com.theeclecticwitch.powertothepeople.congress.Bill
 import com.theeclecticwitch.powertothepeople.congress.BillTopics
+import com.theeclecticwitch.powertothepeople.congress.MemberRecord
+import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.VoteSummary
+import com.theeclecticwitch.powertothepeople.congress.voteLabel
 import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.ui.Format
@@ -135,6 +139,25 @@ fun AlertsScreen(onBack: () -> Unit, nav: CongressNav, onLegislation: () -> Unit
                             }
                         }
                         if (prefs.bills.isEmpty()) OutlinedButton(onClick = onLegislation) { Text("Find a bill to follow") }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Text("Members I follow", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "You'll hear how a member you follow votes, and when a bill they sponsor is introduced or moves. " +
+                                "Follow any senator or representative with the button on their page.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        prefs.members.forEach { m ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    m.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f).clickable { nav.official(m.id) }.padding(vertical = 6.dp),
+                                )
+                                TextButton(onClick = { Alerts.unfollowMember(m.id) }) { Text("Unfollow") }
+                            }
+                        }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         TopicsSection(prefs, onFollowed = { checkNow() })
                     }
@@ -290,8 +313,6 @@ fun FollowedBillsCard(nav: CongressNav, onAlerts: () -> Unit, onLegislation: () 
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.clickable(onClick = onLegislation).padding(vertical = 4.dp),
             )
-            if (prefs.topics.isNotEmpty()) LatelyInTopics(prefs, nav)
-            return@InfoCard
         }
         prefs.bills.forEachIndexed { i, id ->
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -313,13 +334,105 @@ fun FollowedBillsCard(nav: CongressNav, onAlerts: () -> Unit, onLegislation: () 
                 }
             }
         }
-        Text(
-            "Alerts ›",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.clickable(onClick = onAlerts).padding(vertical = 4.dp),
-        )
+        if (prefs.members.isNotEmpty()) MembersIFollow(prefs.members, nav)
+        if (prefs.bills.isNotEmpty() || prefs.members.isNotEmpty() || prefs.topics.isNotEmpty()) {
+            Text(
+                "Alerts ›",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.clickable(onClick = onAlerts).padding(vertical = 4.dp),
+            )
+        }
         if (prefs.topics.isNotEmpty()) LatelyInTopics(prefs, nav)
+    }
+}
+
+/** One followed member's record, latest vote, and that vote's roll call. */
+private class MemberLately(val record: MemberRecord?, val vote: MemberVote?, val summary: VoteSummary?)
+
+/** Under the followed bills: each followed member's latest vote and their sponsored bills that moved last. */
+@Composable
+private fun MembersIFollow(members: List<FollowedMember>, nav: CongressNav) {
+    val lately by produceState<Map<String, MemberLately>>(emptyMap(), members) {
+        value = members.associate { m ->
+            val record = runCatching { CongressData.member(m.id) }.getOrNull()
+            val vote = record?.votes?.firstOrNull()
+            val summary = vote?.let { v -> runCatching { CongressData.voteSummary(v.chamber, v.session, v.roll) }.getOrNull() }
+            m.id to MemberLately(record, vote, summary)
+        }
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    Text("Members I follow", style = MaterialTheme.typography.titleSmall)
+    members.forEach { m ->
+        val l = lately[m.id]
+        Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                m.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable { nav.official(m.id) },
+            )
+            l?.vote?.let { v ->
+                val s = l.summary
+                Text(
+                    listOfNotNull(
+                        "Latest vote: ${voteLabel(v.vote)}",
+                        s?.date?.let { Format.date(it) },
+                        s?.question,
+                        s?.bill?.let { BillNames.label(it) } ?: s?.title,
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable { nav.vote(v.chamber, v.session, v.roll) },
+                )
+            }
+            l?.record?.recentSponsored?.take(2)?.forEach { b ->
+                Column(Modifier.fillMaxWidth().clickable { nav.bill(b.bill) }, verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text("Sponsored ${BillNames.label(b.bill)}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                    b.title?.let { Text(it, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                    b.action?.let { a ->
+                        Text(
+                            listOfNotNull(a.date?.let { Format.date(it) }, a.text).joinToString(": "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+            val sponsored = l?.record?.sponsored?.size ?: 0
+            if (sponsored > 2) {
+                Text(
+                    "All $sponsored bills they sponsored ›",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.clickable { nav.sponsoredBills(m.id) },
+                )
+            }
+        }
+    }
+}
+
+/** On a member's page: follow their votes and the bills they sponsor, or stop. */
+@Composable
+fun FollowMemberButton(id: String, name: String) {
+    val prefs by Alerts.prefs.collectAsState()
+    val following = prefs.members.any { it.id == id }
+    val scope = rememberCoroutineScope()
+    OutlinedButton(onClick = {
+        if (following) {
+            Alerts.unfollowMember(id)
+        } else {
+            Alerts.followMember(id, name)
+            // Note where things stand now, so only what happens next is reported.
+            scope.launch { Alerts.check(notify = false) }
+        }
+    }) {
+        Icon(if (following) Icons.Filled.Notifications else Icons.Outlined.Notifications, contentDescription = null, Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(if (following) "Following" else "Follow")
     }
 }
 
