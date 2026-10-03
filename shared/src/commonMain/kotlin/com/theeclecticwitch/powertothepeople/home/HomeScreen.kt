@@ -31,6 +31,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
@@ -140,18 +143,18 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     header()
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DocumentTile("Constitution", Originals.pages.first().thumbnail, Modifier.weight(1f), onConstitution)
-                        DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, Modifier.weight(1f), onBillOfRights)
-                        PersonTile(delegation?.president, "President", Modifier.weight(1f), onOfficial)
-                        PersonTile(delegation?.vicePresident, "Vice President", Modifier.weight(1f), onOfficial)
+                    TileRow(gap = 8.dp, tiles = buildList {
+                        add { m -> DocumentTile("Constitution", Originals.pages.first().thumbnail, m, onConstitution) }
+                        add { m -> DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, m, onBillOfRights) }
+                        add { m -> PersonTile(delegation?.president, "President", m, onOfficial) }
+                        add { m -> PersonTile(delegation?.vicePresident, "Vice President", m, onOfficial) }
                         if (location != null) {
-                            delegation?.senators.orEmpty().forEach { PersonTile(it, "Senator", Modifier.weight(1f), onOfficial) }
-                            delegation?.representative?.let { PersonTile(it, roleOf(it), Modifier.weight(1f), onOfficial) }
-                            governor?.let { PersonTile(it, "Governor", Modifier.weight(1f), onOfficial) }
+                            delegation?.senators.orEmpty().forEach { o -> add { m -> PersonTile(o, "Senator", m, onOfficial) } }
+                            delegation?.representative?.let { o -> add { m -> PersonTile(o, roleOf(o), m, onOfficial) } }
+                            governor?.let { o -> add { m -> PersonTile(o, "Governor", m, onOfficial) } }
                         }
-                        AllCongressTile(Modifier.weight(1f), onAllCongress)
-                    }
+                        add { m -> AllCongressTile(m, onAllCongress) }
+                    })
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             if (location == null) setLocationCard()
@@ -180,12 +183,14 @@ fun HomeScreen(
                         header()
 
                         // The founding documents beside the nation's two highest offices.
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            DocumentTile("Constitution", Originals.pages.first().thumbnail, Modifier.weight(1f), onConstitution)
-                            PersonTile(delegation?.president, "President", Modifier.weight(1f), onOfficial)
-                            PersonTile(delegation?.vicePresident, "Vice President", Modifier.weight(1f), onOfficial)
-                            DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, Modifier.weight(1f), onBillOfRights)
-                        }
+                        TileRow(
+                            listOf(
+                                { m -> DocumentTile("Constitution", Originals.pages.first().thumbnail, m, onConstitution) },
+                                { m -> PersonTile(delegation?.president, "President", m, onOfficial) },
+                                { m -> PersonTile(delegation?.vicePresident, "Vice President", m, onOfficial) },
+                                { m -> DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, m, onBillOfRights) },
+                            ),
+                        )
 
                         // Everyone else who represents the reader.
                         if (location == null) {
@@ -196,14 +201,13 @@ fun HomeScreen(
                             // governor follows. Four to a row, like the row above.
                             val tiles: List<Official?> = d?.senators.orEmpty() + listOfNotNull(d?.representative) + null + listOfNotNull(governor)
                             tiles.chunked(4).forEach { row ->
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    // null marks the All Congress tile.
-                                    row.forEach { o ->
-                                        if (o == null) AllCongressTile(Modifier.weight(1f), onAllCongress)
-                                        else PersonTile(o, roleOf(o), Modifier.weight(1f), onOfficial)
-                                    }
-                                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
-                                }
+                                // null marks the All Congress tile.
+                                TileRow(
+                                    row.map { o ->
+                                        { m: Modifier -> if (o == null) AllCongressTile(m, onAllCongress) else PersonTile(o, roleOf(o), m, onOfficial) }
+                                    },
+                                    columns = 4,
+                                )
                             }
                         }
 
@@ -227,6 +231,27 @@ private fun roleOf(o: Official): String = when {
     o.office.startsWith("Governor") -> "Governor"
     o.office.contains("Delegate") -> "Delegate"
     else -> "Representative"
+}
+
+/**
+ * Tiles side by side, each as tall as the tallest, so a role that takes two lines ("Vice President" on a narrow
+ * phone) doesn't leave its neighbors short. [columns] keeps a part-filled row's tiles the same width as a full one's.
+ * (A Row with IntrinsicSize.Min can't do this: the tiles are built on BoxWithConstraints.)
+ */
+@Composable
+private fun TileRow(tiles: List<@Composable (Modifier) -> Unit>, columns: Int = tiles.size, gap: Dp = 6.dp) {
+    SubcomposeLayout { constraints ->
+        val gapPx = gap.roundToPx()
+        val width = ((constraints.maxWidth - gapPx * (columns - 1)) / columns).coerceAtLeast(0)
+        val natural = subcompose("measure") { tiles.forEach { it(Modifier) } }
+            .map { it.measure(Constraints(minWidth = width, maxWidth = width)) }
+        val height = natural.maxOfOrNull { it.height } ?: 0
+        val placeables = subcompose("place") { tiles.forEach { it(Modifier) } }
+            .map { it.measure(Constraints.fixed(width, height)) }
+        layout(constraints.maxWidth, height) {
+            placeables.forEachIndexed { i, p -> p.placeRelative(i * (width + gapPx), 0) }
+        }
+    }
 }
 
 /** A face, a surname and a role; tap for their page. */
