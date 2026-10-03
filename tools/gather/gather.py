@@ -20,6 +20,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bills  # noqa: E402
+import births  # noqa: E402
 import candidates  # noqa: E402
 import contacts  # noqa: E402
 import disclosures  # noqa: E402
@@ -122,6 +123,7 @@ def main():
 
     step(f"Session days {congress}", session_days.gather, net, store, congress, log)
     member_count = step("Members", members.build, store, congress, log)
+    step("Birthplaces", births.gather, net, store, state, log)
     step("Candidates", candidates.gather, net, store, log)
     step(f"Campaign money {congress}", finance.gather, net, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)

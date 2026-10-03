@@ -317,6 +317,7 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                         official.termEnds?.let { Text("Current term ends ${Format.date(it)}", style = MaterialTheme.typography.bodyMedium) }
                     }
                 }
+                if (!official.userEntered && official.level == Level.Federal) CitizenshipCard(official)
                 // Senators and representatives; the President and Vice President don't cast roll-call votes.
                 if (!official.userEntered && official.level == Level.Federal && !official.id.startsWith("exec:")) {
                     MemberRecordCards(official.id, congressNav)
