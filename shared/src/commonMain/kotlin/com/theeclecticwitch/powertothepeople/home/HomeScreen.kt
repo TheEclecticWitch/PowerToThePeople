@@ -80,6 +80,7 @@ fun HomeScreen(
     onAlerts: () -> Unit,
     onComingUp: () -> Unit,
     onElections: () -> Unit,
+    onSources: () -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
@@ -135,6 +136,17 @@ fun HomeScreen(
             Text("Search ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
         }
     }
+    // At the foot of the page, where everyone who scrolls will pass it: whose app this is, and isn't.
+    val independent: @Composable () -> Unit = {
+        InfoCard(onClick = onSources) {
+            Text(
+                "Power to the People is an independent app. It is not affiliated with or endorsed by the U.S. government, " +
+                    "Congress, any state or any political party. Its facts come from public government records.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text("Our sources ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+        }
+    }
     Scaffold { padding ->
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
             if (maxWidth >= 900.dp) {
@@ -175,6 +187,7 @@ fun HomeScreen(
                             howItWorks()
                         }
                     }
+                    independent()
                 }
             } else {
                 ReadingColumn {
@@ -222,6 +235,7 @@ fun HomeScreen(
                         DebtCard(onOpen = onDebt)
                         DoomsdayCard(onOpen = onDoomsday)
                         FollowedBillsCard(congressNav, onAlerts = onAlerts, onLegislation = onLegislation)
+                        independent()
                     }
                 }
             }
