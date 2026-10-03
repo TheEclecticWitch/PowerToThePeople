@@ -27,6 +27,9 @@ import com.theeclecticwitch.powertothepeople.officials.FederalOfficials
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalUriHandler
+import com.theeclecticwitch.powertothepeople.ui.openSafely
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
 
 @Composable
@@ -214,6 +217,8 @@ private fun Source(title: String, what: String, name: String, url: String?) {
     }
 }
 
+const val PRIVACY_POLICY_URL = "https://00theeclecticwitch00.com/power-to-the-people-privacy-policy/"
+
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     Scaffold(topBar = { AppTopBar("About", onBack) }) { padding ->
@@ -251,6 +256,13 @@ fun AboutScreen(onBack: () -> Unit) {
                             "address is sent only to look up your districts (the Census Bureau) or your polling place (Google's " +
                             "election service, through this app's own service, which doesn't keep it), and only when you ask.",
                         style = MaterialTheme.typography.bodyLarge,
+                    )
+                    val uri = LocalUriHandler.current
+                    Text(
+                        "Read the full privacy policy ›",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.clickable { openSafely(uri, PRIVACY_POLICY_URL) }.padding(vertical = 4.dp),
                     )
                 }
                 InfoCard(title = "Coming next") {

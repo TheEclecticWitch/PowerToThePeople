@@ -9,7 +9,7 @@ Everything needed to put Power to the People in testers' hands. Answers here mat
 - Version: 1.0 (Android versionCode 1, iOS build 1)
 - Category: **Education** (not News: Google Play's News category brings extra publisher requirements)
 - Price: Free (News will be an in-app subscription later)
-- Privacy policy URL: the page on your developer site where `docs/privacy-policy.html` is posted
+- Privacy policy URL: https://00theeclecticwitch00.com/power-to-the-people-privacy-policy/
 
 ## Store listing text
 
