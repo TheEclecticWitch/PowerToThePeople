@@ -46,6 +46,12 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        # An iPad app that can share the screen must allow all four, or App Store Connect rejects the upload.
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         # The contact buttons open the dialer, mail and the browser.
         LSApplicationQueriesSchemes: [tel, mailto, https]
         # Alerts: a check every few hours, when iOS allows, for votes and bills the reader follows.
