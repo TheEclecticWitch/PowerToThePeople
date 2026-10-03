@@ -3,6 +3,7 @@ Polite HTTP for the gatherer: retries with backoff, a request budget, and the ap
 added only to Congress.gov calls. Uses the standard library so the GitHub runner needs no installs.
 """
 import gzip
+import http.client
 import json
 import os
 import time
@@ -80,7 +81,8 @@ class Net:
                     # 404 is a real answer (not published yet); only busy/server errors are worth retrying.
                     if e.code not in (429, 500, 502, 503, 504) or attempt == 4:
                         raise
-                except (urllib.error.URLError, TimeoutError) as e:
+                # A dropped connection mid-body (IncompleteRead, RemoteDisconnected) is as passing as a timeout.
+                except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
                     reason = type(e).__name__
                     if attempt == 4:
                         raise
