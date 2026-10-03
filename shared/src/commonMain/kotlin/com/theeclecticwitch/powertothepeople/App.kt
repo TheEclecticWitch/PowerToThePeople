@@ -54,6 +54,7 @@ import com.theeclecticwitch.powertothepeople.civics.HowGovernmentWorksScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.ComingUpScreen
+import com.theeclecticwitch.powertothepeople.congress.StateBillScreen
 import com.theeclecticwitch.powertothepeople.alerts.Alerts
 import com.theeclecticwitch.powertothepeople.alerts.AlertsScreen
 import com.theeclecticwitch.powertothepeople.alerts.Notifications
@@ -108,6 +109,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class BillRoute(val id: String)
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
+@Serializable data class StateBillRoute(val id: String)
 @Serializable data class DirectoryRoute(val chamber: String? = null)
 @Serializable object SettingsRoute
 @Serializable object VotingRoute
@@ -255,6 +257,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () ->
         sponsoredBills = { open(SponsoredBillsRoute(it)) },
         recentVotes = { nav.navigate(RecentVotesRoute) },
         setLocation = { nav.navigate(LocationRoute) },
+        stateBill = { open(StateBillRoute(it)) },
     )
     // The gear on every main screen opens Settings.
     CompositionLocalProvider(LocalOpenSettings provides { nav.navigate(SettingsRoute) }) {
@@ -410,6 +413,7 @@ private fun NavGraphBuilder.pageScreens(nav: NavHostController, congressNav: Con
             VoteScreen(r.chamber, r.session, r.roll, back, congressNav)
         }
         composable<BillRoute> { entry -> BillScreen(entry.toRoute<BillRoute>().id, back, congressNav) }
+        composable<StateBillRoute> { entry -> StateBillScreen(entry.toRoute<StateBillRoute>().id, back) }
         composable<MemberVotesRoute> { entry -> MemberVotesScreen(entry.toRoute<MemberVotesRoute>().id, back, congressNav) }
         composable<SponsoredBillsRoute> { entry -> SponsoredBillsScreen(entry.toRoute<SponsoredBillsRoute>().id, back, congressNav) }
         composable<EditOfficialRoute> { entry ->
@@ -440,6 +444,7 @@ private fun DetailNavHost(detail: NavHostController, main: NavHostController) {
         sponsoredBills = { detail.navigate(SponsoredBillsRoute(it)) },
         recentVotes = { main.navigate(RecentVotesRoute) },
         setLocation = { main.navigate(LocationRoute) },
+        stateBill = { detail.navigate(StateBillRoute(it)) },
     )
     NavHost(detail, startDestination = DetailEmptyRoute) {
         composable<DetailEmptyRoute> {

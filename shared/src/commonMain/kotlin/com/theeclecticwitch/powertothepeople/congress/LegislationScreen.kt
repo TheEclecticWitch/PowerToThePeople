@@ -76,7 +76,7 @@ fun LegislationScreen(onBack: () -> Unit, nav: CongressNav) {
                 when (tab) {
                     0 -> CongressBills(nav)
                     1 -> PresidentOrders()
-                    else -> StateBillSearch()
+                    else -> StateBillSearch(nav.stateBill)
                 }
             }
         }
@@ -207,7 +207,7 @@ private fun PresidentOrders() {
 // --- The states ---
 
 @Composable
-private fun StateBillSearch() {
+private fun StateBillSearch(onOpen: (String) -> Unit) {
     val location by LocationStore.location.collectAsState()
     var state by rememberSaveable { mutableStateOf(location?.stateAbbr?.takeIf { it.length == 2 } ?: "") }
     var query by rememberSaveable { mutableStateOf("") }
@@ -269,7 +269,7 @@ private fun StateBillSearch() {
         results?.let { r ->
             items(r.bills, key = { it.id }) { b ->
                 Column(
-                    Modifier.fillMaxWidth().clickable(enabled = b.url != null) { b.url?.let { openSafely(uri, it) } }.padding(vertical = 6.dp),
+                    Modifier.fillMaxWidth().clickable { onOpen(b.id) }.padding(vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(

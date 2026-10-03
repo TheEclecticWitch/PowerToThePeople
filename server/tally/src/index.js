@@ -8,6 +8,8 @@
  *   POST /answer {"vote":..., "install":"<random code>", "answer":"Yea"|"Nay"|null}
  *   GET  /state-bills?state=md&q=paid leave  -> a state's bills matching words or a number ("HB 123"),
  *        from Open States. The Open States key stays here as a secret, never in the app.
+ *   GET  /state-bill?id=ocd-bill/...         -> one state bill: its actions, sponsors and every recorded vote with
+ *        how each legislator voted, from Open States.
  *   GET  /elections                          -> upcoming elections (Google Civic Information)
  *   POST /voter-info {"address", "electionId"?} -> polling places, ballot contests and the state's official
  *        election links for an address. The address is passed to Google and not kept.
@@ -29,6 +31,7 @@ export default {
       if (request.method === "GET" && url.pathname === "/tally") return await readTallies(url, env);
       if (request.method === "POST" && url.pathname === "/answer") return await recordAnswer(request, env);
       if (request.method === "GET" && url.pathname === "/state-bills") return await stateBills(request, url, env, ctx);
+      if (request.method === "GET" && url.pathname === "/state-bill") return await stateBill(request, url, env, ctx);
       if (request.method === "GET" && url.pathname === "/elections") return await elections(env, ctx);
       if (request.method === "POST" && url.pathname === "/voter-info") return await voterInfo(request, env);
       if (request.method === "GET" && url.pathname === "/") {
@@ -175,6 +178,63 @@ async function stateBills(request, url, env, ctx) {
     headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=21600" },
   });
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
+}
+
+const OCD_BILL = /^ocd-bill\/[0-9a-f-]{36}$/;
+
+async function stateBill(request, url, env, ctx) {
+  const id = url.searchParams.get("id") || "";
+  if (!OCD_BILL.test(id)) return json({ error: "bad request" }, 400);
+  if (!env.OPENSTATES_KEY) return json({ error: "state bills aren't set up yet" }, 503);
+  const cacheKey = new Request(`https://cache.ptp/state-bill?id=${id}`);
+  const hit = await caches.default.match(cacheKey);
+  if (hit) return hit;
+  if (env.LIMIT) {
+    const { success } = await env.LIMIT.limit({ key: request.headers.get("CF-Connecting-IP") || "unknown" });
+    if (!success) return json({ error: "too many requests, try again in a minute" }, 429);
+  }
+  const api = new URL(`https://v3.openstates.org/bills/${id}`);
+  for (const part of ["actions", "sponsorships", "votes", "sources"]) api.searchParams.append("include", part);
+  const upstream = await fetch(api, { headers: { "X-API-KEY": env.OPENSTATES_KEY } });
+  if (upstream.status === 404) return json({ error: "that bill wasn't found" }, 404);
+  if (upstream.status === 429) return json({ error: "the state bill service has reached its limit for now; try again later" }, 503);
+  if (!upstream.ok) return json({ error: "the state bill service didn't answer" }, 502);
+  const b = await upstream.json();
+  const body = {
+    id: b.id,
+    state: (b.jurisdiction?.id || "").match(/state:([a-z]{2})/)?.[1] || null,
+    number: b.identifier,
+    title: b.title,
+    session: b.session,
+    chamber: b.from_organization?.classification ?? null,
+    subjects: b.subject || [],
+    actions: (b.actions || []).map((a) => ({
+      date: (a.date || "").slice(0, 10),
+      text: a.description,
+      chamber: a.organization?.classification ?? null,
+    })),
+    sponsors: (b.sponsorships || []).map((sp) => ({
+      name: sp.name,
+      primary: !!sp.primary,
+      personId: sp.person?.id ?? null,
+      party: sp.person?.party ?? null,
+    })),
+    votes: (b.votes || []).map((v) => ({
+      date: (v.start_date || "").slice(0, 10),
+      motion: (v.motion_text || "").replace(/\s+/g, " ").trim() || null,
+      result: v.result,
+      chamber: v.organization?.classification ?? null,
+      counts: Object.fromEntries((v.counts || []).map((c) => [c.option, c.value])),
+      voters: (v.votes || []).map((x) => ({ name: x.voter_name, personId: x.voter?.id ?? null, option: x.option })),
+    })),
+    url: b.openstates_url,
+    sources: (b.sources || []).map((x) => x.url).filter(Boolean).slice(0, 3),
+  };
+  const response = new Response(JSON.stringify(body), {
+    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=21600" },
+  });
+  ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
   return response;
 }
 

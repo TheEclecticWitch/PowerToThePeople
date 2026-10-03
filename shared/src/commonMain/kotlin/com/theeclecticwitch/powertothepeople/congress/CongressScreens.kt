@@ -69,6 +69,8 @@ class CongressNav(
     val sponsoredBills: (id: String) -> Unit,
     val recentVotes: () -> Unit,
     val setLocation: () -> Unit,
+    /** A state legislature's bill, by its Open States id. */
+    val stateBill: (id: String) -> Unit = {},
 )
 
 internal sealed interface Load<out T> {
