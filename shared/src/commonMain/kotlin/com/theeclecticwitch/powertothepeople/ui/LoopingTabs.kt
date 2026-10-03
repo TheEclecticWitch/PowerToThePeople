@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.PrimaryTabRow
+import com.theeclecticwitch.powertothepeople.ui.theme.OnSurfaceColors
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +32,8 @@ fun LoopingTabs(labels: List<String>, modifier: Modifier = Modifier, content: @C
     val saved = rememberSaveableStateHolder()
     val selected = pager.currentPage % count
     Column(modifier) {
-        PrimaryTabRow(selectedTabIndex = selected) {
+        // The tabs sit with the top bar, in the chosen theme's colors.
+        OnSurfaceColors { PrimaryTabRow(selectedTabIndex = selected) {
             labels.forEachIndexed { i, label ->
                 Tab(
                     selected = selected == i,
@@ -45,7 +47,7 @@ fun LoopingTabs(labels: List<String>, modifier: Modifier = Modifier, content: @C
                     text = { Text(label) },
                 )
             }
-        }
+        } }
         HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) { page ->
             val tab = page % count
             Box(Modifier.fillMaxSize()) {

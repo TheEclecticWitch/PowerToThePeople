@@ -1,5 +1,6 @@
 package com.theeclecticwitch.powertothepeople.home
 
+import com.theeclecticwitch.powertothepeople.ui.theme.OnSurfaceColors
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.background
@@ -231,6 +232,7 @@ private fun roleOf(o: Official): String = when {
 /** A face, a surname and a role; tap for their page. */
 @Composable
 private fun PersonTile(o: Official?, role: String, modifier: Modifier, onOfficial: (String) -> Unit) {
+    OnSurfaceColors {
     Column(
         modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(enabled = o != null) { o?.let { onOfficial(it.id) } }.padding(4.dp),
@@ -247,10 +249,12 @@ private fun PersonTile(o: Official?, role: String, modifier: Modifier, onOfficia
         FitText(role, MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
     }
 }
+}
 
 /** Everyone in Congress, as a tile beside the reader's own members. */
 @Composable
 private fun AllCongressTile(modifier: Modifier, onOpen: () -> Unit) {
+    OnSurfaceColors {
     Column(
         modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(onClick = onOpen).padding(4.dp),
@@ -267,10 +271,12 @@ private fun AllCongressTile(modifier: Modifier, onOpen: () -> Unit) {
         FitText("Directory", MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
+}
 
 /** One of the founding documents, shown as its own first page. */
 @Composable
 private fun DocumentTile(title: String, image: String, modifier: Modifier, onOpen: () -> Unit) {
+    OnSurfaceColors {
     Column(
         modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(onClick = onOpen).padding(4.dp),
@@ -291,4 +297,5 @@ private fun DocumentTile(title: String, image: String, modifier: Modifier, onOpe
             maxLines = if (' ' in title) 2 else 1,
         )
     }
+}
 }

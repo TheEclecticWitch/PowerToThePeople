@@ -1,6 +1,8 @@
 package com.theeclecticwitch.powertothepeople.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -10,6 +12,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.ui.Modifier
 import com.theeclecticwitch.powertothepeople.ui.FlagBackground
 import androidx.compose.runtime.collectAsState
@@ -120,6 +126,64 @@ private val DarkColors = darkColorScheme(
     scrim = Color.Black,
 )
 
+/** Old paper and ink: easy on the eyes for long reading, as in a printed book. */
+private val SepiaColors = lightColorScheme(
+    primary = Color(0xFF5B3A1E),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE6D2B0),
+    onPrimaryContainer = Color(0xFF2E1A08),
+    secondary = Gold,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFEBDCB5),
+    onSecondaryContainer = Color(0xFF3A2C0B),
+    tertiary = Color(0xFF5E5A3E),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFE2DCC0),
+    onTertiaryContainer = Color(0xFF1F1D0E),
+    background = Color(0xFFF1E6CE),
+    onBackground = Color(0xFF3A2D1C),
+    surface = Color(0xFFF1E6CE),
+    onSurface = Color(0xFF3A2D1C),
+    surfaceVariant = Color(0xFFE4D5B6),
+    onSurfaceVariant = Color(0xFF5C4A33),
+    surfaceTint = Color(0xFF5B3A1E),
+    surfaceBright = Color(0xFFF8F0DD),
+    surfaceDim = Color(0xFFDDCFB2),
+    surfaceContainerLowest = Color(0xFFFBF5E7),
+    surfaceContainerLow = Color(0xFFF7EEDA),
+    surfaceContainer = Color(0xFFEFE3C8),
+    surfaceContainerHigh = Color(0xFFE9DCBF),
+    surfaceContainerHighest = Color(0xFFE3D5B6),
+    inverseSurface = Color(0xFF3B3024),
+    inverseOnSurface = Color(0xFFF6EBD4),
+    inversePrimary = Color(0xFFE2BE93),
+    outline = Color(0xFF8A7759),
+    outlineVariant = Color(0xFFD5C3A1),
+    error = Color(0xFF9C3B2E),
+    onError = Color.White,
+    errorContainer = Color(0xFFF3D6C9),
+    onErrorContainer = Color(0xFF3D0E07),
+    scrim = Color.Black,
+)
+
+/**
+ * The colors for cards, tiles and bars: the reader's chosen theme. With the flag on, the page itself (and any
+ * text written straight onto it) takes the dark look so it reads against the deep flag, while everything drawn
+ * on a card keeps the chosen theme. Wrap a surface's content in [OnSurfaceColors] to use these.
+ */
+val LocalSurfaceScheme = staticCompositionLocalOf<ColorScheme?> { null }
+
+/** Draws [content] in the chosen theme's colors, for anything that sits on its own card, tile or bar. */
+@Composable
+fun OnSurfaceColors(content: @Composable () -> Unit) {
+    val scheme = LocalSurfaceScheme.current
+    if (scheme == null || scheme == MaterialTheme.colorScheme) content()
+    else MaterialTheme(colorScheme = scheme, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+        // Text that names no color takes the theme's own, not the light lettering meant for the flag.
+        CompositionLocalProvider(LocalContentColor provides scheme.onSurface, content = content)
+    }
+}
+
 /** The typefaces the app needs beyond Material's: Caslon for the founding documents. */
 class AppFonts(val caslon: FontFamily, val caslonDisplay: FontFamily)
 
@@ -146,19 +210,30 @@ fun PowerTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () ->
     )
     val scale by TextSize.flow.collectAsState()
     val density = LocalDensity.current
-    val scheme = if (dark) DarkColors else LightColors
-    // With the flag on, screens are see-through so it shows behind them, and cards let a little of it through.
-    val colors = if (scale.flag) {
-        scheme.copy(background = Color.Transparent, surfaceContainerLow = scheme.surfaceContainerLow.copy(alpha = if (dark) 0.88f else 0.86f))
-    } else scheme
+    val scheme = when (scale.theme) {
+        "light" -> LightColors
+        "dark" -> DarkColors
+        "sepia" -> SepiaColors
+        else -> if (dark) DarkColors else LightColors
+    }
+    val isDark = scheme == DarkColors
+    // With the flag on, the flag is always shown deep and rich, never faded: the page takes the dark look over
+    // it, cards keep the chosen theme and let a little of the flag through.
+    val surfaces = if (scale.flag) scheme.copy(surfaceContainerLow = scheme.surfaceContainerLow.copy(alpha = if (isDark) 0.88f else 0.92f)) else scheme
+    val colors = if (scale.flag) DarkColors.copy(background = Color.Transparent, surfaceContainerLow = surfaces.surfaceContainerLow) else scheme
     CompositionLocalProvider(
         LocalAppFonts provides AppFonts(caslon, display),
         LocalDensity provides Density(density.density, density.fontScale * scale.scale),
+        LocalSurfaceScheme provides surfaces,
     ) {
         MaterialTheme(colorScheme = colors, typography = typography) {
-            Box(Modifier.fillMaxSize().background(scheme.background)) {
-                if (scale.flag) FlagBackground(wash = scheme.background.copy(alpha = if (dark) 0.80f else 0.74f))
+            Box(Modifier.fillMaxSize().background(if (scale.flag) DarkColors.background else scheme.background)) {
+                if (scale.flag) FlagBackground(wash = DarkColors.background.copy(alpha = 0.80f))
                 content()
+                // Behind the phone's clock and battery, the theme's own color, so those icons always read.
+                if (scale.flag) {
+                    Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(scheme.surface))
+                }
             }
         }
     }

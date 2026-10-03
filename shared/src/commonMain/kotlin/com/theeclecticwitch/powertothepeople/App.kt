@@ -88,6 +88,7 @@ import com.theeclecticwitch.powertothepeople.officials.Level
 import com.theeclecticwitch.powertothepeople.officials.OfficialDetailScreen
 import com.theeclecticwitch.powertothepeople.officials.OfficialsScreen
 import com.theeclecticwitch.powertothepeople.ui.theme.PowerTheme
+import com.theeclecticwitch.powertothepeople.ui.theme.OnSurfaceColors
 import com.theeclecticwitch.powertothepeople.ui.FitText
 import kotlinx.serialization.Serializable
 
@@ -177,13 +178,13 @@ fun App() {
                     if (detail.currentBackStackEntry != null) detail.popBackStack(DetailEmptyRoute, inclusive = false)
                 }
                 Row(Modifier.fillMaxSize()) {
-                    NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                    OnSurfaceColors { NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         val selected = selectedTab(nav)
                         tabs.forEach { tab ->
                             // A rail item offers its label the whole window; a fixed width keeps the rail narrow.
                             NavigationRailItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium, Modifier.width(76.dp)) })
                         }
-                    }
+                    } }
                     Scaffold(
                         modifier = if (split) Modifier.width(ListPaneWidth) else Modifier.weight(1f),
                         contentWindowInsets = WindowInsets(0),
@@ -198,13 +199,13 @@ fun App() {
             } else {
                 Scaffold(
                     contentWindowInsets = WindowInsets(0),
-                    bottomBar = {
+                    bottomBar = { OnSurfaceColors {
                         NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                             val selected = selectedTab(nav)
                             tabs.forEach { tab ->
                                 NavigationBarItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium) })
                             }
-                        }
+                        } }
                     },
                 ) { padding ->
                     AppNavHost(nav, Modifier.padding(padding).consumeWindowInsets(padding))

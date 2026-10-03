@@ -17,6 +17,8 @@ object TextSize {
         val scale: Float = 1f,
         /** The flag behind the app. On unless the reader turns it off. */
         val flag: Boolean = true,
+        /** "system" (match the device), "light", "dark" or "sepia". */
+        val theme: String = "system",
     )
 
     private val prefs = JsonFileState("display_prefs.json", Prefs.serializer(), Prefs())
@@ -25,6 +27,10 @@ object TextSize {
     fun set(scale: Float) = prefs.update { it.copy(scale = scale) }
 
     fun setFlag(on: Boolean) = prefs.update { it.copy(flag = on) }
+
+    fun setTheme(theme: String) = prefs.update { it.copy(theme = theme) }
+
+    val themes = listOf("system" to "Match my device", "light" to "Light", "dark" to "Dark", "sepia" to "Sepia")
 
     fun nameOf(scale: Float): String = names[steps.indexOfFirst { it >= scale - 0.01f }.coerceAtLeast(0)]
 }

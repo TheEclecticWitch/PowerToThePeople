@@ -1,5 +1,6 @@
 package com.theeclecticwitch.powertothepeople.ui
 
+import com.theeclecticwitch.powertothepeople.ui.theme.OnSurfaceColors
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.runtime.remember
@@ -69,6 +70,11 @@ fun SettingsButton() {
 
 @Composable
 fun AppTopBar(title: String, onBack: (() -> Unit)? = null, actions: @Composable () -> Unit = {}) {
+    OnSurfaceColors { AppTopBarBody(title, onBack, actions) }
+}
+
+@Composable
+private fun AppTopBarBody(title: String, onBack: (() -> Unit)?, actions: @Composable () -> Unit) {
     TopAppBar(
         title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         navigationIcon = {
@@ -95,6 +101,16 @@ fun InfoCard(
     title: String? = null,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    OnSurfaceColors { InfoCardBody(title, modifier, onClick, content) }
+}
+
+@Composable
+private fun InfoCardBody(
+    title: String?,
+    modifier: Modifier,
+    onClick: (() -> Unit)?,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(16.dp)

@@ -14,6 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -77,6 +81,24 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
                     )
                     Text(
                         "This adds to the text size set on your device.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                InfoCard(title = "Theme") {
+                    val display by TextSize.flow.collectAsState()
+                    TextSize.themes.forEach { (id, label) ->
+                        Row(
+                            Modifier.fillMaxWidth().selectable(selected = display.theme == id, onClick = { TextSize.setTheme(id) }, role = Role.RadioButton),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = display.theme == id, onClick = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                    Text(
+                        "Sepia is warm, like old paper, and easy on the eyes for long reading.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
