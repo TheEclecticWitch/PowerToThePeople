@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -26,8 +29,8 @@ import kotlinx.coroutines.launch
 /** So many pages that no one swipes to either end; the pager starts in the middle. */
 private const val PAGES = 10_000
 
-/** The space a Material tab keeps on each side of its label. */
-private val TAB_PADDING = 16.dp
+/** The space kept on each side of a label: enough to keep neighbors apart, less than Material's 16dp. */
+private val TAB_PADDING = 6.dp
 
 /**
  * Tabs across the top that can also be swiped, round and round: past the last tab comes the first again, in
@@ -66,8 +69,13 @@ fun LoopingTabs(labels: List<String>, modifier: Modifier = Modifier, content: @C
                             if (step < -count / 2) step += count
                             scope.launch { pager.animateScrollToPage(pager.currentPage + step) }
                         },
-                        text = { Text(label, style = style.copy(fontSize = size), maxLines = 1, softWrap = false) },
-                    )
+                    ) {
+                        // Drawn here rather than through Tab's text slot, which pads 16dp a side and leaves the
+                        // labels small on a phone.
+                        Box(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = TAB_PADDING), contentAlignment = Alignment.Center) {
+                            Text(label, style = style.copy(fontSize = size), maxLines = 1, softWrap = false)
+                        }
+                    }
                 }
             }
         } }
