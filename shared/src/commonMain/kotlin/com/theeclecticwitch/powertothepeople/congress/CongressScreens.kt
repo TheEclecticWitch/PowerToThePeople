@@ -58,6 +58,7 @@ class CongressNav(
     val official: (id: String) -> Unit,
     val memberVotes: (id: String) -> Unit,
     val sponsoredBills: (id: String) -> Unit,
+    val recentVotes: () -> Unit,
 )
 
 private sealed interface Load<out T> {
@@ -137,6 +138,7 @@ fun MemberRecordCards(id: String, nav: CongressNav) {
                 }
                 CongressSource()
             }
+            AlignmentCard(record, cast, titles, nav)
             InfoCard(title = "Bills sponsored") {
                 val n = record.sponsored.size
                 Text(
@@ -202,7 +204,7 @@ private fun VoteRow(
             summary?.result?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
             } ?: Spacer(Modifier.weight(1f))
-            theirVote?.let { Spacer(Modifier.width(8.dp)); Tag(voteLabel(it)) }
+            theirVote?.let { Spacer(Modifier.width(8.dp)); Tag(if (it.startsWith("You: ")) it else voteLabel(it)) }
         }
     }
 }
@@ -361,6 +363,9 @@ fun VoteScreen(chamber: String, session: Int, roll: Int, onBack: () -> Unit, nav
                                 }
                             }
                         }
+                        if ("Yea" in groups || "Nay" in groups) {
+                            item { YourViewCard(MyPositions.key(chamber, session, roll)) }
+                        }
                         if (mine.isNotEmpty()) {
                             item {
                                 InfoCard(title = "Your members") {
@@ -432,6 +437,173 @@ private fun PositionRow(p: Position, showVote: Boolean, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (showVote) { Spacer(Modifier.width(8.dp)); Tag(voteLabel(p.vote)) }
+    }
+}
+
+/** Lets the reader say how they would have voted. Stays on the device; used only for the member pages. */
+@Composable
+private fun YourViewCard(key: String) {
+    val positions by MyPositions.flow.collectAsState()
+    val current = positions[key]
+    InfoCard(title = "Your view") {
+        Text("How would you have voted?", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            listOf("Yea", "Nay").forEach { v ->
+                FilterChip(
+                    selected = current == v,
+                    onClick = { MyPositions.set(key, if (current == v) null else v) },
+                    label = { Text(v) },
+                )
+            }
+        }
+        Text(
+            if (current == null) {
+                "Answer, and your members' pages will show how often they voted the way you would have. " +
+                    "Private: kept only on this device."
+            } else {
+                "Saved on this device only. Tap your answer again to clear it."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** The reader's answers set beside this member's votes: counts and the votes themselves, no score. */
+@Composable
+private fun AlignmentCard(record: MemberRecord, cast: List<CastVote>, titles: Map<String, BillSummary>, nav: CongressNav) {
+    val positions by MyPositions.flow.collectAsState()
+    val a = align(record.votes, positions, record.congress)
+    var showAll by remember(record.id) { mutableStateOf(false) }
+    InfoCard(title = "You and ${record.name}") {
+        if (a.compared.isEmpty()) {
+            Text(
+                "Open any vote, say how you would have voted, and this card will show how often ${record.name} " +
+                    "voted the same way. Your answers stay on this device.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            OutlinedButton(onClick = nav.recentVotes) { Text("See the latest votes") }
+            return@InfoCard
+        }
+        a.sameShare?.let { share ->
+            Text(
+                "Voted the way you would have on ${a.same} of ${a.same + a.different} votes (${Format.decimals(share * 100, 0)}%)",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Tag("Same as you ${a.same}")
+            Tag("Different ${a.different}")
+            if (a.memberDidNotTakeSide > 0) Tag("Didn't vote Yea or Nay ${a.memberDidNotTakeSide}")
+        }
+        Text(
+            "Based only on the ${a.compared.size} vote${if (a.compared.size == 1) "" else "s"} you answered. " +
+                "Answer more for a fuller picture.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        val summaries = cast.associate { MyPositions.key(it.vote.chamber, it.vote.session, it.vote.roll, record.congress) to it.summary }
+        val rows = if (showAll) a.compared else a.compared.take(5)
+        rows.forEachIndexed { i, c ->
+            if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            val key = MyPositions.key(c.vote.chamber, c.vote.session, c.vote.roll, record.congress)
+            VoteRow(c.vote.chamber, summaries[key], c.vote.roll, titles) {
+                nav.vote(c.vote.chamber, c.vote.session, c.vote.roll)
+            }
+            Text(
+                "You: ${c.mine} · ${record.name.substringAfterLast(' ')}: ${voteLabel(c.vote.vote)}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+        if (!showAll && a.compared.size > 5) {
+            OutlinedButton(onClick = { showAll = true }) { Text("Show all ${a.compared.size}") }
+        }
+    }
+}
+
+// --- The latest roll calls in both chambers ---
+
+/** Newest first across both chambers. */
+private suspend fun latestVotes(force: Boolean): List<BillVote> =
+    CongressData.voteLists(force).flatMap { (key, votes) ->
+        val (chamber, session) = key.split('/')
+        votes.map { BillVote(chamber, session.toInt(), it) }
+    }.sortedWith(compareByDescending<BillVote> { it.summary.date }.thenByDescending { it.summary.roll })
+
+@Composable
+fun LatestVotesCard(nav: CongressNav) {
+    val (load, _) = rememberLoad(Unit, OFFLINE) { latestVotes(false) }
+    val titles = rememberBillTitles()
+    val positions by MyPositions.flow.collectAsState()
+    InfoCard(title = "Latest votes in Congress") {
+        when (val l = load) {
+            Load.Loading -> LoadingBox("Loading votes…")
+            is Load.Failed -> Text(l.message, style = MaterialTheme.typography.bodyMedium)
+            is Load.Done -> {
+                l.value.take(3).forEachIndexed { i, v ->
+                    if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    val mine = positions[MyPositions.key(v.chamber, v.session, v.summary.roll)]
+                    VoteRow(v.chamber, v.summary, v.summary.roll, titles, mine?.let { "You: $it" }) {
+                        nav.vote(v.chamber, v.session, v.summary.roll)
+                    }
+                }
+                Text(
+                    "See all votes, and say how you would have voted ›",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.clickable(onClick = nav.recentVotes).padding(vertical = 4.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun RecentVotesScreen(onBack: () -> Unit, nav: CongressNav) {
+    val (load, retry) = rememberLoad(Unit, OFFLINE) { force -> latestVotes(force) }
+    val titles = rememberBillTitles()
+    val positions by MyPositions.flow.collectAsState()
+    var chamber by remember { mutableStateOf<String?>(null) }
+    var unanswered by remember { mutableStateOf(false) }
+    Scaffold(topBar = { AppTopBar("Votes in Congress", onBack) }) { padding ->
+        ReadingColumn(Modifier.padding(padding)) {
+            when (val l = load) {
+                Load.Loading -> LoadingBox("Loading votes…")
+                is Load.Failed -> ErrorBox(l.message, retry)
+                is Load.Done -> {
+                    val shown = l.value.filter { v ->
+                        (chamber == null || v.chamber == chamber) &&
+                            (!unanswered || MyPositions.key(v.chamber, v.session, v.summary.roll) !in positions)
+                    }
+                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    "Every roll-call vote this Congress, newest first. Open one to see how each member voted " +
+                                        "and to say how you would have voted.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    listOf(null to "Both chambers", "senate" to "Senate", "house" to "House").forEach { (value, label) ->
+                                        FilterChip(selected = chamber == value, onClick = { chamber = value }, label = { Text(label) })
+                                    }
+                                    FilterChip(selected = unanswered, onClick = { unanswered = !unanswered }, label = { Text("Not answered yet") })
+                                }
+                            }
+                        }
+                        items(shown, key = { "${it.chamber}/${it.session}/${it.summary.roll}" }) { v ->
+                            val mine = positions[MyPositions.key(v.chamber, v.session, v.summary.roll)]
+                            VoteRow(v.chamber, v.summary, v.summary.roll, titles, mine?.let { "You: $it" }) {
+                                nav.vote(v.chamber, v.session, v.summary.roll)
+                            }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        }
+                        item { Spacer(Modifier.height(8.dp)); CongressSource() }
+                    }
+                }
+            }
+        }
     }
 }
 

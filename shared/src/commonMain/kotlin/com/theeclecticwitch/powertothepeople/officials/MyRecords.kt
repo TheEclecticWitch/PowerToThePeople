@@ -48,7 +48,7 @@ data class OfficialRecord(
 fun newId(): String = Uuid.random().toString()
 
 /** A small JSON file that is read once, kept in memory, and written back on every change. */
-private class JsonFileState<T>(private val file: String, private val serializer: KSerializer<T>, empty: T) {
+internal class JsonFileState<T>(private val file: String, private val serializer: KSerializer<T>, empty: T) {
     private val state = MutableStateFlow(
         try {
             AppFiles.store.read(file)?.let { Http.json.decodeFromString(serializer, it) } ?: empty

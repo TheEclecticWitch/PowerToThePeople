@@ -182,7 +182,7 @@ fun DoomsdayScreen(onBack: () -> Unit) {
                     textAlign = TextAlign.Center,
                 )
                 Text(
-                    "On a clock, that is ${Doomsday.clockTime(d.seconds)} - just before 12 midnight.",
+                    "On a digital clock, that is ${Doomsday.clockTime(d.seconds)} - just before 12 midnight.",
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

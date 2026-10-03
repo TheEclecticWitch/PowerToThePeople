@@ -3,11 +3,14 @@ package com.theeclecticwitch.powertothepeople
 import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberRecord
+import com.theeclecticwitch.powertothepeople.congress.MemberVote
 import com.theeclecticwitch.powertothepeople.congress.VoteDetail
+import com.theeclecticwitch.powertothepeople.congress.align
 import com.theeclecticwitch.powertothepeople.congress.voteLabel
 import com.theeclecticwitch.powertothepeople.data.Http
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /** The published files' shapes, trimmed from real ones on GitHub Pages. */
 class CongressDataTest {
@@ -47,5 +50,26 @@ class CongressDataTest {
         assertEquals("H.R. 1", BillNames.label("119/hr/1"))
         assertEquals("S.J.Res. 12", BillNames.label("119/sjres/12"))
         assertEquals("H.Con.Res. 14", BillNames.label("119/hconres/14"))
+    }
+
+    @Test
+    fun alignmentCountsOnlyVotesTheReaderAnswered() {
+        val votes = listOf(
+            MemberVote("house", 2, 314, "Yea"),
+            MemberVote("house", 2, 313, "Nay"),
+            MemberVote("house", 2, 312, "Not Voting"),
+            MemberVote("house", 2, 311, "Yea"),
+        )
+        val mine = mapOf(
+            "119/house/2/314" to "Yea",
+            "119/house/2/313" to "Yea",
+            "119/house/2/312" to "Nay",
+            "119/senate/2/10" to "Nay",
+        )
+        val a = align(votes, mine, 119)
+        assertEquals(3, a.compared.size)
+        assertEquals(listOf(1, 1, 1), listOf(a.same, a.different, a.memberDidNotTakeSide))
+        assertEquals(0.5, a.sameShare)
+        assertNull(align(votes, emptyMap(), 119).sameShare)
     }
 }

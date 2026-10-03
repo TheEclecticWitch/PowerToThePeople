@@ -43,6 +43,7 @@ import com.theeclecticwitch.powertothepeople.constitution.SignaturesScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.MemberVotesScreen
+import com.theeclecticwitch.powertothepeople.congress.RecentVotesScreen
 import com.theeclecticwitch.powertothepeople.congress.SponsoredBillsScreen
 import com.theeclecticwitch.powertothepeople.congress.VoteScreen
 import com.theeclecticwitch.powertothepeople.data.Http
@@ -79,6 +80,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable object DirectoryRoute
+@Serializable object RecentVotesRoute
 @Serializable object SourcesRoute
 @Serializable object AboutRoute
 
@@ -175,12 +177,14 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
         official = { nav.navigate(OfficialRoute(it)) },
         memberVotes = { nav.navigate(MemberVotesRoute(it)) },
         sponsoredBills = { nav.navigate(SponsoredBillsRoute(it)) },
+        recentVotes = { nav.navigate(RecentVotesRoute) },
     )
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> {
             HomeScreen(
                 onDebt = { nav.navigate(DebtRoute) },
                 onDoomsday = { nav.navigate(DoomsdayRoute) },
+                congressNav = congressNav,
                 onConstitution = { goToTab(nav, tabs[1]) },
                 onOfficials = { goToTab(nav, tabs[2]) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
@@ -267,6 +271,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onDirectory = { nav.navigate(DirectoryRoute) },
             )
         }
+        composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
         composable<DirectoryRoute> { DirectoryScreen(back) { nav.navigate(OfficialRoute(it)) } }
         composable<SourcesRoute> { SourcesScreen(back) }
         composable<AboutRoute> { AboutScreen(back) }
