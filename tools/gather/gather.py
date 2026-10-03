@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bills  # noqa: E402
 import contacts  # noqa: E402
 import doomsday  # noqa: E402
+import finance  # noqa: E402
 import members  # noqa: E402
 import sessions  # noqa: E402
 import states  # noqa: E402
@@ -37,6 +38,8 @@ SOURCES = [
      "covers": "House roll-call votes (the original record behind the Congress.gov copy)"},
     {"name": "U.S. Senate roll call votes", "url": "https://www.senate.gov/legislative/votes_new.htm",
      "covers": "Senate roll-call votes"},
+    {"name": "Federal Election Commission (OpenFEC API)", "url": "https://www.fec.gov/data/",
+     "covers": "Campaign money raised and spent by members' campaign committees"},
     {"name": "Bulletin of the Atomic Scientists", "url": "https://thebulletin.org/doomsday-clock/",
      "covers": "The Doomsday Clock"},
     {"name": "Open States", "url": "https://github.com/openstates/people",
@@ -98,6 +101,7 @@ def main():
 
     step(f"Session days {congress}", sessions.gather, net, store, congress, log)
     member_count = step("Members", members.build, store, congress, log)
+    step(f"Campaign money {congress}", finance.gather, net, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Contact pages", contacts.gather, net, store, state, log)
     step("State officials", states.gather, net, store, state, log)
@@ -120,7 +124,8 @@ def main():
             "'Yea'/'Nay', the Senate's words for the same votes; nothing else is changed.",
         ],
         "lastRun": {"log": lines, "errors": errors,
-                    "congressRequests": net.congress_requests, "otherRequests": net.other_requests,
+                    "congressRequests": net.congress_requests, "fecRequests": net.fec_requests,
+                    "otherRequests": net.other_requests,
                     "network": net.stats()},
     })
     print(f"Done: {net.congress_requests} Congress.gov requests, {net.other_requests} other, "

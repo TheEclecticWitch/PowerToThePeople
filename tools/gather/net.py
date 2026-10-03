@@ -13,6 +13,9 @@ import urllib.request
 
 USER_AGENT = "PowerToThePeople-gatherer/0.1 (+https://github.com/TheEclecticWitch/PowerToThePeople)"
 CONGRESS_API = "https://api.congress.gov/v3"
+FEC_API = "https://api.open.fec.gov/v1"
+# The FEC shares the api.data.gov key but counts its own calls (1,000 an hour); a run uses a few hundred.
+MAX_FEC_REQUESTS = 300
 
 
 class BudgetSpent(Exception):
@@ -25,9 +28,10 @@ class Net:
         self.max_congress_requests = max_congress_requests
         self.deadline = time.monotonic() + max_minutes * 60
         self.congress_requests = 0
+        self.fec_requests = 0
         self.other_requests = 0
         # How the sources behaved this run, published in manifest.json so slowdowns can be traced.
-        self.seconds = {"congress": 0.0, "other": 0.0}
+        self.seconds = {"congress": 0.0, "fec": 0.0, "other": 0.0}
         self.slowest = (0.0, None)
         self.retries = {}
 
@@ -37,6 +41,7 @@ class Net:
         return {
             "keySet": self.key != "DEMO_KEY",
             "avgSecondsCongress": avg("congress", self.congress_requests),
+            "avgSecondsFec": avg("fec", self.fec_requests),
             "avgSecondsOther": avg("other", self.other_requests),
             "slowest": {"seconds": round(self.slowest[0], 1), "url": self.slowest[1]},
             "retries": self.retries,
@@ -56,6 +61,15 @@ class Net:
         url = f"{CONGRESS_API}{path}?{urllib.parse.urlencode(params)}"
         # The key goes in a header so it never shows up in logged URLs.
         return json.loads(self._get(url, {"X-Api-Key": self.key}, "congress"))
+
+    def fec(self, path, **params):
+        """GET an OpenFEC API path such as '/candidate/H2MD05155/totals/' and return the parsed JSON."""
+        self.check_time()
+        if self.fec_requests >= MAX_FEC_REQUESTS:
+            raise BudgetSpent()
+        self.fec_requests += 1
+        url = f"{FEC_API}{path}?{urllib.parse.urlencode(params)}"
+        return json.loads(self._get(url, {"X-Api-Key": self.key}, "fec"))
 
     def text(self, url, browser=False):
         """GET any other public source. senate.gov turns away non-browser user agents."""

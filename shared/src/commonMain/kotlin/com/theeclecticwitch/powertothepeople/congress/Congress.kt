@@ -84,6 +84,32 @@ data class BillSummary(
     val latestAction: Action? = null,
 )
 
+/** A member's campaign committee totals for their current race, as reported to the FEC. Whole dollars. */
+@Serializable
+data class CampaignMoney(
+    val fecId: String? = null,
+    val electionYear: Int? = null,
+    val from: String? = null,
+    val through: String? = null,
+    val lastReport: String? = null,
+    val receipts: Long? = null,
+    val individuals: Long? = null,
+    val individualsItemized: Long? = null,
+    val individualsUnitemized: Long? = null,
+    val pacs: Long? = null,
+    val parties: Long? = null,
+    val candidate: Long? = null,
+    val candidateLoans: Long? = null,
+    val transfers: Long? = null,
+    val disbursements: Long? = null,
+    val cashOnHand: Long? = null,
+    val debts: Long? = null,
+    val source: String? = null,
+)
+
+@Serializable
+private class CampaignMoneyFile(val members: Map<String, CampaignMoney> = emptyMap())
+
 /** A day the House, the Senate or both met, and that day's Congressional Record. */
 @Serializable
 data class SessionDay(val date: String, val house: Boolean = false, val senate: Boolean = false, val record: String? = null)
@@ -221,6 +247,14 @@ object CongressData {
         Http.json.decodeFromString<ContactForms>(text("contacts.json", 7.days)).forms
     } catch (e: Exception) {
         emptyMap()
+    }
+
+    /** A member's campaign money, or null when the FEC has nothing for them yet. */
+    suspend fun campaignMoney(bioguide: String): CampaignMoney? = try {
+        Http.json.decodeFromString<CampaignMoneyFile>(text("finance/$CONGRESS.json", 1.days)).members[bioguide]
+            ?.takeIf { it.receipts != null }
+    } catch (e: ClientRequestException) {
+        if (e.response.status == HttpStatusCode.NotFound) null else throw e
     }
 
     /** Every day either chamber met this Congress, oldest first. Empty until the gatherer has published it. */

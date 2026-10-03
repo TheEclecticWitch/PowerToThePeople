@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import coil3.compose.SubcomposeAsyncImage
+import com.theeclecticwitch.powertothepeople.congress.CampaignMoneyCard
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.MemberRecordCards
 import com.theeclecticwitch.powertothepeople.location.LocationStore
@@ -311,6 +312,7 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                 if (!official.userEntered && official.level == Level.Federal && !official.id.startsWith("exec:")) {
                     MemberRecordCards(official.id, congressNav)
                     CommitteesCard(official.id)
+                    CampaignMoneyCard(official.id)
                 }
                 ContactCard(official)
                 if (official.districtOffices.isNotEmpty()) {

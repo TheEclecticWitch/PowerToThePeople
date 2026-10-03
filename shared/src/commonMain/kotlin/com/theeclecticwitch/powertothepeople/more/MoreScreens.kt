@@ -99,6 +99,26 @@ fun SourcesScreen(onBack: () -> Unit) {
                     CongressData.SOURCE_URL,
                 )
                 Source(
+                    "Campaign money",
+                    "What each member's campaign committee raised, from whom by category, spent, and had on hand, for " +
+                        "their current race, as filed with the Federal Election Commission. Checked weekly.",
+                    "Federal Election Commission",
+                    "https://www.fec.gov/data/",
+                )
+                Source(
+                    "Governors and state legislators",
+                    "Statewide officers and every state legislator, with their districts and contact details, from the " +
+                        "Open States project's public data, kept from state government websites. Checked weekly.",
+                    "Open States",
+                    "https://github.com/openstates/people",
+                )
+                Source(
+                    "Days in session",
+                    "Which days the House and the Senate met, from the daily Congressional Record.",
+                    "Congressional Record, via Congress.gov",
+                    "https://www.congress.gov/congressional-record",
+                )
+                Source(
                     "How app users answered",
                     "Only if you turn on \"Add my answers to the app-wide count\": the roll call, your Yea or Nay, and a " +
                         "random code for this copy of the app, so each phone counts once. The code is scrambled before it is " +
