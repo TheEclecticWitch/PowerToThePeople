@@ -23,6 +23,7 @@ import bills  # noqa: E402
 import contacts  # noqa: E402
 import doomsday  # noqa: E402
 import members  # noqa: E402
+import sessions  # noqa: E402
 import states  # noqa: E402
 import votes  # noqa: E402
 from congress import current_congress, sessions_of  # noqa: E402
@@ -95,6 +96,7 @@ def main():
         bills.write_recent(store, congress, index)
         step(f"Bill details {congress}", bills.gather_details, net, store, congress, index, log)
 
+    step(f"Session days {congress}", sessions.gather, net, store, congress, log)
     member_count = step("Members", members.build, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Contact pages", contacts.gather, net, store, state, log)
