@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.debt.TreasurySources
+import com.theeclecticwitch.powertothepeople.doomsday.Doomsday
 import com.theeclecticwitch.powertothepeople.location.CensusGeocoder
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.officials.FederalOfficials
@@ -96,6 +97,13 @@ fun SourcesScreen(onBack: () -> Unit) {
                         "own gatherer collects them every six hours; each vote links to its official record.",
                     CongressData.SOURCE_NAME,
                     CongressData.SOURCE_URL,
+                )
+                Source(
+                    "The Doomsday Clock",
+                    "The setting announced by the Bulletin of the Atomic Scientists, who keep the clock. It is their " +
+                        "judgment, shown as they state it; this app's gatherer checks their page for a new setting.",
+                    Doomsday.SOURCE_NAME,
+                    Doomsday.PAGE,
                 )
                 Source(
                     "National debt",

@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.debt.DebtCard
+import com.theeclecticwitch.powertothepeople.doomsday.DoomsdayCard
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.officials.OfficialPhoto
 import com.theeclecticwitch.powertothepeople.officials.rememberDelegation
@@ -33,6 +34,7 @@ import com.theeclecticwitch.powertothepeople.ui.theme.LocalAppFonts
 @Composable
 fun HomeScreen(
     onDebt: () -> Unit,
+    onDoomsday: () -> Unit,
     onConstitution: () -> Unit,
     onOfficials: () -> Unit,
     onOfficial: (String) -> Unit,
@@ -92,6 +94,8 @@ fun HomeScreen(
                 }
 
                 DebtCard(onOpen = onDebt)
+
+                DoomsdayCard(onOpen = onDoomsday)
 
                 InfoCard(title = "The Constitution", onClick = onConstitution) {
                     Text(

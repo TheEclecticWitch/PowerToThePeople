@@ -47,6 +47,7 @@ import com.theeclecticwitch.powertothepeople.congress.SponsoredBillsScreen
 import com.theeclecticwitch.powertothepeople.congress.VoteScreen
 import com.theeclecticwitch.powertothepeople.data.Http
 import com.theeclecticwitch.powertothepeople.debt.DebtScreen
+import com.theeclecticwitch.powertothepeople.doomsday.DoomsdayScreen
 import com.theeclecticwitch.powertothepeople.home.HomeScreen
 import com.theeclecticwitch.powertothepeople.location.LocationScreen
 import com.theeclecticwitch.powertothepeople.more.AboutScreen
@@ -69,6 +70,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class AmendmentRoute(val number: Int)
 @Serializable object SignaturesRoute
 @Serializable object DebtRoute
+@Serializable object DoomsdayRoute
 @Serializable object LocationRoute
 @Serializable data class OfficialRoute(val id: String)
 @Serializable data class EditOfficialRoute(val id: String? = null, val level: String = "Local")
@@ -178,6 +180,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
         composable<HomeRoute> {
             HomeScreen(
                 onDebt = { nav.navigate(DebtRoute) },
+                onDoomsday = { nav.navigate(DoomsdayRoute) },
                 onConstitution = { goToTab(nav, tabs[1]) },
                 onOfficials = { goToTab(nav, tabs[2]) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
@@ -210,6 +213,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
         }
         composable<SignaturesRoute> { SignaturesScreen(back) }
         composable<DebtRoute> { DebtScreen(back) }
+        composable<DoomsdayRoute> { DoomsdayScreen(back) }
         composable<LocationRoute> {
             LocationScreen(onBack = back, onDone = {
                 nav.popBackStack()

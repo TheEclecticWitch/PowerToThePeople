@@ -18,6 +18,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bills  # noqa: E402
+import doomsday  # noqa: E402
 import members  # noqa: E402
 import votes  # noqa: E402
 from congress import current_congress, sessions_of  # noqa: E402
@@ -31,6 +32,8 @@ SOURCES = [
      "covers": "House roll-call votes (the original record behind the Congress.gov copy)"},
     {"name": "U.S. Senate roll call votes", "url": "https://www.senate.gov/legislative/votes_new.htm",
      "covers": "Senate roll-call votes"},
+    {"name": "Bulletin of the Atomic Scientists", "url": "https://thebulletin.org/doomsday-clock/",
+     "covers": "The Doomsday Clock"},
     {"name": "@unitedstates congress-legislators", "url": "https://github.com/unitedstates/congress-legislators",
      "covers": "Matching Senate ids to bioguide ids"},
 ]
@@ -87,6 +90,7 @@ def main():
         step(f"Bill details {congress}", bills.gather_details, net, store, congress, index, log)
 
     member_count = step("Members", members.build, store, congress, log)
+    step("Doomsday Clock", doomsday.gather, net, store, log)
 
     store.write("state.json", state)
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

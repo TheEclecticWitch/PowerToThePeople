@@ -1,6 +1,7 @@
 package com.theeclecticwitch.powertothepeople
 
 import com.theeclecticwitch.powertothepeople.data.FileStore
+import com.theeclecticwitch.powertothepeople.doomsday.Doomsday
 import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.congressOn
 import com.theeclecticwitch.powertothepeople.ui.Format
@@ -25,6 +26,17 @@ class BasicsTest {
         assertEquals("Waldorf", communityName("District 6, Waldorf"))
         assertEquals("Springfield township", communityName("Springfield township"))
         assertEquals("District Heights", communityName("District Heights"))
+    }
+
+    @Test
+    fun doomsdayClockReadsInWordsAndOnAClock() {
+        assertEquals("85 seconds to midnight", Doomsday.words(85))
+        assertEquals("2 minutes to midnight", Doomsday.words(120))
+        assertEquals("61 seconds, or 1 minute and 1 second to midnight", Doomsday.spelledOut(61))
+        assertEquals("1 minute to midnight", Doomsday.words(60))
+        assertEquals("85 seconds, or 1 minute and 25 seconds to midnight", Doomsday.spelledOut(85))
+        assertEquals("11:58:35", Doomsday.clockTime(85))
+        assertEquals("11:43:00", Doomsday.clockTime(17 * 60))
     }
 
     @Test
