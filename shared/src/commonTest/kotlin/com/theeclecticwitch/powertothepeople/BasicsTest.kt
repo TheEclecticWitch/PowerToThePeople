@@ -4,9 +4,12 @@ import com.theeclecticwitch.powertothepeople.data.FileStore
 import com.theeclecticwitch.powertothepeople.doomsday.Doomsday
 import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.congressOn
+import com.theeclecticwitch.powertothepeople.officials.districtMatches
 import com.theeclecticwitch.powertothepeople.ui.Format
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertNull
 import kotlinx.datetime.LocalDate
 import okio.Path.Companion.toPath
@@ -37,6 +40,18 @@ class BasicsTest {
         assertEquals("85 seconds, or 1 minute and 25 seconds to midnight", Doomsday.spelledOut(85))
         assertEquals("11:58:35", Doomsday.clockTime(85))
         assertEquals("11:43:00", Doomsday.clockTime(17 * 60))
+    }
+
+    @Test
+    fun censusDistrictNamesMatchTheStatesOwn() {
+        assertTrue(districtMatches("State Senate District 28", "28"))
+        assertTrue(districtMatches("State Legislative District 28", "28"))
+        assertTrue(districtMatches("State Legislative Subdistrict 29A", "29A"))
+        assertTrue(districtMatches("State House District 7", "07"))
+        assertTrue(districtMatches("10th Bristol District", "10th Bristol"))
+        assertFalse(districtMatches("State Senate District 28", "2"))
+        assertFalse(districtMatches("State Legislative Subdistrict 29A", "29B"))
+        assertFalse(districtMatches(null, "28"))
     }
 
     @Test

@@ -111,6 +111,53 @@ fun DirectoryScreen(onBack: () -> Unit, onOfficial: (String) -> Unit) {
     }
 }
 
+/** Every legislator in one state, searchable by name or district. */
+@Composable
+fun StateLegislatorsScreen(state: String, onBack: () -> Unit, onOfficial: (String) -> Unit) {
+    var people by remember(state) { mutableStateOf<List<Official>?>(null) }
+    var error by remember(state) { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(state, attempt) {
+        error = null
+        try {
+            people = StateOfficials.legislators(state)
+        } catch (e: Exception) {
+            error = "Couldn't load the legislators. Check your connection."
+        }
+    }
+    var query by rememberSaveable { mutableStateOf("") }
+    Scaffold(topBar = { AppTopBar("${StateNames.of(state)} legislators", onBack) }) { padding ->
+        ReadingColumn(Modifier.padding(padding)) {
+            val all = people
+            when {
+                all != null -> {
+                    val q = query.trim()
+                    val shown = all.filter { q.isEmpty() || it.name.contains(q, true) || it.office.contains(q, true) }
+                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item {
+                            OutlinedTextField(
+                                value = query,
+                                onValueChange = { query = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                leadingIcon = { Icon(Icons.Default.Search, null) },
+                                placeholder = { Text("Name or district") },
+                            )
+                        }
+                        item {
+                            Text("${shown.size} of ${all.size}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        items(shown, key = { it.id }) { o -> OfficialRow(o) { onOfficial(o.id) } }
+                        item { SourceLine(StateOfficials.SOURCE_NAME, StateOfficials.SOURCE_URL, modifier = Modifier.padding(top = 8.dp)) }
+                    }
+                }
+                error != null -> ErrorBox(error!!) { attempt++ }
+                else -> LoadingBox("Loading legislators…")
+            }
+        }
+    }
+}
+
 /** A name, a state's name or its two letters ("OH" finds Ohio's delegation, not every "John"). */
 internal fun matches(m: Member, query: String): Boolean {
     val q = query.trim()

@@ -87,16 +87,36 @@ fun rememberDelegation(location: UserLocation?): Triple<FederalDelegation?, Stri
     return Triple(value, error, { attempt++ })
 }
 
+/** Loads the reader's state officials, with a retry. */
+@Composable
+fun rememberStateDelegation(location: UserLocation?): Triple<StateDelegation?, String?, () -> Unit> {
+    var value by remember(location) { mutableStateOf<StateDelegation?>(null) }
+    var error by remember(location) { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(location, attempt) {
+        if (location == null) return@LaunchedEffect
+        error = null
+        try {
+            value = StateOfficials.forLocation(location, force = attempt > 0)
+        } catch (e: Exception) {
+            error = "Couldn't load your state officials. Check your connection."
+        }
+    }
+    return Triple(value, error, { attempt++ })
+}
+
 @Composable
 fun OfficialsScreen(
     onOfficial: (String) -> Unit,
     onDirectory: () -> Unit,
+    onStateLegislators: (String) -> Unit,
     onSetLocation: () -> Unit,
     onAddOfficial: (Level) -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
     val mine by MyRecords.officialsFlow.collectAsState()
     val (delegation, error, retry) = rememberDelegation(location)
+    val (stateDelegation, stateError, stateRetry) = rememberStateDelegation(location)
     Scaffold(topBar = { AppTopBar("My Officials") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             Column(
@@ -149,16 +169,26 @@ fun OfficialsScreen(
                     if (stateDistricts.isNotEmpty()) {
                         Text("You're in ${stateDistricts.joinToString(" and ")}.", style = MaterialTheme.typography.bodyMedium)
                     }
-                    mine.filter { it.level == Level.State }.forEach { OfficialRow(it) { onOfficial(it.id) } }
-                    InfoCard {
-                        Text(
-                            "Your governor and state legislators will appear here automatically in a coming update. " +
-                                "Until then, you can add them yourself.",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        OutlinedButton(onClick = { onAddOfficial(Level.State) }) {
-                            Icon(Icons.Default.Add, null); Spacer(Modifier.width(6.dp)); Text("Add a state official")
+                    when {
+                        stateDelegation != null -> {
+                            val sd = stateDelegation
+                            sd.executives.forEach { OfficialRow(it) { onOfficial(it.id) } }
+                            (sd.senators + sd.representatives).forEach { OfficialRow(it) { onOfficial(it.id) } }
+                            if (!sd.matched) {
+                                Text(
+                                    "Your state legislators couldn't be matched to your district automatically.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                            OutlinedButton(onClick = { onStateLegislators(loc.stateAbbr) }) { Text("All of ${loc.stateName}'s legislators") }
+                            SourceLine(StateOfficials.SOURCE_NAME, StateOfficials.SOURCE_URL, "checked weekly")
                         }
+                        stateError != null -> ErrorBox(stateError, stateRetry)
+                        else -> LoadingBox("Finding your state officials…")
+                    }
+                    mine.filter { it.level == Level.State }.forEach { OfficialRow(it) { onOfficial(it.id) } }
+                    OutlinedButton(onClick = { onAddOfficial(Level.State) }) {
+                        Icon(Icons.Default.Add, null); Spacer(Modifier.width(6.dp)); Text("Add someone missing")
                     }
 
                     LevelHeading("Local", listOfNotNull(loc.place?.let(::communityName), loc.county).joinToString(" · ").ifBlank { "Your area" })
@@ -233,7 +263,11 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
     var loaded by remember(id) { mutableStateOf(false) }
     LaunchedEffect(id) {
         if (userEntered == null) {
-            fromPublic = try { FederalOfficials.byId(id) } catch (e: Exception) { null }
+            fromPublic = try {
+                if (id.startsWith("state:")) StateOfficials.byId(id) else FederalOfficials.byId(id)
+            } catch (e: Exception) {
+                null
+            }
         }
         loaded = true
     }

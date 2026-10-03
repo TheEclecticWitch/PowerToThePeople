@@ -55,6 +55,7 @@ import com.theeclecticwitch.powertothepeople.more.AboutScreen
 import com.theeclecticwitch.powertothepeople.more.MoreScreen
 import com.theeclecticwitch.powertothepeople.more.SourcesScreen
 import com.theeclecticwitch.powertothepeople.officials.DirectoryScreen
+import com.theeclecticwitch.powertothepeople.officials.StateLegislatorsScreen
 import com.theeclecticwitch.powertothepeople.officials.EditOfficialScreen
 import com.theeclecticwitch.powertothepeople.officials.Level
 import com.theeclecticwitch.powertothepeople.officials.OfficialDetailScreen
@@ -80,6 +81,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
 @Serializable object DirectoryRoute
+@Serializable data class StateLegislatorsRoute(val state: String)
 @Serializable object RecentVotesRoute
 @Serializable object SourcesRoute
 @Serializable object AboutRoute
@@ -229,6 +231,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
             OfficialsScreen(
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onDirectory = { nav.navigate(DirectoryRoute) },
+                onStateLegislators = { nav.navigate(StateLegislatorsRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
                 onAddOfficial = { nav.navigate(EditOfficialRoute(level = it.name)) },
             )
@@ -273,6 +276,9 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
             )
         }
         composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
+        composable<StateLegislatorsRoute> { entry ->
+            StateLegislatorsScreen(entry.toRoute<StateLegislatorsRoute>().state, back) { nav.navigate(OfficialRoute(it)) }
+        }
         composable<DirectoryRoute> { DirectoryScreen(back) { nav.navigate(OfficialRoute(it)) } }
         composable<SourcesRoute> { SourcesScreen(back) }
         composable<AboutRoute> { AboutScreen(back) }

@@ -32,6 +32,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      # The one library beyond Python's own: Open States keeps its state officials in YAML files.
+      - name: Install the YAML reader
+        run: pip install pyyaml==6.0.3
+
       - name: Gather
         env:
           API_DATA_GOV_KEY: ${{ secrets.API_DATA_GOV_KEY }}
