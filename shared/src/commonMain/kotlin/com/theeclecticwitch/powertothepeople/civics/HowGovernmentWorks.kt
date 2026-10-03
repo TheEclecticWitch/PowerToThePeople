@@ -276,9 +276,11 @@ fun HowGovernmentWorksScreen(
     val partIndex = { id: String -> 2 + Civics.parts.indexOfFirst { it.id == id } }
     Scaffold(topBar = { AppTopBar("How Our Government Works", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
-          LoopingTabs(listOf("How it works", "Questions", "Citizenship test")) { tab ->
-            if (tab == 2) {
+          LoopingTabs(listOf("How it works", "Questions", "Take part", "Citizenship test")) { tab ->
+            if (tab == 3) {
                 CitizenshipTestTab()
+            } else if (tab == 2) {
+                GuidesList(onArticle, onAmendment)
             } else if (tab == 1) {
                 CommonQuestionsList(onArticle, onAmendment)
             } else {
