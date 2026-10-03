@@ -110,6 +110,7 @@ fun rememberStateDelegation(location: UserLocation?): Triple<StateDelegation?, S
 
 @Composable
 fun OfficialsScreen(
+    onBack: () -> Unit,
     onOfficial: (String) -> Unit,
     onDirectory: () -> Unit,
     onStateLegislators: (String) -> Unit,
@@ -120,7 +121,7 @@ fun OfficialsScreen(
     val mine by MyRecords.officialsFlow.collectAsState()
     val (delegation, error, retry) = rememberDelegation(location)
     val (stateDelegation, stateError, stateRetry) = rememberStateDelegation(location)
-    Scaffold(topBar = { AppTopBar("My Officials") }) { padding ->
+    Scaffold(topBar = { AppTopBar("My Officials", onBack) }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),

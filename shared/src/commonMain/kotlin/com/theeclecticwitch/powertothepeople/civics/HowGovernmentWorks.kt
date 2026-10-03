@@ -256,7 +256,7 @@ private const val HOW_LAWS = "https://www.congress.gov/help/learn-about-the-legi
 /** The page: a diagram to take in at a glance, then each part in plain words with the Constitution's own text a tap away. */
 @Composable
 fun HowGovernmentWorksScreen(
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onArticle: (Int) -> Unit,
     onAmendment: (Int) -> Unit,
     onYourOfficials: () -> Unit,

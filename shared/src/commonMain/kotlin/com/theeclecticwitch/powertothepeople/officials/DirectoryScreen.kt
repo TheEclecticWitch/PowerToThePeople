@@ -38,7 +38,7 @@ import com.theeclecticwitch.powertothepeople.ui.SourceLine
 
 /** Every member of the House and Senate, searchable by name or state. */
 @Composable
-fun DirectoryScreen(onBack: () -> Unit, onOfficial: (String) -> Unit) {
+fun DirectoryScreen(onBack: () -> Unit, onOfficial: (String) -> Unit, initialChamber: String? = null) {
     var members by remember { mutableStateOf<List<Member>?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var attempt by remember { mutableIntStateOf(0) }
@@ -51,7 +51,7 @@ fun DirectoryScreen(onBack: () -> Unit, onOfficial: (String) -> Unit) {
         }
     }
     var query by rememberSaveable { mutableStateOf("") }
-    var chamber by rememberSaveable { mutableStateOf<String?>(null) }
+    var chamber by rememberSaveable { mutableStateOf(initialChamber) }
     var party by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(topBar = { AppTopBar("All of Congress", onBack) }) { padding ->

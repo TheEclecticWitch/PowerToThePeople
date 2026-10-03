@@ -24,6 +24,9 @@ object MyPositions {
     /** The reader's view of a bill itself: "Yea" here means they support it, "Nay" that they oppose it. */
     fun billKey(bill: String) = "bill/$bill"
 
+    /** Forgets every answer on this device; if sharing is on, the next sync withdraws them from the count. */
+    fun clearAll() = positions.update { emptyMap() }
+
     fun set(key: String, vote: String?) = positions.update { if (vote == null) it - key else it + (key to vote) }
 }
 

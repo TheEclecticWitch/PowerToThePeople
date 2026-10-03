@@ -28,26 +28,25 @@ import com.theeclecticwitch.powertothepeople.ui.SourceLine
 
 @Composable
 fun MoreScreen(
-    onLocation: () -> Unit,
+    onOfficials: () -> Unit,
     onSources: () -> Unit,
     onAbout: () -> Unit,
     onDebt: () -> Unit,
+    onDoomsday: () -> Unit,
     onDirectory: () -> Unit,
     onLegislation: () -> Unit,
-    onHowGovernment: () -> Unit,
 ) {
-    val location by LocationStore.location.collectAsState()
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                InfoCard(title = "Your location", onClick = onLocation) {
-                    Text(location?.matchedAddress ?: "Not set yet", style = MaterialTheme.typography.bodyLarge)
-                }
-                InfoCard(title = "How our government works", onClick = onHowGovernment) {
-                    Text("The three branches, what each does, and how a bill becomes a law.", style = MaterialTheme.typography.bodyLarge)
+                InfoCard(title = "My officials", onClick = onOfficials) {
+                    Text(
+                        "Everyone who represents you, federal, state and local, with contact details, your notes and their promises.",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
                 }
                 InfoCard(title = "Legislation", onClick = onLegislation) {
                     Text("Find any bill in Congress, any executive order, or a bill in your state legislature.", style = MaterialTheme.typography.bodyLarge)
@@ -57,6 +56,9 @@ fun MoreScreen(
                 }
                 InfoCard(title = "Debt & deficit", onClick = onDebt) {
                     Text("The national debt, this year's budget, and how both have changed.", style = MaterialTheme.typography.bodyLarge)
+                }
+                InfoCard(title = "The Doomsday Clock", onClick = onDoomsday) {
+                    Text("Where the Bulletin of the Atomic Scientists has set it, and what it means.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "Where our information comes from", onClick = onSources) {
                     Text("Every source this app uses, and how to check it yourself.", style = MaterialTheme.typography.bodyLarge)

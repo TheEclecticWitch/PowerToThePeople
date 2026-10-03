@@ -17,6 +17,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.theeclecticwitch.powertothepeople.civics.Civics
+import com.theeclecticwitch.powertothepeople.officials.OfficialRow
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.officials.rememberDelegation
@@ -60,30 +66,76 @@ fun LatestVoteCard(nav: CongressNav) {
     }
 }
 
-/** The Congress tab: what Congress is voting on, finding legislation, who serves, and when they work. */
+/** The Congress tab: Congress as a whole, then the Senate and the House each on their own tab. */
 @Composable
-fun CongressScreen(nav: CongressNav, onLegislation: () -> Unit, onDirectory: () -> Unit, onSessions: () -> Unit) {
+fun CongressScreen(
+    nav: CongressNav,
+    onLegislation: () -> Unit,
+    onDirectory: (chamber: String?) -> Unit,
+    onSessions: () -> Unit,
+    onLearn: () -> Unit,
+    onOfficial: (String) -> Unit,
+) {
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    val location by LocationStore.location.collectAsState()
+    val (delegation, _, _) = rememberDelegation(location)
     Scaffold(topBar = { AppTopBar("Congress") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                InfoCard(title = "Find legislation", onClick = onLegislation) {
-                    Text(
-                        "Any bill in Congress, any executive order, or a bill in your state legislature, by number or name.",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text("Search ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+            Column(Modifier.fillMaxSize()) {
+                PrimaryTabRow(selectedTabIndex = tab) {
+                    listOf("Congress", "Senate", "House").forEachIndexed { i, label ->
+                        Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
+                    }
                 }
-                LatestVotesCard(nav)
-                SessionCard(onOpen = onSessions)
-                InfoCard(title = "All of Congress", onClick = onDirectory) {
-                    Text(
-                        "Every senator and representative: their votes, bills, committees and campaign money.",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text("Browse ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                val part = Civics.parts.first { it.id == listOf("congress", "senate", "house")[tab] }
+                val chamber = listOf(null, "senate", "house")[tab]
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    // What this body is for, briefly, with the full explanation a tap away.
+                    InfoCard(title = part.title, onClick = onLearn) {
+                        Text(part.role, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(part.about, style = MaterialTheme.typography.bodyMedium)
+                        part.facts.take(2).forEach { (k, v) ->
+                            Text("$k: $v", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text("How it works ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                    }
+                    // The reader's own members in this chamber.
+                    val mine = when (chamber) {
+                        "senate" -> delegation?.senators.orEmpty()
+                        "house" -> listOfNotNull(delegation?.representative)
+                        else -> delegation?.let { it.senators + listOfNotNull(it.representative) }.orEmpty()
+                    }
+                    if (mine.isNotEmpty()) {
+                        Text(
+                            when (chamber) { "senate" -> "Your senators"; "house" -> "Your representative"; else -> "Your members of Congress" },
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        mine.forEach { OfficialRow(it) { onOfficial(it.id) } }
+                    }
+                    LatestVotesCard(nav, chamber)
+                    ChamberSessionCard(chamber, onSessions)
+                    if (chamber == null) {
+                        InfoCard(title = "Find legislation", onClick = onLegislation) {
+                            Text(
+                                "Any bill in Congress, any executive order, or a bill in your state legislature, by number or name.",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text("Search ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                        }
+                    }
+                    InfoCard(
+                        title = when (chamber) { "senate" -> "All 100 senators"; "house" -> "Every representative"; else -> "All of Congress" },
+                        onClick = { onDirectory(chamber) },
+                    ) {
+                        Text(
+                            "Their votes, bills, committees and campaign money. Search by name or state.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Text("Browse ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                    }
                 }
             }
         }

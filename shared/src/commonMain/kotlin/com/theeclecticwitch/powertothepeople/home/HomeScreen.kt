@@ -43,6 +43,7 @@ import com.theeclecticwitch.powertothepeople.officials.rememberStateDelegation
 import com.theeclecticwitch.powertothepeople.ui.Format
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
+import com.theeclecticwitch.powertothepeople.ui.SettingsButton
 import com.theeclecticwitch.powertothepeople.ui.theme.LocalAppFonts
 
 /**
@@ -73,11 +74,15 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Column(Modifier.padding(top = 8.dp)) {
-                    Text(
-                        "Our Democratic Republic",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontFamily = LocalAppFonts.current.caslonDisplay),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Our Democratic Republic",
+                            style = MaterialTheme.typography.headlineLarge.copy(fontFamily = LocalAppFonts.current.caslonDisplay),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        SettingsButton()
+                    }
                     Text(
                         listOfNotNull(
                             "${now.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }}, ${Format.date(now)}",

@@ -616,11 +616,11 @@ internal suspend fun latestVotes(force: Boolean): List<BillVote> =
     }.sortedWith(compareByDescending<BillVote> { it.summary.date }.thenByDescending { it.summary.roll })
 
 @Composable
-fun LatestVotesCard(nav: CongressNav) {
-    val (load, _) = rememberLoad(Unit, OFFLINE) { latestVotes(false) }
+fun LatestVotesCard(nav: CongressNav, chamber: String? = null) {
+    val (load, _) = rememberLoad(chamber, OFFLINE) { latestVotes(false).filter { chamber == null || it.chamber == chamber } }
     val titles = rememberBillTitles()
     val positions by MyPositions.flow.collectAsState()
-    InfoCard(title = "Latest votes in Congress") {
+    InfoCard(title = "Latest votes in " + when (chamber) { "senate" -> "the Senate"; "house" -> "the House"; else -> "Congress" }) {
         when (val l = load) {
             Load.Loading -> LoadingBox("Loading votes…")
             is Load.Failed -> Text(l.message, style = MaterialTheme.typography.bodyMedium)

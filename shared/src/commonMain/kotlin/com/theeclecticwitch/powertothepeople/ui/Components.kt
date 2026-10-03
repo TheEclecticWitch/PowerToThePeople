@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -47,6 +49,16 @@ fun ReadingColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit
     }
 }
 
+/** Opens Settings; provided once by the app so every main screen's top bar can offer it. */
+val LocalOpenSettings = staticCompositionLocalOf<(() -> Unit)?> { null }
+
+/** The gear in the upper right of the main screens. */
+@Composable
+fun SettingsButton() {
+    val open = LocalOpenSettings.current ?: return
+    IconButton(onClick = open) { Icon(Icons.Default.Settings, contentDescription = "Settings") }
+}
+
 @Composable
 fun AppTopBar(title: String, onBack: (() -> Unit)? = null, actions: @Composable () -> Unit = {}) {
     TopAppBar(
@@ -58,7 +70,11 @@ fun AppTopBar(title: String, onBack: (() -> Unit)? = null, actions: @Composable 
                 }
             }
         },
-        actions = { actions() },
+        actions = {
+            actions()
+            // Main screens (the ones without a back arrow) carry the Settings gear.
+            if (onBack == null) SettingsButton()
+        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),

@@ -103,6 +103,34 @@ fun SessionCard(onOpen: () -> Unit) {
     }
 }
 
+/** Days in session for one chamber, or both when [chamber] is null. */
+@Composable
+fun ChamberSessionCard(chamber: String?, onOpen: () -> Unit) {
+    if (chamber == null) {
+        SessionCard(onOpen)
+        return
+    }
+    val (load, _) = rememberSessionDays()
+    val name = if (chamber == "senate") "Senate" else "House"
+    InfoCard(title = "Days in session", onClick = onOpen) {
+        when (val l = load) {
+            Load.Loading -> LoadingBox("Loading…")
+            is Load.Failed -> Text(l.message, style = MaterialTheme.typography.bodyMedium)
+            is Load.Done -> if (l.value.isEmpty()) {
+                Text("How many days the $name has been in session will appear after the next data update.", style = MaterialTheme.typography.bodyMedium)
+            } else {
+                val s = summarize(l.value, today().year)
+                val (days, last) = if (chamber == "senate") s.senate to s.senateLast else s.house to s.houseLast
+                Text("So far in ${s.year}, the $name has been in session $days days.", style = MaterialTheme.typography.titleMedium)
+                last?.let {
+                    Text("Most recently on ${Format.date(it)}.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("See the calendar ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+            }
+        }
+    }
+}
+
 @Composable
 private fun rememberSessionDays() = rememberLoad(Unit, "Couldn't load the session days. Check your connection.") { force ->
     CongressData.sessionDays(force)
