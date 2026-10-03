@@ -227,28 +227,37 @@ fun AboutScreen(onBack: () -> Unit) {
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
+                InfoCard(title = "Not part of the government") {
+                    Text(
+                        "Power to the People is an independent app. It is not made by, affiliated with or endorsed by the U.S. " +
+                            "government, Congress, any state or any political party. Its information comes from public government " +
+                            "records, such as Congress.gov, the House Clerk, Senate.gov, the National Archives, the U.S. Treasury, " +
+                            "the Census Bureau and the Federal Election Commission; Our Sources lists every one, with links.",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
                 InfoCard(title = "Free, for everyone") {
                     Text(
-                        "Officials, votes, bills, the Constitution and everything else built on public data are free, with no " +
-                            "paywall. The one exception will be News: an optional subscription that pays for news sources, and " +
-                            "for the servers that count app users' answers on each vote. Today those counts run on a free server " +
-                            "plan with a daily limit; subscriptions will let them keep up as more people use the app.",
+                        "Officials, votes, bills, elections, the Constitution and everything else built on public data are free, " +
+                            "with no paywall. The one exception will be News: an optional subscription that pays for news sources, " +
+                            "This Week in Congress, and the servers that count app users' answers on each vote. Until subscriptions " +
+                            "are ready, This Week in Congress is free too.",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+                InfoCard(title = "Your privacy") {
+                    Text(
+                        "No accounts, no ads, no tracking. Your address, notes and what you follow stay on this device. Your " +
+                            "address is sent only to look up your districts (the Census Bureau) or your polling place (Google's " +
+                            "election service, through this app's own service, which doesn't keep it), and only when you ask.",
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
                 InfoCard(title = "Coming next") {
                     listOf(
-                        "Bills in Congress that affect you, with official plain-English summaries",
-                        "How everyone who uses the app answered each vote, counted anonymously",
-                        "Charts of how your members of Congress vote",
-                        "Days in session and days in recess",
-                        "Your governor and state legislators, and bills in your state",
-                        "Campaign donors and lobbying disclosures",
-                        "Financial disclosures: reported net worth compared with salary",
                         "News about your officials from across the spectrum, with each outlet's lean labeled",
-                        "Election dates, registration and polling place links",
-                        "Public comment periods on new federal rules",
-                        "Guides to your rights, a public-records (FOIA) request helper, and a civics quiz",
+                        "Your ballot, race by race, as states and counties publish it before each election",
+                        "Candidates in state races",
                     ).forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
                 }
                 InfoCard(title = "Fonts") {
