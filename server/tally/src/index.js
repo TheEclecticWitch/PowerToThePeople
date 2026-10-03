@@ -229,9 +229,10 @@ async function voterInfo(request, env) {
   if (!r.ok) {
     // Google answers 400 when it has no election data for that address yet.
     const reason = data?.error?.message || "";
-    return json({ error: /election unknown|no information|not found/i.test(reason)
+    const error = /election unknown|no information|not found/i.test(reason)
       ? "There's no election information for your address yet. It usually appears a few weeks before an election."
-      : "the election service didn't answer" }, r.status === 400 ? 404 : 502);
+      : "the election service didn't answer";
+    return json({ error, detail: reason.slice(0, 200) }, r.status === 400 ? 404 : 502);
   }
   const admin = (data.state || [])[0]?.electionAdministrationBody || {};
   return json({
