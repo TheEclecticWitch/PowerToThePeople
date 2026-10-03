@@ -54,4 +54,16 @@ class BillProgressTest {
         val b = Bill("119/hres/50", origin = "House", latestAction = Action("2025-01-10", "Agreed to in House"))
         assertEquals(listOf("Introduced:yes", "In committee:yes", "Agreed to by the House:yes"), labels(b))
     }
+
+    @Test
+    fun theHousePassingUnderSuspensionCounts() {
+        // S. 2403 as published: the Senate passed it without a roll call, the House under suspension of the rules.
+        val b = Bill("119/s/2403", origin = "Senate", stages = listOf("Passed Senate"),
+            latestAction = Action("2026-09-16", "Motion to reconsider laid on the table Agreed to without objection."))
+        val vote = BillVote("house", 2, VoteSummary(roll = 314, date = "2026-09-16", question = "On Motion to Suspend the Rules and Pass", result = "Passed"))
+        assertEquals(
+            listOf("Introduced:yes", "In committee:yes", "Passed the Senate:yes", "Passed the House:yes", "Sent to the President:no", "Became law:no"),
+            labels(b, listOf(vote)),
+        )
+    }
 }

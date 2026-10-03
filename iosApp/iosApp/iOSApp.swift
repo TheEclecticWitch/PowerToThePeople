@@ -14,6 +14,11 @@ struct ComposeView: UIViewControllerRepresentable {
 
 @main
 struct PowerToThePeopleApp: App {
+    init() {
+        // iOS requires background tasks to be registered before launch finishes.
+        Notifications_iosKt.registerBackgroundChecks()
+    }
+
     var body: some Scene {
         WindowGroup {
             ComposeView().ignoresSafeArea(.all)

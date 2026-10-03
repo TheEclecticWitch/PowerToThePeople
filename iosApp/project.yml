@@ -48,6 +48,9 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         # The contact buttons open the dialer, mail and the browser.
         LSApplicationQueriesSchemes: [tel, mailto, https]
+        # Alerts: a check every few hours, when iOS allows, for votes and bills the reader follows.
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.theeclecticwitch.powertothepeople.alerts]
     preBuildScripts:
       - name: Build the shared Kotlin code
         basedOnDependencyAnalysis: false

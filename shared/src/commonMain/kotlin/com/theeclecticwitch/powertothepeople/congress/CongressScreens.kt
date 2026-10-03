@@ -1,5 +1,6 @@
 package com.theeclecticwitch.powertothepeople.congress
 
+import com.theeclecticwitch.powertothepeople.alerts.FollowBillButton
 import androidx.compose.material3.Button
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -819,7 +820,7 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
         }
     }
     val uri = LocalUriHandler.current
-    Scaffold(topBar = { AppTopBar(BillNames.label(id), onBack) }) { padding ->
+    Scaffold(topBar = { AppTopBar(BillNames.label(id), onBack) { FollowBillButton(id) } }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox("Loading the bill…")

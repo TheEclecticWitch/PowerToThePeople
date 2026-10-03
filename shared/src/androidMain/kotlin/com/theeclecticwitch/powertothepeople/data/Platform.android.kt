@@ -12,6 +12,8 @@ fun initialiseAndroidContext(context: Context) {
     appContext = context.applicationContext
 }
 
+fun androidContext(): Context = appContext
+
 actual fun appDataDirectory(): Path = appContext.filesDir.absolutePath.toPath()
 
 actual val appFileSystem: FileSystem = FileSystem.SYSTEM

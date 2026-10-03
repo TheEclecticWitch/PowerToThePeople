@@ -244,7 +244,7 @@ object CongressData {
         return bills
     }
 
-    suspend fun bill(id: String): Bill = Http.json.decodeFromString(text("bills/$id.json", 1.days))
+    suspend fun bill(id: String, force: Boolean = false): Bill = Http.json.decodeFromString(text("bills/$id.json", 1.days, force))
 
     /**
      * Each member's contact form, from the gatherer's weekly check that the page loads (contacts.json).

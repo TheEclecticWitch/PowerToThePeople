@@ -20,6 +20,7 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -46,6 +47,9 @@ import com.theeclecticwitch.powertothepeople.civics.HowGovernmentWorksScreen
 import com.theeclecticwitch.powertothepeople.congress.BillScreen
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.ComingUpScreen
+import com.theeclecticwitch.powertothepeople.alerts.Alerts
+import com.theeclecticwitch.powertothepeople.alerts.AlertsScreen
+import com.theeclecticwitch.powertothepeople.alerts.Notifications
 import com.theeclecticwitch.powertothepeople.congress.CongressScreen
 import com.theeclecticwitch.powertothepeople.congress.LegislationScreen
 import com.theeclecticwitch.powertothepeople.congress.MemberVotesScreen
@@ -100,6 +104,7 @@ import kotlinx.serialization.Serializable
 @Serializable object SettingsRoute
 @Serializable object VotingRoute
 @Serializable object ComingUpRoute
+@Serializable object AlertsRoute
 @Serializable object HowGovernmentRoute
 @Serializable object LegislationRoute
 @Serializable data class StateLegislatorsRoute(val state: String)
@@ -125,6 +130,8 @@ fun App() {
             .components { add(KtorNetworkFetcherFactory(httpClient = { Http.client })) }
             .build()
     }
+    // Background checks survive an update or a restore only if asked for again; asking twice is harmless.
+    LaunchedEffect(Unit) { if (Alerts.prefs.value.notify) Notifications.schedule(true) }
     PowerTheme {
         val nav = rememberNavController()
         BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -211,6 +218,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
     CompositionLocalProvider(LocalOpenSettings provides { nav.navigate(SettingsRoute) }) {
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<ComingUpRoute> { ComingUpScreen(back, congressNav) }
+        composable<AlertsRoute> { AlertsScreen(back, congressNav, onLegislation = { nav.navigate(LegislationRoute) }) }
         composable<VotingRoute> { VotingScreen(back) { nav.navigate(LocationRoute) } }
         composable<SettingsRoute> { SettingsScreen(back) { nav.navigate(LocationRoute) } }
         composable<HomeRoute> {
@@ -342,6 +350,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onVoting = { nav.navigate(VotingRoute) },
                 onDirectory = { nav.navigate(DirectoryRoute()) },
                 onLegislation = { nav.navigate(LegislationRoute) },
+                onAlerts = { nav.navigate(AlertsRoute) },
             )
         }
         composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }

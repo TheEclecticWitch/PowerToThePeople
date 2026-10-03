@@ -21,6 +21,8 @@ ktor = "3.6.0"
 # 3.4.0 is ABI 2.3. Checked for Book of Shadows by reading each klib's manifest.
 coil3 = "3.4.0"
 okio = "3.18.2"
+# Runs the alert check every few hours while the app is closed.
+work = "2.10.1"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -46,6 +48,7 @@ ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref =
 coil3-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }
 coil3-network-ktor = { group = "io.coil-kt.coil3", name = "coil-network-ktor3", version.ref = "coil3" }
 okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 okio-fakefilesystem = { group = "com.squareup.okio", name = "okio-fakefilesystem", version.ref = "okio" }
 
 [plugins]

@@ -187,7 +187,7 @@ fun billProgress(bill: Bill, votes: List<BillVote>): BillProgress {
             action.contains("Passed $name", true) || action.contains("Agreed to in $name", true) ||
             (origin && (action.contains("Received in the $other", true) || stages.contains("Passed $other", true))) ||
             votes.any { v ->
-                v.chamber == chamber && v.summary.question.orEmpty().let { q -> q.contains("Passage", true) || q.startsWith("On the Bill") || q.startsWith("On the Joint Resolution") || q.startsWith("On the Resolution") || q.startsWith("On the Concurrent Resolution") } &&
+                v.chamber == chamber && v.summary.question.orEmpty().let { q -> q.contains("Passage", true) || q.contains("Suspend the Rules and Pass", true) || q.contains("Suspend the Rules and Agree", true) || q.startsWith("On the Bill") || q.startsWith("On the Joint Resolution") || q.startsWith("On the Resolution") || q.startsWith("On the Concurrent Resolution") } &&
                     v.summary.result.orEmpty().let { r -> r.contains("Passed", true) || r.contains("Agreed to", true) }
             }
     }

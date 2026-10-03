@@ -36,6 +36,7 @@ fun MoreScreen(
     onVoting: () -> Unit,
     onDirectory: () -> Unit,
     onLegislation: () -> Unit,
+    onAlerts: () -> Unit,
 ) {
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
@@ -54,6 +55,9 @@ fun MoreScreen(
                 }
                 InfoCard(title = "Legislation", onClick = onLegislation) {
                     Text("Find any bill in Congress, any executive order, or a bill in your state legislature.", style = MaterialTheme.typography.bodyLarge)
+                }
+                InfoCard(title = "Alerts", onClick = onAlerts) {
+                    Text("Hear when your members vote, and when bills you follow move or come up for a vote.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "All of Congress", onClick = onDirectory) {
                     Text("Every senator and representative: their votes, bills and committees.", style = MaterialTheme.typography.bodyLarge)
