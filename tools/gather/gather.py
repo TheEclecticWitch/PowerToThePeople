@@ -25,6 +25,7 @@ import doomsday  # noqa: E402
 import finance  # noqa: E402
 import members  # noqa: E402
 import orders  # noqa: E402
+import press  # noqa: E402
 import sessions  # noqa: E402
 import states  # noqa: E402
 import votes  # noqa: E402
@@ -43,6 +44,8 @@ SOURCES = [
      "covers": "Campaign money raised and spent by members' campaign committees"},
     {"name": "Federal Register", "url": "https://www.federalregister.gov/presidential-documents/executive-orders",
      "covers": "Executive orders"},
+    {"name": "Members' and the White House's own news feeds", "url": "https://www.whitehouse.gov/news/",
+     "covers": "Press releases and office news, as published by each office"},
     {"name": "Bulletin of the Atomic Scientists", "url": "https://thebulletin.org/doomsday-clock/",
      "covers": "The Doomsday Clock"},
     {"name": "Open States", "url": "https://github.com/openstates/people",
@@ -107,6 +110,7 @@ def main():
     step(f"Campaign money {congress}", finance.gather, net, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Executive orders", orders.gather, net, store, log)
+    step("Office news", press.gather, net, store, state, log)
     step("Contact pages", contacts.gather, net, store, state, log)
     step("State officials", states.gather, net, store, state, log)
 

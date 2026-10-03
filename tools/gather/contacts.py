@@ -38,10 +38,13 @@ def gather(net, store, state, log):
             forms[bioguide] = term["contact_form"]
         elif term.get("url"):
             to_check[bioguide] = term["url"].rstrip("/") + "/contact"
-    # A few at a time: these are 400-odd separate House office sites, each asked once a week.
-    with concurrent.futures.ThreadPoolExecutor(6) as pool:
+    # Two at a time: House sites sit behind protection that blocks bursts of requests.
+    with concurrent.futures.ThreadPoolExecutor(2) as pool:
+        previous = store.read("contacts.json", {}).get("forms", {})
         for bioguide, ok in zip(to_check, pool.map(_loads, to_check.values())):
-            if ok:
+            # A page that won't load today keeps last week's verified link: a site blocking a burst of
+            # requests shouldn't take a member's contact link away.
+            if ok or previous.get(bioguide) == to_check[bioguide]:
                 forms[bioguide] = to_check[bioguide]
     store.write("contacts.json", {"checked": today.isoformat(), "forms": forms})
     state["contactsChecked"] = today.isoformat()
