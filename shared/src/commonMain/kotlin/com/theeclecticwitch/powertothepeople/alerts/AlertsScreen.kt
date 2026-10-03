@@ -33,7 +33,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.InputChip
 import com.theeclecticwitch.powertothepeople.congress.Bill
+import com.theeclecticwitch.powertothepeople.congress.BillTopics
 import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.ui.Format
@@ -128,6 +135,8 @@ fun AlertsScreen(onBack: () -> Unit, nav: CongressNav, onLegislation: () -> Unit
                             }
                         }
                         if (prefs.bills.isEmpty()) OutlinedButton(onClick = onLegislation) { Text("Find a bill to follow") }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        TopicsSection(prefs, onFollowed = { checkNow() })
                     }
                 }
                 item {
@@ -185,6 +194,62 @@ fun AlertsScreen(onBack: () -> Unit, nav: CongressNav, onLegislation: () -> Unit
                 }
             }
         }
+    }
+}
+
+/**
+ * Subjects to follow: the policy areas the Congressional Research Service assigns every bill, listed in full
+ * and in alphabetical order, so none is put forward over another.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TopicsSection(prefs: AlertPrefs, onFollowed: () -> Unit) {
+    var choosing by remember { mutableStateOf(false) }
+    val topics by produceState<BillTopics?>(null) { value = runCatching { CongressData.topics() }.getOrNull() }
+    Text("Topics I follow", style = MaterialTheme.typography.bodyLarge)
+    Text(
+        "You'll hear when a bill on a subject you choose takes a step, such as a committee vote or passing the House " +
+            "or Senate. Subjects are the ones the Library of Congress gives every bill.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (prefs.topics.isNotEmpty()) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            prefs.topics.sorted().forEach { t ->
+                InputChip(
+                    selected = true,
+                    onClick = { Alerts.unfollowTopic(t) },
+                    label = { Text(t) },
+                    trailingIcon = { Icon(Icons.Default.Close, contentDescription = "Stop following $t", Modifier.size(16.dp)) },
+                )
+            }
+        }
+        SwitchRow(
+            "Include new bills",
+            "Also tell me when a bill is introduced or sent to a committee. Thousands are each year, and most go no further.",
+            prefs.topicsIncludeNew,
+        ) { Alerts.setTopicsIncludeNew(it) }
+    }
+    if (!choosing) {
+        OutlinedButton(onClick = { choosing = true }) { Text(if (prefs.topics.isEmpty()) "Choose topics" else "Add or remove topics") }
+    } else {
+        val list = topics?.topics.orEmpty()
+        if (topics == null) {
+            Text("The list of topics isn't available right now. Try again later.", style = MaterialTheme.typography.bodyMedium)
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            list.forEach { t ->
+                val on = t.name in prefs.topics
+                FilterChip(
+                    selected = on,
+                    onClick = {
+                        if (on) Alerts.unfollowTopic(t.name) else { Alerts.followTopic(t.name); onFollowed() }
+                    },
+                    label = { Text("${t.name} (${Format.commas(t.bills.toLong())})") },
+                )
+            }
+        }
+        TextButton(onClick = { choosing = false }) { Text("Done") }
     }
 }
 

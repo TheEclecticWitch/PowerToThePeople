@@ -1,10 +1,13 @@
 package com.theeclecticwitch.powertothepeople
 
+import com.theeclecticwitch.powertothepeople.alerts.Seen
 import com.theeclecticwitch.powertothepeople.alerts.actionKey
+import com.theeclecticwitch.powertothepeople.alerts.topicAlerts
 import com.theeclecticwitch.powertothepeople.alerts.newVotes
 import com.theeclecticwitch.powertothepeople.alerts.voteKey
 import com.theeclecticwitch.powertothepeople.congress.Action
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.TopicMove
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -34,5 +37,46 @@ class AlertsTest {
         val before = actionKey(Action("2026-09-30", "Referred to the Committee on Finance."))
         val after = actionKey(Action("2026-10-02", "Passed Senate without amendment by Voice Vote."))
         assertEquals(false, before == after)
+    }
+
+    private fun move(bill: String, area: String, date: String, text: String, early: Boolean = false) =
+        TopicMove(bill, "A bill", area, Action(date, text), early)
+
+    private val moves = listOf(
+        move("119/hr/1", "Health", "2026-10-02", "Passed House by Yea-Nay Vote."),
+        move("119/hr/2", "Health", "2026-10-02", "Referred to the Committee on Energy and Commerce.", early = true),
+        move("119/s/3", "Taxation", "2026-10-02", "Passed Senate by Voice Vote."),
+        move("119/s/4", "Health", "2026-09-20", "Placed on Senate Legislative Calendar."),
+    )
+    private val seenHealth = Seen(topicsBaselined = setOf("Health"))
+
+    @Test
+    fun topicAlertsTellOfStepsInFollowedSubjectsOnly() {
+        val (found, keys) = topicAlerts(moves, listOf("Health"), emptyList(), includeNew = false, seen = seenHealth, notBefore = "2026-09-15")
+        assertEquals(listOf("119/hr/1", "119/s/4"), found.map { it.bill })
+        // Every bill in the file is remembered, followed subject or not.
+        assertEquals(4, keys.size)
+    }
+
+    @Test
+    fun topicAlertsLeaveOutNewBillsUnlessAsked() {
+        val (found, _) = topicAlerts(moves, listOf("Health"), emptyList(), includeNew = true, seen = seenHealth, notBefore = null)
+        assertEquals(listOf("119/hr/1", "119/hr/2", "119/s/4"), found.map { it.bill })
+    }
+
+    @Test
+    fun aSubjectsFirstLookIsSilent() {
+        val (found, _) = topicAlerts(moves, listOf("Health"), emptyList(), includeNew = true, seen = Seen(), notBefore = null)
+        assertEquals(emptyList(), found)
+    }
+
+    @Test
+    fun topicAlertsSkipWhatWasSeenFollowedOrLongAgo() {
+        val (_, keys) = topicAlerts(moves, listOf("Health"), emptyList(), false, seenHealth, null)
+        val seen = seenHealth.copy(topicMoves = keys)
+        // Nothing new since the last look.
+        assertEquals(emptyList(), topicAlerts(moves, listOf("Health"), emptyList(), false, seen, null).first)
+        // A bill followed on its own has its own alerts; a step dated before the last check is old news.
+        assertEquals(emptyList(), topicAlerts(moves, listOf("Health"), listOf("119/hr/1"), false, seenHealth, "2026-09-30").first)
     }
 }

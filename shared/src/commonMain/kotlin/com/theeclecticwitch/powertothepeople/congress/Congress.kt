@@ -123,6 +123,24 @@ private class ContactForms(val forms: Map<String, String> = emptyMap())
 @Serializable
 private class BillList(val bills: Map<String, BillSummary>)
 
+/** One subject (a CRS policy area) and how many of this Congress's bills it covers. */
+@Serializable
+data class TopicCount(val name: String, val bills: Int)
+
+/** A bill that took a step in the last two weeks, with its subject. [early]: only introduced or sent to committee. */
+@Serializable
+data class TopicMove(
+    val bill: String,
+    val title: String? = null,
+    val policyArea: String,
+    val action: Action? = null,
+    val early: Boolean = false,
+)
+
+/** bills/{congress}/topics.json, for topic alerts. */
+@Serializable
+data class BillTopics(val since: String? = null, val topics: List<TopicCount> = emptyList(), val moves: List<TopicMove> = emptyList())
+
 @Serializable
 data class Sponsor(val id: String? = null, val name: String, val party: String? = null, val state: String? = null)
 
@@ -245,6 +263,13 @@ object CongressData {
     }
 
     suspend fun bill(id: String, force: Boolean = false): Bill = Http.json.decodeFromString(text("bills/$id.json", 1.days, force))
+
+    /** Every subject with its bill count, and the bills that moved lately. Null until the gatherer first publishes it. */
+    suspend fun topics(force: Boolean = false): BillTopics? = try {
+        Http.json.decodeFromString<BillTopics>(text("bills/$CONGRESS/topics.json", 6.hours, force))
+    } catch (e: ClientRequestException) {
+        if (e.response.status == HttpStatusCode.NotFound) null else throw e
+    }
 
     /**
      * Each member's contact form, from the gatherer's weekly check that the page loads (contacts.json).

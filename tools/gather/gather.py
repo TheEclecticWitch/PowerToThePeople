@@ -31,6 +31,7 @@ import press  # noqa: E402
 import sessions as session_days  # noqa: E402
 import states  # noqa: E402
 import summaries  # noqa: E402
+import topics  # noqa: E402
 import upcoming  # noqa: E402
 import votes  # noqa: E402
 from congress import current_congress, sessions_of  # noqa: E402
@@ -117,6 +118,7 @@ def main():
         bills.write_recent(store, congress, index)
         step(f"Bill details {congress}", bills.gather_details, net, store, congress, index, log)
         step(f"Bill summaries {congress}", summaries.gather, net, store, state, congress, log)
+        step(f"Topics {congress}", topics.write, store, congress, index, log)
 
     step(f"Session days {congress}", session_days.gather, net, store, congress, log)
     member_count = step("Members", members.build, store, congress, log)

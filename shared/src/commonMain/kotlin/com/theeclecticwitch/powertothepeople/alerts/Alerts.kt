@@ -5,6 +5,7 @@ import com.theeclecticwitch.powertothepeople.congress.BillNames
 import com.theeclecticwitch.powertothepeople.congress.ComingUp
 import com.theeclecticwitch.powertothepeople.congress.CongressData
 import com.theeclecticwitch.powertothepeople.congress.MemberVote
+import com.theeclecticwitch.powertothepeople.congress.TopicMove
 import com.theeclecticwitch.powertothepeople.congress.chamberName
 import com.theeclecticwitch.powertothepeople.congress.voteLabel
 import com.theeclecticwitch.powertothepeople.location.LocationStore
@@ -12,6 +13,9 @@ import com.theeclecticwitch.powertothepeople.officials.FederalOfficials
 import com.theeclecticwitch.powertothepeople.officials.JsonFileState
 import com.theeclecticwitch.powertothepeople.ui.Format
 import kotlin.time.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,6 +31,10 @@ data class AlertPrefs(
     val myMembers: Boolean = true,
     /** Bills the reader follows, as "119/hr/1". */
     val bills: List<String> = emptyList(),
+    /** Subjects the reader follows, by their CRS policy area name ("Health"). */
+    val topics: List<String> = emptyList(),
+    /** Also tell about bills in those subjects that were only introduced or sent to committee. Most go no further. */
+    val topicsIncludeNew: Boolean = false,
 )
 
 /** One thing that happened. [bill] or [vote] ("senate/2/256") says where tapping it leads. */
@@ -55,6 +63,12 @@ data class Seen(
     val scheduled: Set<String> = emptySet(),
     /** Bills whose roll calls and schedules have had their first, silent look. */
     val billsBaselined: Set<String> = emptySet(),
+    /** Bill -> its latest action seen in topics.json, "date|text". Only bills still in that file are kept. */
+    val topicMoves: Map<String, String> = emptyMap(),
+    /** Subjects that have had their first, silent look. */
+    val topicsBaselined: Set<String> = emptySet(),
+    /** The day of the last topic check, "2026-10-03". */
+    val topicsChecked: String? = null,
 )
 
 fun voteKey(v: MemberVote) = "${v.chamber}/${v.session}/${v.roll}"
@@ -66,6 +80,34 @@ fun newVotes(votesNewestFirst: List<MemberVote>, seen: String): List<MemberVote>
 }
 
 fun actionKey(a: Action?): String? = a?.let { "${it.date}|${it.text}" }
+
+/**
+ * The bills in followed [topics] that took a new step since the last look, and what to remember next time.
+ * Skipped: bills the reader follows one by one (they have their own alerts), steps that only introduce a bill
+ * or send it to committee unless [includeNew], subjects having their first look, and steps dated well before
+ * the last check ([notBefore]): a bill can reach topics.json late, when CRS assigns its subject.
+ */
+fun topicAlerts(
+    moves: List<TopicMove>,
+    topics: List<String>,
+    followedBills: List<String>,
+    includeNew: Boolean,
+    seen: Seen,
+    notBefore: String?,
+): Pair<List<TopicMove>, Map<String, String>> {
+    val found = mutableListOf<TopicMove>()
+    val keys = mutableMapOf<String, String>()
+    for (m in moves) {
+        val key = actionKey(m.action) ?: continue
+        keys[m.bill] = key
+        if (m.policyArea !in topics || m.bill in followedBills) continue
+        if (m.policyArea !in seen.topicsBaselined || seen.topicMoves[m.bill] == key) continue
+        if (m.early && !includeNew) continue
+        if (notBefore != null && (m.action?.date ?: "") < notBefore) continue
+        found += m
+    }
+    return found to keys
+}
 
 object Alerts {
     private const val KEEP = 100
@@ -89,6 +131,16 @@ object Alerts {
     fun follow(bill: String) = prefsState.update { if (bill in it.bills) it else it.copy(bills = it.bills + bill) }
 
     fun unfollow(bill: String) = prefsState.update { it.copy(bills = it.bills - bill) }
+
+    fun followTopic(topic: String) {
+        // A fresh, silent first look, so following again doesn't bring what happened in between.
+        seenState.update { it.copy(topicsBaselined = it.topicsBaselined - topic) }
+        prefsState.update { if (topic in it.topics) it else it.copy(topics = it.topics + topic) }
+    }
+
+    fun unfollowTopic(topic: String) = prefsState.update { it.copy(topics = it.topics - topic) }
+
+    fun setTopicsIncludeNew(on: Boolean) = prefsState.update { it.copy(topicsIncludeNew = on) }
 
     fun clearHistory() = historyState.update { emptyList() }
 
@@ -194,6 +246,28 @@ object Alerts {
                     }
                 }
                 seen = seen.copy(billsBaselined = seen.billsBaselined + id)
+            }
+        }
+
+        if (p.topics.isNotEmpty()) {
+            runCatching {
+                val t = CongressData.topics(force = true) ?: return@runCatching
+                val today = now.take(10)
+                // Two days' grace before the last check, for steps Congress.gov posts late.
+                val notBefore = seen.topicsChecked?.let { runCatching { LocalDate.parse(it).minus(2, DateTimeUnit.DAY).toString() }.getOrNull() }
+                val (moved, keys) = topicAlerts(t.moves, p.topics, p.bills, p.topicsIncludeNew, seen, notBefore)
+                for (m in moved) {
+                    found += AlertItem(
+                        at = now,
+                        title = "${m.policyArea}: ${BillNames.label(m.bill)}",
+                        text = listOfNotNull(
+                            m.title,
+                            listOfNotNull(m.action?.date?.let { Format.date(it) }, m.action?.text).joinToString(": ").ifEmpty { null },
+                        ).joinToString(" · "),
+                        bill = m.bill,
+                    )
+                }
+                seen = seen.copy(topicMoves = keys, topicsBaselined = seen.topicsBaselined + p.topics, topicsChecked = today)
             }
         }
 
