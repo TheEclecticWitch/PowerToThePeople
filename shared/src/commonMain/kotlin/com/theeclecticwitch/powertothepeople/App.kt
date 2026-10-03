@@ -3,6 +3,7 @@ package com.theeclecticwitch.powertothepeople
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
@@ -143,7 +144,8 @@ fun App() {
                     NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         val selected = selectedTab(nav)
                         tabs.forEach { tab ->
-                            NavigationRailItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium) })
+                            // A rail item offers its label the whole window; a fixed width keeps the rail narrow.
+                            NavigationRailItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium, Modifier.width(76.dp)) })
                         }
                     }
                     Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
