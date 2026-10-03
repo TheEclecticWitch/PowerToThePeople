@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Power to the People</string>
+    <!-- The name under the home-screen icon, where "Power to the People" would be cut off. -->
+    <string name="app_name">P2P</string>
 </resources>

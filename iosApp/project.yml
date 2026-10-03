@@ -33,7 +33,7 @@ targets:
     info:
       path: iosApp/Info.plist
       properties:
-        CFBundleDisplayName: Power to the People
+        CFBundleDisplayName: P2P  # the name under the home-screen icon
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # Only the system's own HTTPS, so App Store Connect needn't ask on every upload.

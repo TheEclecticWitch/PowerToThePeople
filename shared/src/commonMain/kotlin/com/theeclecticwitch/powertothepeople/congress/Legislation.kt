@@ -154,3 +154,63 @@ object StateBills {
         }
     }
 }
+
+// --- Where a bill is on its way to becoming law ---
+
+/** One step on a bill's path, and whether it has happened. */
+data class ProgressStep(val label: String, val done: Boolean)
+
+/** A bill's path, with each step marked, and whether it was vetoed. */
+data class BillProgress(val steps: List<ProgressStep>, val vetoed: Boolean) {
+    /** The furthest step reached. */
+    val current: Int get() = steps.indexOfLast { it.done }
+}
+
+/**
+ * Works out how far a bill has gone from what the record shows: its latest action, the stages the
+ * Congressional Research Service has summarized, any roll-call votes on it, and whether it became law. A
+ * step is only marked when the record shows it; voice votes leave no roll call, so the latest action and
+ * CRS stages carry those.
+ */
+fun billProgress(bill: Bill, votes: List<BillVote>): BillProgress {
+    val type = bill.bill.split('/').getOrNull(1).orEmpty()
+    val action = bill.latestAction?.text.orEmpty()
+    val stages = bill.stages.joinToString(" | ")
+    val law = bill.laws.isNotEmpty() || action.contains("Became Public Law", true) || action.contains("Became Private Law", true)
+    val vetoed = action.contains("Vetoed", true)
+    fun passedIn(chamber: String): Boolean {
+        val name = if (chamber == "house") "House" else "Senate"
+        val other = if (chamber == "house") "Senate" else "House"
+        val origin = bill.origin?.equals(name, true) == true
+        return law ||
+            stages.contains("Passed $name", true) || stages.contains("Agreed to $name", true) ||
+            action.contains("Passed $name", true) || action.contains("Agreed to in $name", true) ||
+            (origin && (action.contains("Received in the $other", true) || stages.contains("Passed $other", true))) ||
+            votes.any { v ->
+                v.chamber == chamber && v.summary.question.orEmpty().let { q -> q.contains("Passage", true) || q.startsWith("On the Bill") || q.startsWith("On the Joint Resolution") || q.startsWith("On the Resolution") || q.startsWith("On the Concurrent Resolution") } &&
+                    v.summary.result.orEmpty().let { r -> r.contains("Passed", true) || r.contains("Agreed to", true) }
+            }
+    }
+    val house = passedIn("house")
+    val senate = passedIn("senate")
+    val introduced = ProgressStep("Introduced", true)
+    val committee = ProgressStep(
+        "In committee",
+        house || senate || action.contains("Referred to", true) || action.contains("committee", true) || stages.contains("Reported", true),
+    )
+    val houseStep = ProgressStep("Passed the House", house)
+    val senateStep = ProgressStep("Passed the Senate", senate)
+    val chambers = if (bill.origin.equals("Senate", true)) listOf(senateStep, houseStep) else listOf(houseStep, senateStep)
+    val steps = when (type) {
+        // A simple resolution is one chamber speaking for itself; it doesn't go further.
+        "hres" -> listOf(introduced, committee, ProgressStep("Agreed to by the House", house))
+        "sres" -> listOf(introduced, committee, ProgressStep("Agreed to by the Senate", senate))
+        // A concurrent resolution needs both chambers but no President, and isn't law.
+        "hconres", "sconres" -> listOf(introduced, committee) + chambers
+        else -> listOf(introduced, committee) + chambers + listOf(
+            ProgressStep("Sent to the President", law || vetoed || action.contains("Presented to President", true)),
+            ProgressStep("Became law", law),
+        )
+    }
+    return BillProgress(steps, vetoed && !law)
+}

@@ -838,6 +838,7 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
                         )
                         Text(b.title ?: BillNames.label(id), style = MaterialTheme.typography.headlineSmall)
                         b.policyArea?.let { Tag(it) }
+                        ProgressCard(billProgress(b, votes))
                         b.laws.forEach { law ->
                             InfoCard { Text("Became ${law.type ?: "law"} ${law.number}", style = MaterialTheme.typography.titleMedium) }
                         }
@@ -847,6 +848,8 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
                                 a.text?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                             }
                         }
+                        // What the bill does comes before "Do you support it?": read first, then decide.
+                        SummaryCard(b)
                         val viewKey = MyPositions.billKey(id)
                         YourViewCard(
                             viewKey, "Do you support this bill?", "Support", "Oppose",

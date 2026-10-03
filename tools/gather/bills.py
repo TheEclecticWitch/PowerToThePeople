@@ -75,7 +75,10 @@ def gather_details(net, store, congress, index, log):
             _, t, number = key.split("/")
             b = net.congress(f"/bill/{congress}/{t}/{number}")["bill"]
             action = b.get("latestAction") or {}
+            # The summary and stages come from summaries.py; a refresh of the details keeps them.
+            kept = {k: v for k, v in (store.read(f"bills/{key}.json") or {}).items() if k in ("summary", "stages")}
             store.write(f"bills/{key}.json", {
+                **kept,
                 "bill": key, "congress": congress, "type": t, "number": int(number),
                 "title": b.get("title"),
                 "introduced": b.get("introducedDate"),

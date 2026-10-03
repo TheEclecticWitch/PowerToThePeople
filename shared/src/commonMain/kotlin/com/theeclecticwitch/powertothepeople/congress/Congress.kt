@@ -141,7 +141,14 @@ data class Bill(
     val latestAction: Action? = null,
     val laws: List<Law> = emptyList(),
     val url: String? = null,
+    /** The Congressional Research Service's latest plain-English summary, if it has written one. */
+    val summary: CrsSummary? = null,
+    /** Every stage CRS has summarized: "Introduced in House", "Passed Senate", "Public Law"… */
+    val stages: List<String> = emptyList(),
 )
+
+@Serializable
+data class CrsSummary(val text: String, val stage: String? = null, val date: String? = null)
 
 /** A vote joined to its roll call, so a member's record reads as sentences rather than numbers. */
 data class CastVote(val vote: MemberVote, val summary: VoteSummary?)
