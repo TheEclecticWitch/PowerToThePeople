@@ -26,7 +26,7 @@ import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
 
 @Composable
-fun MoreScreen(onLocation: () -> Unit, onSources: () -> Unit, onAbout: () -> Unit, onDebt: () -> Unit) {
+fun MoreScreen(onLocation: () -> Unit, onSources: () -> Unit, onAbout: () -> Unit, onDebt: () -> Unit, onDirectory: () -> Unit) {
     val location by LocationStore.location.collectAsState()
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
@@ -36,6 +36,9 @@ fun MoreScreen(onLocation: () -> Unit, onSources: () -> Unit, onAbout: () -> Uni
             ) {
                 InfoCard(title = "Your location", onClick = onLocation) {
                     Text(location?.matchedAddress ?: "Not set yet", style = MaterialTheme.typography.bodyLarge)
+                }
+                InfoCard(title = "All of Congress", onClick = onDirectory) {
+                    Text("Every senator and representative: their votes, bills and committees.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "Debt & deficit", onClick = onDebt) {
                     Text("The national debt, this year's budget, and how both have changed.", style = MaterialTheme.typography.bodyLarge)

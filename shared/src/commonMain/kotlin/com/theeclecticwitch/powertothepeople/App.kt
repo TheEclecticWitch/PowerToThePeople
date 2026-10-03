@@ -52,6 +52,7 @@ import com.theeclecticwitch.powertothepeople.location.LocationScreen
 import com.theeclecticwitch.powertothepeople.more.AboutScreen
 import com.theeclecticwitch.powertothepeople.more.MoreScreen
 import com.theeclecticwitch.powertothepeople.more.SourcesScreen
+import com.theeclecticwitch.powertothepeople.officials.DirectoryScreen
 import com.theeclecticwitch.powertothepeople.officials.EditOfficialScreen
 import com.theeclecticwitch.powertothepeople.officials.Level
 import com.theeclecticwitch.powertothepeople.officials.OfficialDetailScreen
@@ -75,6 +76,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class BillRoute(val id: String)
 @Serializable data class MemberVotesRoute(val id: String)
 @Serializable data class SponsoredBillsRoute(val id: String)
+@Serializable object DirectoryRoute
 @Serializable object SourcesRoute
 @Serializable object AboutRoute
 
@@ -217,6 +219,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
         composable<OfficialsRoute> {
             OfficialsScreen(
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
+                onDirectory = { nav.navigate(DirectoryRoute) },
                 onSetLocation = { nav.navigate(LocationRoute) },
                 onAddOfficial = { nav.navigate(EditOfficialRoute(level = it.name)) },
             )
@@ -257,8 +260,10 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onSources = { nav.navigate(SourcesRoute) },
                 onAbout = { nav.navigate(AboutRoute) },
                 onDebt = { nav.navigate(DebtRoute) },
+                onDirectory = { nav.navigate(DirectoryRoute) },
             )
         }
+        composable<DirectoryRoute> { DirectoryScreen(back) { nav.navigate(OfficialRoute(it)) } }
         composable<SourcesRoute> { SourcesScreen(back) }
         composable<AboutRoute> { AboutScreen(back) }
     }

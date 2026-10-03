@@ -50,6 +50,9 @@ data class Official(
     val userEntered: Boolean = false,
 )
 
+/** One seat in Congress, as the directory lists it. */
+data class Member(val official: Official, val chamber: String, val state: String, val district: Int?)
+
 /** Everyone who represents the reader in Washington. */
 data class FederalDelegation(
     val president: Official?,
@@ -191,6 +194,15 @@ object FederalOfficials {
         return legislators.orEmpty().firstOrNull { it.id.bioguide == id }?.toOfficial()
     }
 
+    /** Every sitting member of both chambers, for the directory. */
+    suspend fun allMembers(forceRefresh: Boolean = false): List<Member> {
+        ensureLoaded(forceRefresh)
+        return legislators.orEmpty().filter { it.id.bioguide != null }.map { p ->
+            val t = p.terms.last()
+            Member(p.toOfficial(), if (t.type == "sen") "senate" else "house", t.state ?: "", t.district)
+        }
+    }
+
     private fun currentExecutive(type: String): Official? {
         val now = today()
         val person = executive.orEmpty().lastOrNull { p ->
@@ -295,4 +307,6 @@ object StateNames {
     )
 
     fun of(abbr: String?): String = names[abbr] ?: abbr ?: ""
+
+    fun isAbbreviation(text: String): Boolean = text.uppercase() in names
 }

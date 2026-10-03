@@ -90,6 +90,7 @@ fun rememberDelegation(location: UserLocation?): Triple<FederalDelegation?, Stri
 @Composable
 fun OfficialsScreen(
     onOfficial: (String) -> Unit,
+    onDirectory: () -> Unit,
     onSetLocation: () -> Unit,
     onAddOfficial: (Level) -> Unit,
 ) {
@@ -141,6 +142,7 @@ fun OfficialsScreen(
                         error != null -> ErrorBox(error, retry)
                         else -> LoadingBox("Finding your representatives…")
                     }
+                    OutlinedButton(onClick = onDirectory) { Text("Browse all of Congress") }
 
                     LevelHeading("State", loc.stateName)
                     val stateDistricts = listOfNotNull(loc.stateSenateDistrict, loc.stateHouseDistrict)
@@ -274,6 +276,7 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                 // Senators and representatives; the President and Vice President don't cast roll-call votes.
                 if (!official.userEntered && official.level == Level.Federal && !official.id.startsWith("exec:")) {
                     MemberRecordCards(official.id, congressNav)
+                    CommitteesCard(official.id)
                 }
                 ContactCard(official)
                 if (official.districtOffices.isNotEmpty()) {
@@ -312,6 +315,41 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
         )
+    }
+}
+
+/** Committee and subcommittee seats, full committees first with their subcommittees beneath. */
+@Composable
+private fun CommitteesCard(bioguide: String) {
+    var seats by remember(bioguide) { mutableStateOf<List<CommitteeSeat>?>(null) }
+    var failed by remember(bioguide) { mutableStateOf(false) }
+    LaunchedEffect(bioguide) {
+        seats = try { Committees.forMember(bioguide) } catch (e: Exception) { failed = true; null }
+    }
+    val list = seats
+    if (failed || (list != null && list.isEmpty())) return
+    InfoCard(title = "Committees") {
+        if (list == null) {
+            LoadingBox("Loading committees…")
+            return@InfoCard
+        }
+        list.groupBy { it.committee }.entries.forEachIndexed { i, (committee, inIt) ->
+            if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            val full = inIt.firstOrNull { it.subcommittee == null }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(committee, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                full?.title?.let { Spacer(Modifier.width(8.dp)); Tag(it) }
+            }
+            inIt.filter { it.subcommittee != null }.forEach { sub ->
+                Text(
+                    listOfNotNull(sub.subcommittee, sub.title?.let { "($it)" }).joinToString(" "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+        }
+        SourceLine(FederalOfficials.SOURCE_NAME, FederalOfficials.SOURCE_URL)
     }
 }
 
