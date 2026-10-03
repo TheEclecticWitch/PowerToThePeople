@@ -109,6 +109,21 @@ fun topicAlerts(
     return found to keys
 }
 
+/**
+ * What to show under "Lately in your topics": each followed subject's latest step, so a subject just picked
+ * shows something at once, then the newest steps across them all, up to [limit] in all (more if there are more
+ * subjects). Steps that only introduce a bill or send it to committee count only with [includeNew], or for a
+ * subject that has had no other step lately.
+ */
+fun latelyInTopics(moves: List<TopicMove>, topics: List<String>, includeNew: Boolean, limit: Int = 5): List<TopicMove> {
+    val newest = compareByDescending<TopicMove> { it.action?.date ?: "" }.thenByDescending { it.bill }
+    val mine = moves.filter { it.policyArea in topics }.sortedWith(newest)
+    val shown = mine.filter { includeNew || !it.early }
+    val latestEach = topics.mapNotNull { t -> shown.firstOrNull { it.policyArea == t } ?: mine.firstOrNull { it.policyArea == t } }
+    val rest = shown.filter { it !in latestEach }
+    return (latestEach + rest.take((limit - latestEach.size).coerceAtLeast(0))).sortedWith(newest)
+}
+
 object Alerts {
     private const val KEEP = 100
     private const val MAX_NOTIFICATIONS = 4

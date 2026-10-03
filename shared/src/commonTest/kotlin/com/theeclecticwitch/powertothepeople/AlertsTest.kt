@@ -2,6 +2,7 @@ package com.theeclecticwitch.powertothepeople
 
 import com.theeclecticwitch.powertothepeople.alerts.Seen
 import com.theeclecticwitch.powertothepeople.alerts.actionKey
+import com.theeclecticwitch.powertothepeople.alerts.latelyInTopics
 import com.theeclecticwitch.powertothepeople.alerts.topicAlerts
 import com.theeclecticwitch.powertothepeople.alerts.newVotes
 import com.theeclecticwitch.powertothepeople.alerts.voteKey
@@ -78,5 +79,20 @@ class AlertsTest {
         assertEquals(emptyList(), topicAlerts(moves, listOf("Health"), emptyList(), false, seen, null).first)
         // A bill followed on its own has its own alerts; a step dated before the last check is old news.
         assertEquals(emptyList(), topicAlerts(moves, listOf("Health"), listOf("119/hr/1"), false, seenHealth, "2026-09-30").first)
+    }
+
+    @Test
+    fun latelyInTopicsShowsEachSubjectsLatestNewestFirst() {
+        val shown = latelyInTopics(moves, listOf("Health", "Taxation"), includeNew = false, limit = 2)
+        // Each subject gets its latest, even past the limit's share; new bills stay out.
+        assertEquals(listOf("119/s/3", "119/hr/1"), shown.map { it.bill })
+        assertEquals(listOf("119/s/3", "119/hr/1", "119/s/4"), latelyInTopics(moves, listOf("Health", "Taxation"), false, limit = 5).map { it.bill })
+    }
+
+    @Test
+    fun aQuietSubjectStillShowsItsNewestBill() {
+        val onlyNew = listOf(move("119/hr/9", "Animals", "2026-10-01", "Referred to the Committee on Agriculture.", early = true))
+        assertEquals(listOf("119/hr/9"), latelyInTopics(onlyNew, listOf("Animals"), includeNew = false).map { it.bill })
+        assertEquals(emptyList(), latelyInTopics(onlyNew, listOf("Health"), includeNew = false))
     }
 }

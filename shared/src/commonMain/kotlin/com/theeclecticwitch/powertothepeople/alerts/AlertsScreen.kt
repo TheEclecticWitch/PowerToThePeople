@@ -290,6 +290,7 @@ fun FollowedBillsCard(nav: CongressNav, onAlerts: () -> Unit, onLegislation: () 
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.clickable(onClick = onLegislation).padding(vertical = 4.dp),
             )
+            if (prefs.topics.isNotEmpty()) LatelyInTopics(prefs, nav)
             return@InfoCard
         }
         prefs.bills.forEachIndexed { i, id ->
@@ -317,6 +318,43 @@ fun FollowedBillsCard(nav: CongressNav, onAlerts: () -> Unit, onLegislation: () 
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.secondary,
             modifier = Modifier.clickable(onClick = onAlerts).padding(vertical = 4.dp),
+        )
+        if (prefs.topics.isNotEmpty()) LatelyInTopics(prefs, nav)
+    }
+}
+
+/** Under the followed bills: recent steps by bills on the subjects the reader follows. */
+@Composable
+private fun LatelyInTopics(prefs: AlertPrefs, nav: CongressNav) {
+    val topics by produceState<BillTopics?>(null) { value = runCatching { CongressData.topics() }.getOrNull() }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    Text("Lately in your topics", style = MaterialTheme.typography.titleSmall)
+    val t = topics ?: return
+    val moves = latelyInTopics(t.moves, prefs.topics, prefs.topicsIncludeNew)
+    moves.forEach { m ->
+        Column(
+            Modifier.fillMaxWidth().clickable { nav.bill(m.bill) }.padding(vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text("${m.policyArea} · ${BillNames.label(m.bill)}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+            m.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+            m.action?.let { a ->
+                Text(
+                    listOfNotNull(a.date?.let { Format.date(it) }, a.text).joinToString(": "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+    val quiet = prefs.topics.filter { topic -> moves.none { it.policyArea == topic } }.sorted()
+    if (quiet.isNotEmpty()) {
+        Text(
+            "Nothing in the last two weeks on ${quiet.joinToString(", ")}.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
