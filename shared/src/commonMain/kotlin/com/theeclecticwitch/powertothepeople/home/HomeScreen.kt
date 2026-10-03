@@ -73,7 +73,7 @@ fun HomeScreen(
             ) {
                 Column(Modifier.padding(top = 8.dp)) {
                     Text(
-                        "Today",
+                        "Our Democratic Republic",
                         style = MaterialTheme.typography.headlineLarge.copy(fontFamily = LocalAppFonts.current.caslonDisplay),
                         color = MaterialTheme.colorScheme.primary,
                     )
