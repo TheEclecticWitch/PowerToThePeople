@@ -1,6 +1,7 @@
 package com.theeclecticwitch.powertothepeople.congress
 
 import com.theeclecticwitch.powertothepeople.alerts.FollowBillButton
+import com.theeclecticwitch.powertothepeople.share.ShareButton
 import androidx.compose.material3.Button
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -341,7 +342,8 @@ fun VoteScreen(chamber: String, session: Int, roll: Int, onBack: () -> Unit, nav
     var tallyRefresh by remember { mutableIntStateOf(0) }
     // Catch up on any answer that couldn't be sent earlier.
     LaunchedEffect(Unit) { AppTally.sync() }
-    Scaffold(topBar = { AppTopBar("${chamberName(chamber)} roll call $roll", onBack) }) { padding ->
+    val shared = (load as? Load.Done)?.value?.let { ShareText.vote(it) }
+    Scaffold(topBar = { AppTopBar("${chamberName(chamber)} roll call $roll", onBack) { ShareButton(shared) } }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox("Loading the vote…")
@@ -820,7 +822,13 @@ fun BillScreen(id: String, onBack: () -> Unit, nav: CongressNav) {
         }
     }
     val uri = LocalUriHandler.current
-    Scaffold(topBar = { AppTopBar(BillNames.label(id), onBack) { FollowBillButton(id) } }) { padding ->
+    val shared = (load as? Load.Done)?.value?.first?.let { ShareText.bill(it) }
+    Scaffold(topBar = {
+        AppTopBar(BillNames.label(id), onBack) {
+            ShareButton(shared)
+            FollowBillButton(id)
+        }
+    }) { padding ->
         ReadingColumn(Modifier.padding(padding)) {
             when (val l = load) {
                 Load.Loading -> LoadingBox("Loading the bill…")
