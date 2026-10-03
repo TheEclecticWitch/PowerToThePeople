@@ -219,7 +219,7 @@ fun PowerTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () ->
     val isDark = scheme == DarkColors
     // With the flag on, the flag is always shown deep and rich, never faded: the page takes the dark look over
     // it, cards keep the chosen theme and let a little of the flag through.
-    val surfaces = if (scale.flag) scheme.copy(surfaceContainerLow = scheme.surfaceContainerLow.copy(alpha = if (isDark) 0.88f else 0.92f)) else scheme
+    val surfaces = if (scale.flag) scheme.copy(surfaceContainerLow = scheme.surfaceContainerLow.copy(alpha = if (isDark) 0.78f else 0.80f)) else scheme
     val colors = if (scale.flag) DarkColors.copy(background = Color.Transparent, surfaceContainerLow = surfaces.surfaceContainerLow) else scheme
     CompositionLocalProvider(
         LocalAppFonts provides AppFonts(caslon, display),
