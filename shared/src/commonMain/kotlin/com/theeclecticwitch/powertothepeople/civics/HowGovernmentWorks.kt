@@ -278,11 +278,13 @@ fun HowGovernmentWorksScreen(
         ReadingColumn(Modifier.padding(padding)) {
           Column {
             PrimaryTabRow(selectedTabIndex = tab) {
-                listOf("How it works", "Common questions").forEachIndexed { i, label ->
+                listOf("How it works", "Questions", "Citizenship test").forEachIndexed { i, label ->
                     Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
                 }
             }
-            if (tab == 1) {
+            if (tab == 2) {
+                CitizenshipTestTab()
+            } else if (tab == 1) {
                 CommonQuestionsList(onArticle, onAmendment)
             } else {
             LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
