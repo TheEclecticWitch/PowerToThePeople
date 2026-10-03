@@ -11,7 +11,12 @@ import datetime
 import html
 import re
 
-from congress import bill_key
+from congress import bill_key, sessions_of
+
+
+def congress_start(congress):
+    """The year a Congress begins: 2025 for the 119th."""
+    return min(year for _, year in sessions_of(congress))
 
 
 def plain_text(markup):
@@ -25,10 +30,11 @@ def plain_text(markup):
 
 def gather(net, store, state, congress, log):
     started = datetime.datetime.now(datetime.timezone.utc)
-    since = state.get("summariesListedThrough", {}).get(str(congress))
-    params = {"limit": 250, "sort": "updateDate asc"}
-    if since:
-        params["fromDateTime"] = since
+    # Without a starting date the listing returns only the last day or so, so the first run starts from the
+    # beginning of this Congress. (The 10-03 run fell into that and marked itself done after 41; the key's
+    # name changed so every Congress is read in full once.)
+    since = state.get("summariesFrom", {}).get(str(congress)) or f"{congress_start(congress)}-01-01T00:00:00Z"
+    params = {"limit": 250, "sort": "updateDate asc", "fromDateTime": since}
     offset, updated, missing = 0, 0, 0
     last_seen, finished = None, False
     try:
@@ -74,6 +80,6 @@ def gather(net, store, state, congress, log):
         else:
             through = last_seen[:19] + "Z" if last_seen else since
         if through:
-            state.setdefault("summariesListedThrough", {})[str(congress)] = through
+            state.setdefault("summariesFrom", {})[str(congress)] = through
         log(f"Bill summaries {congress}: {updated} added or updated" + (f", {missing} waiting for bill details" if missing else "")
             + ("" if finished else "; the rest next run"))
