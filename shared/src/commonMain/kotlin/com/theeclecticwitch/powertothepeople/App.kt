@@ -77,6 +77,7 @@ import com.theeclecticwitch.powertothepeople.officials.Level
 import com.theeclecticwitch.powertothepeople.officials.OfficialDetailScreen
 import com.theeclecticwitch.powertothepeople.officials.OfficialsScreen
 import com.theeclecticwitch.powertothepeople.ui.theme.PowerTheme
+import com.theeclecticwitch.powertothepeople.ui.FitText
 import kotlinx.serialization.Serializable
 
 // The places the app can go. Type-safe routes: each carries exactly what its screen needs.
@@ -142,7 +143,7 @@ fun App() {
                     NavigationRail(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         val selected = selectedTab(nav)
                         tabs.forEach { tab ->
-                            NavigationRailItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { Text(tab.label) })
+                            NavigationRailItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium) })
                         }
                     }
                     Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
@@ -156,7 +157,7 @@ fun App() {
                         NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                             val selected = selectedTab(nav)
                             tabs.forEach { tab ->
-                                NavigationBarItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { Text(tab.label) })
+                                NavigationBarItem(tab == selected, { goToTab(nav, tab) }, icon = { Icon(tab.icon, null) }, label = { FitText(tab.label, MaterialTheme.typography.labelMedium) })
                             }
                         }
                     },
@@ -235,6 +236,7 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier) {
                 onHowGovernment = { goToTab(nav, tabs[1]) },
                 onOfficial = { nav.navigate(OfficialRoute(it)) },
                 onSetLocation = { nav.navigate(LocationRoute) },
+                onAlerts = { nav.navigate(AlertsRoute) },
             )
         }
         composable<ConstitutionRoute> {

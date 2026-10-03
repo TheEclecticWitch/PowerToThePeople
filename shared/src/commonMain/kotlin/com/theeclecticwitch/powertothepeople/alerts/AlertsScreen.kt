@@ -33,7 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.theeclecticwitch.powertothepeople.congress.Bill
 import com.theeclecticwitch.powertothepeople.congress.BillNames
+import com.theeclecticwitch.powertothepeople.congress.CongressData
+import com.theeclecticwitch.powertothepeople.ui.Format
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.runtime.produceState
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
@@ -201,5 +206,52 @@ fun FollowBillButton(bill: String) {
         Icon(if (following) Icons.Filled.Notifications else Icons.Outlined.Notifications, contentDescription = null)
         Spacer(Modifier.width(6.dp))
         Text(if (following) "Following" else "Follow")
+    }
+}
+
+/** On Overview: the bills the reader follows, each with where it last stood. */
+@Composable
+fun FollowedBillsCard(nav: CongressNav, onAlerts: () -> Unit, onLegislation: () -> Unit) {
+    val prefs by Alerts.prefs.collectAsState()
+    val bills by produceState<Map<String, Bill?>>(emptyMap(), prefs.bills) {
+        value = prefs.bills.associateWith { runCatching { CongressData.bill(it) }.getOrNull() }
+    }
+    InfoCard(title = "Bills I follow") {
+        if (prefs.bills.isEmpty()) {
+            Text("Tap the bell on any bill's page to follow it. It will show up here, and you can be alerted when it moves.", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "Find legislation ›",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.clickable(onClick = onLegislation).padding(vertical = 4.dp),
+            )
+            return@InfoCard
+        }
+        prefs.bills.forEachIndexed { i, id ->
+            if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            val b = bills[id]
+            Column(
+                Modifier.fillMaxWidth().clickable { nav.bill(id) }.padding(vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(BillNames.label(id), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                b?.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                b?.latestAction?.let { a ->
+                    Text(
+                        listOfNotNull(a.date?.let { Format.date(it) }, a.text).joinToString(": "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+        Text(
+            "Alerts ›",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.clickable(onClick = onAlerts).padding(vertical = 4.dp),
+        )
     }
 }

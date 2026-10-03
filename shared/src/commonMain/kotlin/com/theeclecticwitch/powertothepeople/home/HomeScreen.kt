@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
+import com.theeclecticwitch.powertothepeople.alerts.FollowedBillsCard
 import com.theeclecticwitch.powertothepeople.congress.LatestVoteCard
 import com.theeclecticwitch.powertothepeople.congress.SessionCard
 import com.theeclecticwitch.powertothepeople.constitution.Originals
@@ -43,6 +44,7 @@ import com.theeclecticwitch.powertothepeople.officials.rememberDelegation
 import com.theeclecticwitch.powertothepeople.officials.rememberStateDelegation
 import com.theeclecticwitch.powertothepeople.ui.Format
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
+import com.theeclecticwitch.powertothepeople.ui.FitText
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SettingsButton
 import com.theeclecticwitch.powertothepeople.ui.theme.LocalAppFonts
@@ -66,6 +68,7 @@ fun HomeScreen(
     onHowGovernment: () -> Unit,
     onOfficial: (String) -> Unit,
     onSetLocation: () -> Unit,
+    onAlerts: () -> Unit,
 ) {
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
@@ -158,6 +161,8 @@ fun HomeScreen(
                 DebtCard(onOpen = onDebt)
 
                 DoomsdayCard(onOpen = onDoomsday)
+
+                FollowedBillsCard(congressNav, onAlerts = onAlerts, onLegislation = onLegislation)
             }
         }
     }
@@ -180,21 +185,9 @@ private fun PersonTile(o: Official?, role: String, modifier: Modifier, onOfficia
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (o != null) OfficialPhoto(o, 52) else Spacer(Modifier.size(52.dp))
-        Text(
-            o?.name?.let(Format::surname) ?: "…",
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            role,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
+        FitText(o?.name?.let(Format::surname) ?: "…", MaterialTheme.typography.labelLarge)
+        // At large text sizes "Vice President" takes two lines rather than shrinking out of reach.
+        FitText(role, MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
     }
 }
 
@@ -213,15 +206,8 @@ private fun AllCongressTile(modifier: Modifier, onOpen: () -> Unit) {
         ) {
             Text("535", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
         }
-        Text("All Congress", style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-        Text(
-            "Directory",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
+        FitText("All Congress", MaterialTheme.typography.labelLarge)
+        FitText("Directory", MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -241,12 +227,11 @@ private fun DocumentTile(title: String, image: String, modifier: Modifier, onOpe
             modifier = Modifier.size(width = 42.dp, height = 52.dp).clip(RoundedCornerShape(4.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         )
-        Text(
+        // A single word stays whole on one line; "Bill of Rights" may take two.
+        FitText(
             title,
-            style = MaterialTheme.typography.labelLarge.copy(fontFamily = LocalAppFonts.current.caslon),
-            fontStyle = FontStyle.Italic,
-            maxLines = 2,
-            textAlign = TextAlign.Center,
+            MaterialTheme.typography.labelLarge.copy(fontFamily = LocalAppFonts.current.caslon, fontStyle = FontStyle.Italic),
+            maxLines = if (' ' in title) 2 else 1,
         )
     }
 }

@@ -1,5 +1,13 @@
 package com.theeclecticwitch.powertothepeople.ui
 
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -199,6 +207,46 @@ fun Tag(text: String, modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+/**
+ * A short label in a fixed space (a tab, a tile) that shrinks to fit rather than wrapping mid-word or being
+ * cut off, at any text size the reader picks. Never larger than [style]. Words are never split: on one line it
+ * must fit whole; on more, each word must fit a line by itself.
+ */
+@Composable
+fun FitText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    maxLines: Int = 1,
+    textAlign: TextAlign = TextAlign.Center,
+) {
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        val room = constraints.maxWidth
+        val size = remember(text, style, room, maxLines) {
+            fun fits(sized: TextStyle): Boolean {
+                val words = if (maxLines == 1) listOf(text) else text.split(' ')
+                if (words.any { measurer.measure(it, sized, softWrap = false, maxLines = 1).size.width > room }) return false
+                return maxLines == 1 ||
+                    !measurer.measure(text, sized, maxLines = maxLines, constraints = Constraints(maxWidth = room)).hasVisualOverflow
+            }
+            var sp = style.fontSize.value
+            while (sp > 6f && !fits(style.copy(fontSize = sp.sp))) sp -= 0.5f
+            sp.sp
+        }
+        Text(
+            text,
+            Modifier.fillMaxWidth(),
+            color = color,
+            style = style.copy(fontSize = size),
+            maxLines = maxLines,
+            softWrap = maxLines > 1,
+            textAlign = textAlign,
         )
     }
 }

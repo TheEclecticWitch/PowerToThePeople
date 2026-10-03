@@ -13,6 +13,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +33,8 @@ import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
+import com.theeclecticwitch.powertothepeople.ui.TextSize
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 /** The reader's own settings: where they live, and what (if anything) leaves the device. */
@@ -57,6 +60,26 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedButton(onClick = onLocation) { Text(if (location == null) "Set my location" else "Change my location") }
+                }
+                InfoCard(title = "Text size") {
+                    val size by TextSize.flow.collectAsState()
+                    val index = TextSize.steps.indexOfFirst { it >= size.scale - 0.01f }.coerceAtLeast(0)
+                    Text(TextSize.nameOf(size.scale), style = MaterialTheme.typography.titleMedium)
+                    Slider(
+                        value = index.toFloat(),
+                        onValueChange = { TextSize.set(TextSize.steps[it.roundToInt().coerceIn(TextSize.steps.indices)]) },
+                        valueRange = 0f..(TextSize.steps.size - 1).toFloat(),
+                        steps = TextSize.steps.size - 2,
+                    )
+                    Text(
+                        "We the People of the United States, in Order to form a more perfect Union…",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        "This adds to the text size set on your device.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 InfoCard(title = "Your answers on votes and bills") {
                     Text(
