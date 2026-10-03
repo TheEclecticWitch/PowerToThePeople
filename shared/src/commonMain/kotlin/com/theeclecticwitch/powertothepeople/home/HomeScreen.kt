@@ -139,10 +139,6 @@ fun HomeScreen(
                     Text("Learn ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
 
-                LatestVoteCard(congressNav)
-
-                SessionCard(onOpen = onSessions)
-
                 InfoCard(title = "Find legislation", onClick = onLegislation) {
                     Text(
                         "Heard about a bill or an executive order in the news? Look it up by number or name: Congress, the President, and your state.",
@@ -150,6 +146,10 @@ fun HomeScreen(
                     )
                     Text("Search ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
+
+                LatestVoteCard(congressNav)
+
+                SessionCard(onOpen = onSessions)
 
                 DebtCard(onOpen = onDebt)
 
