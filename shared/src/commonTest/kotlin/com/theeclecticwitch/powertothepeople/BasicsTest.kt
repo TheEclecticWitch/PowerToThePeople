@@ -1,6 +1,7 @@
 package com.theeclecticwitch.powertothepeople
 
 import com.theeclecticwitch.powertothepeople.data.FileStore
+import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.congressOn
 import com.theeclecticwitch.powertothepeople.ui.Format
 import kotlin.test.Test
@@ -17,6 +18,13 @@ class BasicsTest {
         assertEquals(119, congressOn(LocalDate(2027, 1, 2)))
         assertEquals(120, congressOn(LocalDate(2027, 1, 3)))
         assertEquals(1, congressOn(LocalDate(1789, 3, 4)))
+    }
+
+    @Test
+    fun marylandElectionDistrictsReadAsTheirCommunity() {
+        assertEquals("Waldorf", communityName("District 6, Waldorf"))
+        assertEquals("Springfield township", communityName("Springfield township"))
+        assertEquals("District Heights", communityName("District Heights"))
     }
 
     @Test

@@ -47,7 +47,15 @@ data class UserLocation(
     val longitude: Double? = null,
     val lookedUpOn: String,
 ) {
-    val cityOrCounty: String get() = listOfNotNull(place, county).firstOrNull() ?: stateName
+    val cityOrCounty: String get() = listOfNotNull(place?.let(::communityName), county).firstOrNull() ?: stateName
+
+    /** "Congressional District 5": plain "District 5" next to a place name reads like a local district. */
+    val congressionalDistrictLabel: String
+        get() = when (congressionalDistrict) {
+            null -> "Congressional district unknown"
+            0 -> "At-large congressional district"
+            else -> "Congressional District $congressionalDistrict"
+        }
 
     val districtLabel: String
         get() = when (congressionalDistrict) {
@@ -56,6 +64,14 @@ data class UserLocation(
             else -> "District $congressionalDistrict"
         }
 }
+
+private val electionDistrictPrefix = Regex("""^(Election )?District \d+, """)
+
+/**
+ * Maryland names its county subdivisions after election districts - "District 5, Thompkinsville" -
+ * which reads like a congressional district. Only the community's name is wanted.
+ */
+fun communityName(place: String): String = place.replace(electionDistrictPrefix, "")
 
 /** Which Congress is sitting on [date]. Each one starts at noon on January 3 of an odd year. */
 fun congressOn(date: LocalDate): Int {
@@ -168,8 +184,10 @@ object CensusGeocoder {
             stateAbbr = state?.field("STUSAB") ?: "",
             stateName = state?.field("NAME") ?: "",
             county = latest.layers.layer { it == "Counties" }?.field("NAME"),
+            // A town, then an unincorporated community the Census names (a CDP), then the county's own subdivision.
             place = latest.layers.layer { it == "Incorporated Places" }?.field("BASENAME")
-                ?: latest.layers.layer { it == "County Subdivisions" }?.field("NAME"),
+                ?: latest.layers.layer { it == "Census Designated Places" }?.field("BASENAME")
+                ?: latest.layers.layer { it == "County Subdivisions" }?.field("NAME")?.let(::communityName),
             schoolDistrict = latest.layers.layer { it.endsWith("School Districts") }?.field("NAME"),
             congress = sitting,
             congressionalDistrict = current?.second,

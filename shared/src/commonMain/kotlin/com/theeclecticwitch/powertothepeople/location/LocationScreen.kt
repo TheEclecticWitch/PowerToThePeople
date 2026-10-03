@@ -116,7 +116,7 @@ fun DistrictsCard(loc: UserLocation) {
         Text(loc.matchedAddress, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         DistrictRow("State", loc.stateName)
         loc.county?.let { DistrictRow("County", it) }
-        loc.place?.let { DistrictRow("City or town", it) }
+        loc.place?.let { DistrictRow("City or town", communityName(it)) }
         loc.schoolDistrict?.let { DistrictRow("School district", it) }
         DistrictRow("U.S. House", "${loc.districtLabel} (${Format.ordinal(loc.congress)} Congress)")
         if (loc.nextCongress != null && loc.nextCongressionalDistrict != null) {

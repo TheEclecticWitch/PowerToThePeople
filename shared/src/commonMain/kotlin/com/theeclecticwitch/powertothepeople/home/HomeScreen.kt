@@ -71,7 +71,7 @@ fun HomeScreen(
                     }
                 } else {
                     InfoCard(title = "Your representatives in Washington", onClick = onOfficials) {
-                        Text("${loc.cityOrCounty}, ${loc.stateAbbr} · ${loc.districtLabel}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${loc.cityOrCounty}, ${loc.stateAbbr} · ${loc.congressionalDistrictLabel}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         val d = delegation
                         if (d == null) {
                             LoadingBox("Finding your representatives…")

@@ -54,6 +54,7 @@ import coil3.compose.SubcomposeAsyncImage
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.MemberRecordCards
 import com.theeclecticwitch.powertothepeople.location.LocationStore
+import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.UserLocation
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
 import com.theeclecticwitch.powertothepeople.ui.CenteredMessage
@@ -112,7 +113,7 @@ fun OfficialsScreen(
                     }
                 } else {
                     Text(
-                        "${loc.cityOrCounty}, ${loc.stateAbbr} · ${loc.districtLabel}",
+                        "${loc.cityOrCounty}, ${loc.stateAbbr} · ${loc.congressionalDistrictLabel}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clickable(onClick = onSetLocation),
@@ -158,7 +159,7 @@ fun OfficialsScreen(
                         }
                     }
 
-                    LevelHeading("Local", listOfNotNull(loc.place, loc.county).joinToString(" · ").ifBlank { "Your area" })
+                    LevelHeading("Local", listOfNotNull(loc.place?.let(::communityName), loc.county).joinToString(" · ").ifBlank { "Your area" })
                     mine.filter { it.level == Level.Local }.forEach { OfficialRow(it) { onOfficial(it.id) } }
                     InfoCard {
                         Text(
