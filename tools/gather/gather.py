@@ -26,6 +26,7 @@ import candidates  # noqa: E402
 import contacts  # noqa: E402
 import disclosures  # noqa: E402
 import doomsday  # noqa: E402
+import election_dates  # noqa: E402
 import finance  # noqa: E402
 import members  # noqa: E402
 import orders  # noqa: E402
@@ -49,6 +50,8 @@ SOURCES = [
      "covers": "Senate roll-call votes"},
     {"name": "Federal Election Commission (OpenFEC API)", "url": "https://www.fec.gov/data/",
      "covers": "Campaign money raised and spent by members' campaign committees, and this cycle's registered candidates"},
+    {"name": "State election offices", "url": "https://vote.gov/",
+     "covers": "Each state's deadlines to register, vote early and vote by mail, copied by hand from its election office"},
     {"name": "Federal Register", "url": "https://www.federalregister.gov/presidential-documents/executive-orders",
      "covers": "Executive orders"},
     {"name": "Members' and the White House's own news feeds", "url": "https://www.whitehouse.gov/news/",
@@ -126,6 +129,7 @@ def main():
     member_count = step("Members", members.build, store, congress, log)
     step("Birthplaces", births.gather, net, store, state, log)
     step("Candidates", candidates.gather, net, store, log)
+    step("Election dates", election_dates.gather, store, log)
     step(f"Campaign money {congress}", finance.gather, net, store, congress, log)
     step("Doomsday Clock", doomsday.gather, net, store, log)
     step("Executive orders", orders.gather, net, store, log)

@@ -51,7 +51,9 @@ import com.theeclecticwitch.powertothepeople.ui.LoadingBox
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
 import com.theeclecticwitch.powertothepeople.ui.openSafely
+import com.theeclecticwitch.powertothepeople.voting.ElectionCountdown
 import com.theeclecticwitch.powertothepeople.voting.Measure
+import com.theeclecticwitch.powertothepeople.voting.StateDatesCard
 import com.theeclecticwitch.powertothepeople.voting.VoterInfo
 import com.theeclecticwitch.powertothepeople.voting.VoterInfoUnavailable
 import com.theeclecticwitch.powertothepeople.voting.Voting
@@ -85,6 +87,7 @@ fun ElectionsScreen(onBack: () -> Unit, onRace: (String) -> Unit, onSetLocation:
             CardPage(spacing = 12.dp) {
                 InfoCard(title = "Election Day") {
                     Text(Format.date(day), style = MaterialTheme.typography.headlineSmall)
+                    ElectionCountdown(day)
                     Text(
                         "Who is running where you live, and what you'd like to remember about each of them. Every candidate " +
                             "is shown the same way, and each race opens in a new random order, so no one is always first.",
@@ -99,6 +102,7 @@ fun ElectionsScreen(onBack: () -> Unit, onRace: (String) -> Unit, onSetLocation:
                     }
                     return@CardPage
                 }
+                StateDatesCard(loc.stateAbbr, day)
 
                 InfoCard(title = "Your ballot") {
                     val b = ballot

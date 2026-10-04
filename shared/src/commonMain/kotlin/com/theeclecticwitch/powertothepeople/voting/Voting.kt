@@ -225,6 +225,7 @@ fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onElections: () 
             CardPage(spacing = 12.dp) {
                 InfoCard(title = "Election Day") {
                     Text(Format.date(day), style = MaterialTheme.typography.headlineSmall)
+                    ElectionCountdown(day)
                     Text(
                         "Federal elections are held on the Tuesday after the first Monday in November of even-numbered " +
                             "years. Every House seat and about a third of Senate seats are on the ballot, along with many " +
@@ -237,6 +238,7 @@ fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onElections: () 
                     Text("See the candidates ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
                 }
                 val loc = location
+                loc?.let { StateDatesCard(it.stateAbbr, day) }
                 InfoCard(title = "Are you registered?") {
                     Text(
                         "You must be registered to vote, and deadlines can be weeks before Election Day. Each state sets its own " +
