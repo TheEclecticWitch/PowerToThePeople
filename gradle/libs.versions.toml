@@ -1,4 +1,5 @@
 [versions]
+billing = "8.3.0"
 agp = "9.4.1"
 # Held at the Kotlin that Compose Multiplatform 1.12.0's iOS klibs were built with.
 # Kotlin/Native refuses a klib from a newer compiler, and Android never notices - so a
@@ -25,6 +26,7 @@ okio = "3.18.2"
 work = "2.10.1"
 
 [libraries]
+android-billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 compose-mp-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
 compose-mp-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }

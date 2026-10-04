@@ -82,6 +82,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.work.runtime)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.android.billing)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

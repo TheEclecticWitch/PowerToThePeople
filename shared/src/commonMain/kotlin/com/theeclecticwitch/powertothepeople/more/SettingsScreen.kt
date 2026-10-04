@@ -39,6 +39,7 @@ import com.theeclecticwitch.powertothepeople.congress.AppTally
 import com.theeclecticwitch.powertothepeople.congress.MyPositions
 import com.theeclecticwitch.powertothepeople.data.systemName
 import com.theeclecticwitch.powertothepeople.location.LocationStore
+import com.theeclecticwitch.powertothepeople.support.SupportCard
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
 import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
@@ -146,6 +147,7 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
                         OutlinedButton(onClick = { confirmClear = true }) { Text("Clear all my answers") }
                     }
                 }
+                SupportCard()
                 SuggestionCard()
             }
         }

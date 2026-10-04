@@ -11,11 +11,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.theeclecticwitch.powertothepeople.data.initialiseAndroidContext
+import com.theeclecticwitch.powertothepeople.support.Store
+import com.theeclecticwitch.powertothepeople.support.attachStoreActivity
 import com.theeclecticwitch.powertothepeople.ui.TextSize
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         initialiseAndroidContext(this)
+        attachStoreActivity(this)
+        Store.connect()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {

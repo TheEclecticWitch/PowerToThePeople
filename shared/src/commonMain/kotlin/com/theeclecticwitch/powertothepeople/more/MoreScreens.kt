@@ -1,5 +1,6 @@
 package com.theeclecticwitch.powertothepeople.more
 
+import com.theeclecticwitch.powertothepeople.support.SupportCard
 import com.theeclecticwitch.powertothepeople.ui.fullWidth
 import com.theeclecticwitch.powertothepeople.ui.PageColumn
 import com.theeclecticwitch.powertothepeople.ui.CardPage
@@ -250,6 +251,7 @@ fun AboutScreen(onBack: () -> Unit) {
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
+                SupportCard()
                 InfoCard(title = "Your privacy") {
                     Text(
                         "No accounts, no ads, no tracking. Your address, notes and what you follow stay on this device. Your " +

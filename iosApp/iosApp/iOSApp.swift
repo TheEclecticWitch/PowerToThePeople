@@ -17,6 +17,8 @@ struct PowerToThePeopleApp: App {
     init() {
         // iOS requires background tasks to be registered before launch finishes.
         Notifications_iosKt.registerBackgroundChecks()
+        // StoreKit is Swift-only; this hooks up the donation buttons.
+        DonationStore.shared.start()
     }
 
     var body: some Scene {
