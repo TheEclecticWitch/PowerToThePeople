@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,10 +28,12 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -46,15 +50,16 @@ import com.theeclecticwitch.powertothepeople.ui.ReadingColumn
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 /** Loads a Treasury figure, with a retry the reader can press. */
 @Composable
-private fun <T> rememberTreasury(load: suspend (Boolean) -> T): Triple<T?, String?, () -> Unit> {
-    var value by remember { mutableStateOf<T?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var attempt by remember { mutableIntStateOf(0) }
-    LaunchedEffect(attempt) {
+private fun <T> rememberTreasury(vararg keys: Any?, load: suspend (Boolean) -> T): Triple<T?, String?, () -> Unit> {
+    var value by remember(*keys) { mutableStateOf<T?>(null) }
+    var error by remember(*keys) { mutableStateOf<String?>(null) }
+    var attempt by remember(*keys) { mutableIntStateOf(0) }
+    LaunchedEffect(attempt, *keys) {
         error = null
         try {
             value = load(attempt > 0)
@@ -193,10 +198,19 @@ private fun DeficitDetail(d: DeficitSnapshot) {
     }
     Spacer(Modifier.height(4.dp))
     Text("Month by month", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-    MonthBars(d.months)
+    var selected by remember(d) { mutableStateOf<Int?>(null) }
+    Text(
+        if (selected == null) "Tap a month to see its details." else "Tap the month again to close.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    MonthBars(d.months, selected) { selected = if (it == selected) null else it }
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Legend(MaterialTheme.colorScheme.primary, "Deficit (spent more)")
         Legend(MaterialTheme.colorScheme.secondary, "Surplus (collected more)")
+    }
+    selected?.let { d.months.getOrNull(it) }?.let { m ->
+        MonthDetail(m, d.priorMonths.firstOrNull { it.month == m.month })
     }
     SourceLine("U.S. Treasury, Monthly Treasury Statement", TreasurySources.MTS_PAGE, staleNote(d.isStale, null))
 }
@@ -242,15 +256,25 @@ private fun Legend(color: Color, label: String) {
     }
 }
 
-/** Deficits above the line, surpluses below it, one bar per month of the fiscal year. */
+/**
+ * Deficits above the line, surpluses below it, one bar per month of the fiscal year. Tapping
+ * anywhere in a month's column (bar or name) picks it; the other months fade.
+ */
 @Composable
-private fun MonthBars(months: List<MonthResult>) {
+private fun MonthBars(months: List<MonthResult>, selected: Int?, onTap: (Int) -> Unit) {
     if (months.isEmpty()) return
     val deficitColor = MaterialTheme.colorScheme.primary
     val surplusColor = MaterialTheme.colorScheme.secondary
     val axis = MaterialTheme.colorScheme.outline
     val biggest = months.maxOf { abs(it.deficit) }.coerceAtLeast(1.0)
-    Column {
+    val tap by rememberUpdatedState(onTap)
+    Column(
+        Modifier.pointerInput(months) {
+            detectTapGestures { at ->
+                tap((at.x / (size.width.toFloat() / months.size)).toInt().coerceIn(months.indices))
+            }
+        },
+    ) {
         Canvas(Modifier.fillMaxWidth().height(150.dp)) {
             val slot = size.width / months.size
             val barWidth = slot * 0.62f
@@ -260,27 +284,84 @@ private fun MonthBars(months: List<MonthResult>) {
             val downSpace = size.height - zeroY
             months.forEachIndexed { i, m ->
                 val x = i * slot + (slot - barWidth) / 2
+                val alpha = if (selected == null || selected == i) 1f else 0.3f
                 if (m.deficit >= 0) {
                     val h = (m.deficit / biggest * upSpace).toFloat()
-                    drawRect(deficitColor, Offset(x, zeroY - h), Size(barWidth, h))
+                    drawRect(deficitColor.copy(alpha = alpha), Offset(x, zeroY - h), Size(barWidth, h))
                 } else {
                     val h = (abs(m.deficit) / biggest * max(downSpace, upSpace * 0.3f)).toFloat().coerceAtMost(downSpace)
-                    drawRect(surplusColor, Offset(x, zeroY), Size(barWidth, h))
+                    drawRect(surplusColor.copy(alpha = alpha), Offset(x, zeroY), Size(barWidth, h))
                 }
             }
             drawLine(axis, Offset(0f, zeroY), Offset(size.width, zeroY), strokeWidth = 1.5f)
         }
         Row(Modifier.fillMaxWidth()) {
-            months.forEach {
+            months.forEachIndexed { i, it ->
                 Text(
                     it.label.take(3),
                     style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (i == selected) FontWeight.Bold else null,
                     maxLines = 1,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
                 )
             }
         }
+    }
+}
+
+/** One month up close: its totals, the same month a year before, and where the money came from and went. */
+@Composable
+private fun MonthDetail(m: MonthResult, lastYear: MonthResult?) {
+    val (b, error, retry) = rememberTreasury(m.year, m.month) { Treasury.breakdown(m.year, m.month, it) }
+    Column(
+        Modifier.fillMaxWidth().padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        HorizontalDivider()
+        Text("${m.label} ${m.year}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(
+            if (m.deficit >= 0) "A deficit of ${Format.dollarsShort(m.deficit)}: the government spent more than it collected."
+            else "A surplus of ${Format.dollarsShort(-m.deficit)}: the government collected more than it spent.",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Stat("Collected", Format.dollarsShort(m.receipts))
+        Stat("Spent", Format.dollarsShort(m.outlays))
+        if (lastYear != null) {
+            val w = if (lastYear.deficit >= 0) "deficit" else "surplus"
+            Stat("${lastYear.label} ${lastYear.year}, a year before", "${Format.dollarsShort(abs(lastYear.deficit))} $w")
+        }
+        when {
+            b != null -> {
+                BreakdownList("Where the money came from", b.sources, show = b.sources.size)
+                BreakdownList("Where it went", b.costs, show = 6)
+                if ((b.sources + b.costs).any { it.amount < 0 }) {
+                    Text(
+                        "Amounts are net: refunds and money paid back are already taken out, so a line can be below zero.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            error != null -> ErrorBox(error, retry)
+            else -> LoadingBox("Asking the Treasury…")
+        }
+    }
+}
+
+/** The biggest lines, each with its share of the whole; the rest added together as "Everything else". */
+@Composable
+private fun BreakdownList(title: String, lines: List<BudgetLine>, show: Int) {
+    val total = lines.sumOf { it.amount }
+    if (lines.isEmpty() || total <= 0) return
+    val rest = lines.drop(show)
+    fun share(amount: Double) = "${(amount / total * 100).roundToInt()}%"
+    Spacer(Modifier.height(4.dp))
+    Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+    lines.take(show).forEach { Stat(it.name, "${Format.dollarsShort(it.amount)} · ${share(it.amount)}") }
+    if (rest.isNotEmpty()) {
+        val other = rest.sumOf { it.amount }
+        Stat("Everything else", "${Format.dollarsShort(other)} · ${share(other)}")
     }
 }
 

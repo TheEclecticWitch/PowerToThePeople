@@ -15,3 +15,6 @@ actual fun appDataDirectory(): Path {
 }
 
 actual val appFileSystem: FileSystem = FileSystem.SYSTEM
+
+actual val systemName: String =
+    platform.UIKit.UIDevice.currentDevice.let { "${it.systemName} ${it.systemVersion}" }

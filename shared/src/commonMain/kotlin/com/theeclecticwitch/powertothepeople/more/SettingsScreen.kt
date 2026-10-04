@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.congress.AppTally
 import com.theeclecticwitch.powertothepeople.congress.MyPositions
+import com.theeclecticwitch.powertothepeople.data.systemName
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
 import com.theeclecticwitch.powertothepeople.ui.InfoCard
@@ -144,6 +146,7 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
                         OutlinedButton(onClick = { confirmClear = true }) { Text("Clear all my answers") }
                     }
                 }
+                SuggestionCard()
             }
         }
     }
@@ -161,5 +164,56 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
             },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } },
         )
+    }
+}
+
+/** The app's version, as the stores know it - keep in step with versionName and MARKETING_VERSION. */
+const val APP_VERSION = "1.0"
+
+private const val SUGGESTIONS = "submissions@00theeclecticwitch00.com"
+
+/**
+ * Where people send ideas and problems (Rod, 2026-10-04: every app gets one). It opens the
+ * person's own email app with the message addressed and the app named in the subject, so it
+ * needs no server and the app itself still sends nothing. The address is also shown, with a
+ * copy button, for anyone without an email app set up.
+ */
+@Composable
+private fun SuggestionCard() {
+    val uri = androidx.compose.ui.platform.LocalUriHandler.current
+    @Suppress("DEPRECATION") val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    var failed by remember { mutableStateOf(false) }
+    var copied by remember { mutableStateOf(false) }
+    InfoCard(title = "Suggestions") {
+        Text(
+            "Have an idea for the app, or found something that isn't right? We read every message.",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Button(onClick = {
+            val body = "\n\n\n---\nPower to the People $APP_VERSION on $systemName"
+            val link = "mailto:$SUGGESTIONS?subject=${mailEncode("Power to the People suggestion")}&body=${mailEncode(body)}"
+            failed = runCatching { uri.openUri(link) }.isFailure
+        }) { Text("Send a suggestion") }
+        Text(
+            if (failed) "No email app opened. Write to the address below from any email account."
+            else "Opens your email app with a message ready to write. The app and version are noted at the bottom; delete them if you like.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(SUGGESTIONS, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            TextButton(onClick = {
+                clipboard.setText(androidx.compose.ui.text.AnnotatedString(SUGGESTIONS)); copied = true
+            }) { Text(if (copied) "Copied" else "Copy") }
+        }
+    }
+}
+
+/** Percent-encoding for a mailto: link - spaces as %20, not +, which mail apps keep as "+". */
+internal fun mailEncode(text: String): String = buildString {
+    text.encodeToByteArray().forEach { b ->
+        val c = b.toInt().toChar()
+        if (c.isLetterOrDigit() && b >= 0 || c in "-._~") append(c)
+        else append('%').append(((b.toInt() and 0xFF) or 0x100).toString(16).substring(1).uppercase())
     }
 }

@@ -17,3 +17,5 @@ fun androidContext(): Context = appContext
 actual fun appDataDirectory(): Path = appContext.filesDir.absolutePath.toPath()
 
 actual val appFileSystem: FileSystem = FileSystem.SYSTEM
+
+actual val systemName: String = "Android ${android.os.Build.VERSION.RELEASE}"

@@ -17,3 +17,5 @@ actual fun appDataDirectory(): Path {
 }
 
 actual val appFileSystem: FileSystem = FileSystem.SYSTEM
+
+actual val systemName: String = System.getProperty("os.name") ?: "Desktop"

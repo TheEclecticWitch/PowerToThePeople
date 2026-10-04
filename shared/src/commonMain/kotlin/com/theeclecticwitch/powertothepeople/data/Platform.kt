@@ -11,3 +11,6 @@ expect fun appDataDirectory(): Path
 
 /** okio's real disc. Declared per platform because okio's common code has none. */
 expect val appFileSystem: FileSystem
+
+/** The system and its version, such as "Android 16", noted at the foot of a suggestion email. */
+expect val systemName: String
