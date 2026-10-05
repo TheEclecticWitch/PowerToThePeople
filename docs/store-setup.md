@@ -21,7 +21,12 @@ Everything needed to put Power to the People in testers' hands. Answers here mat
 
 > Your government in plain words
 
-**Full description (both stores)**
+**Full description (Google Play): use `docs/store/play-description.txt`.** Play rejected the text below twice
+(2026-10-05, Misleading Claims, "Insufficient Sources"): the word "including" implied sources it didn't list. The Play
+text puts the not-government notice first and lists every source the app uses, government and not. If the app gains
+a source, add it there.
+
+**Full description (Apple, and the old Play text)**
 
 > Keeping up with what the government is doing shouldn't take hours of searching. Power to the People puts it in
 > one place, with the facts and where each one came from, so you can decide for yourself.
