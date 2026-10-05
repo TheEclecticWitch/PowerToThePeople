@@ -20,8 +20,10 @@ FF = imageio_ffmpeg.get_ffmpeg_exe()
 # (start, end) in seconds, read off frames taken with `ffmpeg -ss <t>` (exact seeking; a recording from
 # the simulator has an uneven frame rate, and the trim filter's idea of time drifts from it):
 # opening the app, a member, a vote, elections, a bill, then civics and the citizenship test.
-SEGMENTS = [(36.0, 41.5), (45.5, 50.5), (72.8, 77.3), (101.8, 106.0), (120.0, 124.5), (126.8, 132.3)]
-WALKTHROUGH = (36.0, 133.0)
+# Elections (101.8 to 106.0) is left out while the build in review (1.0 build 1, October 3) predates the
+# Election Day countdown and state dates: App Review wants the video to match the build.
+SEGMENTS = [(36.0, 41.5), (45.5, 50.5), (72.8, 77.3), (120.0, 124.5), (126.8, 132.3)]
+WALKTHROUGH = [(36.0, 101.5), (108.5, 133.0)]
 
 
 def run(*args):
@@ -45,13 +47,17 @@ def preview():
 
 
 def walkthrough():
-    start, end = WALKTHROUGH
-    run("-ss", str(start), "-to", str(end), "-i", str(RAW), "-f", "lavfi",
-        "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
-        "-vf", "fps=30,scale=1080:-2,format=yuv420p", "-map", "0:v", "-map", "1:a", "-shortest",
+    inputs = [arg for a, b in WALKTHROUGH for arg in ("-ss", str(a), "-to", str(b), "-i", str(RAW))]
+    n = len(WALKTHROUGH)
+    parts = "".join(f"[{i}:v]setpts=PTS-STARTPTS,fps=30,scale=1080:-2,setsar=1[v{i}];" for i in range(n))
+    joined = "".join(f"[v{i}]" for i in range(n))
+    total = sum(b - a for a, b in WALKTHROUGH)
+    run(*inputs, "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+        "-filter_complex", parts + f"{joined}concat=n={n}:v=1:a=0,format=yuv420p[v]",
+        "-map", "[v]", "-map", f"{n}:a", "-t", str(total),
         "-c:v", "libx264", "-crf", "20", "-c:a", "aac", "-movflags", "+faststart",
         str(OUT / "walkthrough.mp4"))
-    print(f"walkthrough.mp4: {end - start:.0f} s")
+    print(f"walkthrough.mp4: {total:.0f} s")
 
 
 if __name__ == "__main__":
