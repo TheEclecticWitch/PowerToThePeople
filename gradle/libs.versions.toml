@@ -34,6 +34,7 @@ compose-mp-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref =
 compose-mp-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeMultiplatform" }
 compose-mp-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMpMaterial3" }
 compose-mp-icons-core = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "composeIcons" }
+compose-mp-ui-test = { group = "org.jetbrains.compose.ui", name = "ui-test", version.ref = "composeMultiplatform" }
 compose-mp-desktop-currentOs = { group = "org.jetbrains.compose.desktop", name = "desktop-jvm", version.ref = "composeMultiplatform" }
 navigation-mp-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "navigationMp" }
 lifecycle-mp-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleMp" }

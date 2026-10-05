@@ -99,6 +99,12 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.okio.fakefilesystem)
         }
+        val desktopTest by getting
+        desktopTest.dependencies {
+            // Only for the Mac App Store screenshots (MacStoreShots), which drive the real app off-screen.
+            implementation(libs.compose.mp.ui.test)
+            implementation(compose.desktop.currentOs)  // brings the drawing library for this computer
+        }
     }
 }
 
@@ -106,4 +112,17 @@ compose.resources {
     // Named explicitly so it never depends on the root project's name.
     packageOfResClass = "com.theeclecticwitch.powertothepeople.shared.resources"
     publicResClass = false
+}
+
+// The Mac App Store screenshots: `gradlew :shared:desktopTest --tests "*MacStoreShots*" -PstoreShots=<folder>`.
+// They run the whole app against the live sources, so they only run when asked for, and with their own
+// data folder: never the desktop app's real one, which holds the reader's address.
+tasks.named<Test>("desktopTest") {
+    val shots = providers.gradleProperty("storeShots").orNull
+    if (shots != null) {
+        systemProperty("storeShots", shots)
+        environment("APPDATA", "$shots/appdata")
+        systemProperty("user.home", "$shots/home")
+        outputs.upToDateWhen { false }
+    }
 }

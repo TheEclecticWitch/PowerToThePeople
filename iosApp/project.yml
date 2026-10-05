@@ -109,6 +109,23 @@ targets:
         Release:
           KOTLIN_BUILD: release
 
+  # Not part of the app: a UI test that walks the simulator through the app for the App Store
+  # screenshots and preview video. tools/store-shots.sh runs it; it is never archived or shipped.
+  StoreTour:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: StoreTour
+    dependencies:
+      - target: PowerToThePeople
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.theeclecticwitch.powertothepeople.storetour
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: PowerToThePeople
+
 # Spelled out: Xcode only invents a scheme for a project nobody has opened yet, and once it had
 # been opened, xcodebuild found none on MyWorkTracker.
 schemes:
@@ -126,3 +143,11 @@ schemes:
       config: Debug
     archive:
       config: Release
+  StoreTour:
+    build:
+      targets:
+        PowerToThePeople: all
+        StoreTour: [test]
+    test:
+      config: Debug
+      targets: [StoreTour]

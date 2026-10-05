@@ -30,3 +30,7 @@ __pycache__/
 # Cloudflare Wrangler working files
 .wrangler/
 node_modules/
+
+# Working copies from tools/store-shots.sh (the finished pictures are in docs/store/apple/)
+docs/store/apple/raw/
+docs/store/apple/video/
