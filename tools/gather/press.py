@@ -1,12 +1,13 @@
 """
 Official news: members' press releases and office news, from the feeds their own websites publish, and the
-White House's own news feed. Only what the offices themselves publish; no social media.
+White House's general news feed (for app version 1.0; later versions use white_house.py's files instead).
+Only what the offices themselves publish; no social media.
 
 Each member's feed is looked for about once a week: the address listed in the @unitedstates data if it works,
 else the usual places House and Senate sites keep one. Between times, only feeds known to work are read.
 
   press/{bioguide}.json    a member's latest press releases
-  press/whitehouse.json    the White House's latest news
+  press/whitehouse.json    the White House's latest news (app version 1.0)
   press/index.json         which members have a feed that worked this run
 
 A feed that fails is skipped quietly: many offices change sites without updating their feed address.
@@ -41,7 +42,8 @@ def _date(text):
         return text[:10] if text[:4].isdigit() else None
 
 
-def _items(xml_bytes):
+def _items(xml_bytes, keep=KEEP, kinds=False):
+    """A feed's newest items; with [kinds], each one's RSS categories ("Executive Orders") too."""
     root = ET.fromstring(xml_bytes)
     out = []
     # RSS 2.0 <item>, or Atom <entry>.
@@ -61,20 +63,24 @@ def _items(xml_bytes):
                 when = _date(fields[key].text)
                 break
         if title and link and link.startswith("http"):
-            out.append({"title": " ".join(title.split()), "url": link, "date": when})
+            entry = {"title": " ".join(title.split()), "url": link, "date": when}
+            cats = [c.text.strip() for c in item if c.tag.rsplit("}", 1)[-1] == "category" and (c.text or "").strip()]
+            if kinds and cats:
+                entry["kinds"] = cats
+            out.append(entry)
     out.sort(key=lambda i: i.get("date") or "", reverse=True)
-    return out[:KEEP]
+    return out[:keep]
 
 
 # A feed with nothing this recent is a leftover (a site's default feed holding a 2022 "Test Post"), not news.
 FRESH_DAYS = 183
 
 
-def _fetch(url):
+def _fetch(url, keep=KEEP, kinds=False):
     try:
         req = urllib.request.Request(url.replace("&amp;", "&"), headers={"User-Agent": AGENT})
         with urllib.request.urlopen(req, timeout=20) as r:
-            items = _items(r.read())
+            items = _items(r.read(), keep, kinds)
     except Exception:
         return None
     cutoff = (datetime.date.today() - datetime.timedelta(days=FRESH_DAYS)).isoformat()
@@ -119,6 +125,7 @@ def gather(net, store, state, log):
     # A feed that fails this run keeps its last good file; the index lists every member who has one.
     have = sorted(set(working) | {f[:-5] for f in store.list_dir("press") if f[:-5] in feeds})
     store.write("press/index.json", {"members": have})
+    # App version 1.0 shows this mixed feed on the President's page; later ones use white_house.py's files.
     white_house = _fetch(WHITE_HOUSE)
     if white_house:
         store.write("press/whitehouse.json", {"source": "https://www.whitehouse.gov/news/", "items": white_house})

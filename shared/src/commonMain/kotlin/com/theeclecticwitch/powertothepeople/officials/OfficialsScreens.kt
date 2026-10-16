@@ -60,7 +60,6 @@ import com.theeclecticwitch.powertothepeople.congress.DisclosuresCard
 import com.theeclecticwitch.powertothepeople.congress.CongressNav
 import com.theeclecticwitch.powertothepeople.congress.MemberRecordCards
 import com.theeclecticwitch.powertothepeople.congress.OfficeNewsCard
-import com.theeclecticwitch.powertothepeople.congress.WhiteHouseNewsCard
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.location.communityName
 import com.theeclecticwitch.powertothepeople.location.UserLocation
@@ -326,7 +325,6 @@ fun OfficialDetailScreen(id: String, onBack: () -> Unit, onEdit: (String) -> Uni
                     DisclosuresCard(official.id, if (official.office.contains("Senator")) "senate" else "house")
                     OfficeNewsCard(official.id, official.website)
                 }
-                if (official.id.startsWith("exec:")) WhiteHouseNewsCard()
                 ContactCard(official)
                 if (official.districtOffices.isNotEmpty()) {
                     InfoCard(title = "Offices back home") {

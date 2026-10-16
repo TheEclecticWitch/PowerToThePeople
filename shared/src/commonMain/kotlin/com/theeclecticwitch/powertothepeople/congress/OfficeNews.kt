@@ -30,15 +30,26 @@ import io.ktor.http.HttpStatusCode
 import kotlin.time.Duration.Companion.hours
 import kotlinx.serialization.Serializable
 
+/** One item from an office's feed. White House items may say what [kind] of action they are, or which [bills] were signed. */
 @Serializable
-data class NewsItem(val title: String, val url: String, val date: String? = null)
+data class NewsItem(
+    val title: String,
+    val url: String,
+    val date: String? = null,
+    val kind: String? = null,
+    val bills: List<SignedBill> = emptyList(),
+)
+
+/** A bill named in a White House signing statement: the app's id ("119/s/240") and its title from Congress.gov. */
+@Serializable
+data class SignedBill(val id: String, val title: String? = null)
 
 @Serializable
 private class NewsFile(val items: List<NewsItem> = emptyList(), val feed: String? = null, val source: String? = null)
 
 /**
- * What offices publish themselves: a member's press releases and office news, and the White House's news,
- * gathered from their own feeds every six hours. Social media posts are deliberately not included.
+ * What offices publish themselves: a member's press releases and office news, and the White House's briefings,
+ * presidential actions and bill signings, gathered from their own feeds every six hours. Social media posts are deliberately not included.
  */
 object OfficeNews {
     private val sources = mutableMapOf<String, CachedSource>()
@@ -57,7 +68,8 @@ object OfficeNews {
     /** A member's latest items, or null when their office has no working feed. */
     suspend fun forMember(bioguide: String): List<NewsItem>? = load("press/$bioguide.json")
 
-    suspend fun whiteHouse(): List<NewsItem>? = load("press/whitehouse.json")
+    /** One White House section: "briefings", "actions" or "signed". Null until the gatherer first publishes it. */
+    suspend fun whiteHouse(section: String): List<NewsItem>? = load("press/wh-$section.json")
 }
 
 @Composable
@@ -94,12 +106,4 @@ fun OfficeNewsCard(bioguide: String, website: String?) {
     LaunchedEffect(bioguide) { items = try { OfficeNews.forMember(bioguide) } catch (e: Exception) { null } }
     val list = items?.takeIf { it.isNotEmpty() } ?: return
     NewsCard("News from their office", list, "Their office's website", website)
-}
-
-@Composable
-fun WhiteHouseNewsCard() {
-    var items by remember { mutableStateOf<List<NewsItem>?>(null) }
-    LaunchedEffect(Unit) { items = try { OfficeNews.whiteHouse() } catch (e: Exception) { null } }
-    val list = items?.takeIf { it.isNotEmpty() } ?: return
-    NewsCard("White House news", list, "The White House", "https://www.whitehouse.gov/news/")
 }

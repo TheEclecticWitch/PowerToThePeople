@@ -42,6 +42,7 @@ import com.theeclecticwitch.powertothepeople.alerts.FollowedBillsCard
 import com.theeclecticwitch.powertothepeople.congress.LatestVoteCard
 import com.theeclecticwitch.powertothepeople.congress.ComingUpCard
 import com.theeclecticwitch.powertothepeople.congress.SessionCard
+import com.theeclecticwitch.powertothepeople.congress.WhiteHouseCards
 import com.theeclecticwitch.powertothepeople.constitution.Originals
 import com.theeclecticwitch.powertothepeople.debt.DebtCard
 import com.theeclecticwitch.powertothepeople.doomsday.DoomsdayCard
@@ -173,6 +174,7 @@ fun HomeScreen(
                             if (location == null) setLocationCard()
                             ElectionCard(onOpen = onVoting, onElections = onElections)
                             ComingUpCard(onComingUp)
+                            WhiteHouseCards(congressNav)
                             FollowedBillsCard(congressNav, onAlerts = onAlerts, onLegislation = onLegislation)
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -234,6 +236,7 @@ fun HomeScreen(
                         SessionCard(onOpen = onSessions)
                         DebtCard(onOpen = onDebt)
                         DoomsdayCard(onOpen = onDoomsday)
+                        WhiteHouseCards(congressNav)
                         FollowedBillsCard(congressNav, onAlerts = onAlerts, onLegislation = onLegislation)
                         independent()
                     }

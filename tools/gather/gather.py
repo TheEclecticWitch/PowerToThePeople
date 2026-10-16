@@ -37,6 +37,7 @@ import summaries  # noqa: E402
 import topics  # noqa: E402
 import upcoming  # noqa: E402
 import votes  # noqa: E402
+import white_house  # noqa: E402
 from congress import current_congress, sessions_of  # noqa: E402
 from net import BudgetSpent, Net  # noqa: E402
 from store import Store  # noqa: E402
@@ -54,8 +55,10 @@ SOURCES = [
      "covers": "Each state's deadlines to register, vote early and vote by mail, copied by hand from its election office"},
     {"name": "Federal Register", "url": "https://www.federalregister.gov/presidential-documents/executive-orders",
      "covers": "Executive orders"},
-    {"name": "Members' and the White House's own news feeds", "url": "https://www.whitehouse.gov/news/",
+    {"name": "Members' own news feeds", "url": "https://www.house.gov/representatives",
      "covers": "Press releases and office news, as published by each office"},
+    {"name": "The White House (whitehouse.gov)", "url": "https://www.whitehouse.gov/",
+     "covers": "Press briefings, presidential actions and bills signed into law, as the White House publishes them"},
     {"name": "Office of the Clerk and the Majority Leader, docs.house.gov", "url": "https://docs.house.gov/floor/",
      "covers": "The House's weekly floor schedule"},
     {"name": "U.S. Senate floor schedule", "url": "https://www.senate.gov/legislative/schedule/floor_schedule.htm",
@@ -137,6 +140,7 @@ def main():
     step("This Week in Congress", briefing.gather, store, congress, log)
     step("Disclosures", disclosures.gather, net, store, congress, log)
     step("Office news", press.gather, net, store, state, log)
+    step("White House", white_house.gather, store, state, log)
     step("Contact pages", contacts.gather, net, store, state, log)
     step("State officials", states.gather, net, store, state, log)
 

@@ -23,7 +23,7 @@ Government sources:
 • Office of the Clerk, U.S. House (clerk.house.gov, docs.house.gov, disclosures-clerk.house.gov): House votes, floor schedule, financial disclosures
 • U.S. Senate (senate.gov, efdsearch.senate.gov): Senate votes, schedule, financial disclosures
 • Members' official websites (house.gov, senate.gov): press releases and contact pages
-• The White House (whitehouse.gov): the President, the Vice President, White House news
+• The White House (whitehouse.gov): the President, the Vice President, press briefings, presidential actions, bills signed into law
 • Federal Register (federalregister.gov): executive orders
 • Regulations.gov (regulations.gov): rules open for public comment
 • Lobbying Disclosure (lda.gov): lobbying on bills
