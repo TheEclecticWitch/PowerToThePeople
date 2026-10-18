@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The Microsoft Store package's description. tools/msix/build_msix.py fills in VERSION from desktopApp/build.gradle.kts.
-     Identity and publisher come from Partner Center (Product management > Product identity). -->
+     Identity and publisher come from Partner Center (Product management > Product identity), reserved 18 Oct 2026. -->
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
-  <Identity Name="IDENTITY_NAME" Publisher="CN=2C7F1318-FAB2-4A00-A2E5-3B6C2AC2BFC9"
+  <Identity Name="TheEclecticWitch.P2PPowertothePeople" Publisher="CN=2C7F1318-FAB2-4A00-A2E5-3B6C2AC2BFC9"
             Version="VERSION" ProcessorArchitecture="x64" />
   <Properties>
     <DisplayName>P2P: Power to the People</DisplayName>
