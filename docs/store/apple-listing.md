@@ -58,3 +58,15 @@ All pictures use Independence Hall's address (Philadelphia), never a real reader
   > government sources, each linked in the app (More > Where our information comes from). The app is
   > independent and not affiliated with any government body or political party; it says so in the app and the
   > description. A video of the app is attached.
+
+## The Mac version (macOS 1.0, added 2026-10-18)
+
+The same app record, so App Information, Age rating, App Privacy and Pricing are already done. On the macOS
+version page:
+- **Description**: `docs/store/desktop-description.txt` (one line differs from the phones: a computer shows alerts
+  in the app instead of sending notifications).
+- **Promotional text, keywords, support and marketing URLs, copyright**: as above.
+- **Screenshots**: `docs/store/apple/mac/` (remade 2026-10-18 from the current app).
+- **Build**: the Mac App Store package, built on the Mac by Rod with `sh ~/PowerToThePeople/tools/mac-appstore-build.sh <n>`
+  and uploaded with `sh tools/store/apple_upload_mac.sh`. Provisioning profiles: `python tools/store/apple_setup.py`.
+- **App Review notes**: the same as above, with "click" for "tap" and no video.

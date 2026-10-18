@@ -34,3 +34,6 @@ node_modules/
 # Working copies from tools/store-shots.sh (the finished pictures are in docs/store/apple/)
 docs/store/apple/raw/
 docs/store/apple/video/
+
+# Mac App Store provisioning profiles: made by tools/store/apple_setup.py, kept off the public repo.
+/desktopApp/macos/*.provisionprofile
