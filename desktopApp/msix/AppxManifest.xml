@@ -9,7 +9,7 @@
   <Identity Name="IDENTITY_NAME" Publisher="CN=2C7F1318-FAB2-4A00-A2E5-3B6C2AC2BFC9"
             Version="VERSION" ProcessorArchitecture="x64" />
   <Properties>
-    <DisplayName>Power to the People</DisplayName>
+    <DisplayName>P2P: Power to the People</DisplayName>
     <PublisherDisplayName>The Eclectic Witch</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -21,7 +21,7 @@
   </Resources>
   <Applications>
     <Application Id="PowerToThePeople" Executable="Power to the People.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="Power to the People" Description="Your government's public records in plain words: officials, votes, bills and the Constitution."
+      <uap:VisualElements DisplayName="P2P: Power to the People" Description="Your government's public records in plain words: officials, votes, bills and the Constitution."
                           BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
       </uap:VisualElements>

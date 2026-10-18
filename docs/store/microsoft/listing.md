@@ -1,4 +1,4 @@
-# Microsoft Store listing: Power to the People
+# Microsoft Store listing: P2P: Power to the People (the reserved name, as on Apple and Google)
 
 Copy each part into Partner Center (Store listings > English (United States)). Pictures are in this folder
 (a copy is in the Desktop folder **P2P Microsoft Store images**).
