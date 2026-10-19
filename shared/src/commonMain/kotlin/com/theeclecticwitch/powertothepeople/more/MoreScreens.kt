@@ -32,6 +32,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalUriHandler
 import com.theeclecticwitch.powertothepeople.ui.openSafely
 import com.theeclecticwitch.powertothepeople.ui.SourceLine
+import com.theeclecticwitch.powertothepeople.share.rateAppLink
 import com.theeclecticwitch.powertothepeople.share.shareCopies
 import com.theeclecticwitch.powertothepeople.share.shareText
 import androidx.compose.runtime.LaunchedEffect
@@ -91,6 +92,12 @@ fun MoreScreen(
                 }
                 ShareAppCard()
                 val uri = LocalUriHandler.current
+                // Shown only where the app has a live store listing to review.
+                rateAppLink?.let { link ->
+                    InfoCard(title = "Rate this App", onClick = { openSafely(uri, link) }) {
+                        Text("Leave a rating or review in the store. It helps other people find the app.", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
                 InfoCard(title = "More Apps by The Eclectic Witch", onClick = { openSafely(uri, DEVELOPER_URL) }) {
                     Text("Other apps from the maker of this one, on the developer's website.", style = MaterialTheme.typography.bodyLarge)
                 }

@@ -8,3 +8,12 @@ actual fun shareText(subject: String, text: String) {
 }
 
 actual val shareCopies: Boolean = true
+
+// The computer build runs on both Windows and the Mac, so the store is picked by the system it is on.
+actual val rateAppLink: String? = System.getProperty("os.name").orEmpty().lowercase().let { os ->
+    when {
+        os.contains("win") -> StoreReviewLinks.MICROSOFT_STORE
+        os.contains("mac") -> StoreReviewLinks.APP_STORE
+        else -> null
+    }
+}

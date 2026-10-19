@@ -13,3 +13,5 @@ actual fun shareText(subject: String, text: String) {
 }
 
 actual val shareCopies: Boolean = false
+
+actual val rateAppLink: String? = StoreReviewLinks.GOOGLE_PLAY
