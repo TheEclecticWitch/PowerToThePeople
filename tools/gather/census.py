@@ -15,7 +15,12 @@ import os
 import urllib.parse
 
 API = "https://api.census.gov/data"
-VERSION = 1
+VERSION = 2
+# Citizenship by year from the 1-year survey, which began in 2005. 2020's was never released as
+# usual: the pandemic cut its responses, so the Census Bureau published it only as experimental.
+HISTORY_START = 2005
+HISTORY_SKIP = {2020}
+HISTORY_VARIABLES = ["B05001_001E", "B05001_002E", "B05001_003E", "B05001_004E", "B05001_005E", "B05001_006E"]
 
 # Areas the app shows, as the API names them, with the key prefix used in the published file.
 AREAS = [
@@ -74,12 +79,12 @@ class Census:
         self.net = net
         self.key = key
 
-    def get(self, vintage, get, geo, within=None):
-        """Rows of the 5-year survey as dicts. The key goes last so a logged URL can be cut before it."""
+    def get(self, vintage, get, geo, within=None, survey="acs5"):
+        """Rows of the survey as dicts. The key goes last so a logged URL can be cut before it."""
         params = [("get", get), ("for", geo)]
         if within:
             params.append(("in", within))
-        url = f"{API}/{vintage}/acs/acs5?{urllib.parse.urlencode(params)}&key={self.key}"
+        url = f"{API}/{vintage}/acs/{survey}?{urllib.parse.urlencode(params)}&key={self.key}"
         text = self.net.text(url).strip()
         if not text:
             return []  # 204: no such areas here (Nebraska has one house, D.C. no districts).
@@ -193,6 +198,55 @@ def gather(net, store, today, log):
         store.write(f"census/acs/{abbr}.json", {"vintage": vintage, "source": source, "areas": areas})
         log(f"Census: {abbr} {len(areas)} areas")
 
+    gather_history(census, store, today, log)
     store.write("census/acs/state.json", {"vintage": vintage, "version": VERSION, "complete": True})
     log(f"Census: {vintage} survey published")
 
+
+
+def history_row(year, row):
+    """[year, everyone, born a citizen, naturalized, not a citizen]."""
+    n = [number(row.get(v)) for v in HISTORY_VARIABLES]
+    if any(v is None for v in n):
+        return None
+    return [year, n[0], n[1] + n[2] + n[3], n[4], n[5]]
+
+
+def gather_history(census, store, today, log):
+    """
+    How many people were born citizens, became citizens, or are not citizens, year by year: the
+    country, every state, and every county big enough for the 1-year survey (65,000 people or more).
+    """
+    us, states, counties = [], {}, {}
+    get = ",".join(HISTORY_VARIABLES)
+    for year in range(HISTORY_START, today.year):
+        if year in HISTORY_SKIP:
+            continue
+        try:
+            us_rows = census.get(year, get, "us:1", survey="acs1")
+        except Exception:
+            break  # Not published yet.
+        row = history_row(year, us_rows[0]) if us_rows else None
+        if row:
+            us.append(row)
+        for r in census.get(year, get, "state:*", survey="acs1"):
+            abbr = STATES.get(r["state"])
+            row = history_row(year, r)
+            if abbr and row:
+                states.setdefault(abbr, []).append(row)
+        for r in census.get(year, get, "county:*", "state:*", survey="acs1"):
+            abbr = STATES.get(r["state"])
+            row = history_row(year, r)
+            if abbr and row:
+                counties.setdefault(abbr, {}).setdefault(r["county"], []).append(row)
+        log(f"Census: citizenship {year}")
+    source = {
+        "name": "U.S. Census Bureau, American Community Survey 1-year estimates, table B05001",
+        "url": "https://data.census.gov/table/ACSDT1Y2024.B05001",
+        "columns": ["year", "population", "bornCitizens", "naturalized", "notCitizens"],
+        "notes": ["No 1-year figures for 2020: the pandemic cut that year's survey responses, so the Census "
+                  "Bureau released 2020 only as experimental estimates."],
+    }
+    store.write("census/history.json", {"source": source, "us": us, "states": states})
+    for abbr, by_county in counties.items():
+        store.write(f"census/history-counties/{abbr}.json", {"source": source, "counties": by_county})
