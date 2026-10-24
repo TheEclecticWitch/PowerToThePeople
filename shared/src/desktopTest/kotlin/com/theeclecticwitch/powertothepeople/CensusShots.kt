@@ -112,6 +112,8 @@ class CensusShots {
             shot("5-local")
 
             node("Choose another place").performScrollTo().performClick()
+            node("born in U.S.")
+            shot("6a-states")
             node("Texas", substring = false).performScrollTo().performClick()
             node("Counties", substring = false).performClick()
             onAllNodes(hasSetTextAction())[0].performTextInput("Harris")
