@@ -45,6 +45,8 @@ import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
+import com.theeclecticwitch.powertothepeople.census.CommunityScreen
+import com.theeclecticwitch.powertothepeople.census.SeatsScreen
 import com.theeclecticwitch.powertothepeople.constitution.AmendmentScreen
 import com.theeclecticwitch.powertothepeople.constitution.ArticleScreen
 import com.theeclecticwitch.powertothepeople.constitution.ConstitutionScreen
@@ -129,6 +131,8 @@ import kotlinx.serialization.Serializable
 @Serializable object SourcesRoute
 @Serializable object AboutRoute
 @Serializable object DetailEmptyRoute
+@Serializable object CommunityRoute
+@Serializable object SeatsRoute
 
 /** The list column beside the detail pane on a wide window. */
 private val ListPaneWidth = 440.dp
@@ -366,6 +370,8 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () ->
                 onLegislation = { nav.navigate(LegislationRoute) },
                 onAlerts = { nav.navigate(AlertsRoute) },
                 onElections = { nav.navigate(ElectionsRoute) },
+                onCommunity = { nav.navigate(CommunityRoute) },
+                onSeats = { nav.navigate(SeatsRoute) },
             )
         }
         composable<RecentVotesRoute> { RecentVotesScreen(back, congressNav) }
@@ -386,6 +392,10 @@ private fun AppNavHost(nav: NavHostController, modifier: Modifier, detail: () ->
             DirectoryScreen(back, { open(OfficialRoute(it)) }, entry.toRoute<DirectoryRoute>().chamber)
         }
         composable<SourcesRoute> { SourcesScreen(back) }
+        composable<CommunityRoute> {
+            CommunityScreen(back, onSetLocation = { nav.navigate(LocationRoute) }, onSeats = { nav.navigate(SeatsRoute) })
+        }
+        composable<SeatsRoute> { SeatsScreen(back) }
         composable<AboutRoute> { AboutScreen(back) }
     }
     }

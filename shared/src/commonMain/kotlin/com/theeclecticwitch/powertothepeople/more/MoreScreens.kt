@@ -53,6 +53,8 @@ fun MoreScreen(
     onLegislation: () -> Unit,
     onAlerts: () -> Unit,
     onElections: () -> Unit,
+    onCommunity: () -> Unit,
+    onSeats: () -> Unit,
 ) {
     Scaffold(topBar = { AppTopBar("More") }) { padding ->
         PageColumn(Modifier.padding(padding)) {
@@ -68,6 +70,16 @@ fun MoreScreen(
                         "Everyone who represents you, federal, state and local, with contact details, your notes and their promises.",
                         style = MaterialTheme.typography.bodyLarge,
                     )
+                }
+                InfoCard(title = "Your community by the numbers", onClick = onCommunity) {
+                    Text(
+                        "The Census Bureau's figures for your town, county, districts and state: citizenship, immigration " +
+                            "over the years, income, homes, schooling and more.",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+                InfoCard(title = "Seats in the House", onClick = onSeats) {
+                    Text("How many representatives each state has after the 2020 census, and how that has changed.", style = MaterialTheme.typography.bodyLarge)
                 }
                 InfoCard(title = "Legislation", onClick = onLegislation) {
                     Text("Find any bill in Congress, any executive order, or a bill in your state legislature.", style = MaterialTheme.typography.bodyLarge)
@@ -161,6 +173,30 @@ fun SourcesScreen(onBack: () -> Unit) {
                         "county, city and school districts.",
                     "U.S. Census Bureau",
                     CensusGeocoder.SOURCE_URL,
+                )
+                Source(
+                    "Your community by the numbers",
+                    "Population, citizenship, country of birth, income, homes, schooling, health insurance and languages " +
+                        "for your areas, from the American Community Survey; immigrants over the years from every census since " +
+                        "1850; local governments from the 2022 Census of Governments. Copied as published; the app only " +
+                        "works out percentages.",
+                    "U.S. Census Bureau",
+                    "https://www.census.gov/programs-surveys/acs",
+                )
+                Source(
+                    "Seats in the House, who votes, and state and local budgets",
+                    "House seats from the 2020 census apportionment; registration and voting from the Census Bureau's " +
+                        "survey after each November election; state and local government revenue, spending and debt from " +
+                        "the Annual Survey of State and Local Government Finances.",
+                    "U.S. Census Bureau",
+                    "https://www.census.gov/",
+                )
+                Source(
+                    "Immigrants here without legal permission",
+                    "The Department of Homeland Security's own estimate, for the country and the states it lists. The " +
+                        "Census Bureau doesn't ask about legal status, so it has no such figure.",
+                    "Office of Homeland Security Statistics",
+                    "https://ohss.dhs.gov/topics/immigration/illegal/population-estimates",
                 )
                 Source(
                     "Members of Congress, the President and Vice President",

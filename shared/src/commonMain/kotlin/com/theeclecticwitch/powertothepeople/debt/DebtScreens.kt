@@ -1,5 +1,8 @@
 package com.theeclecticwitch.powertothepeople.debt
 
+import com.theeclecticwitch.powertothepeople.census.StateMoneyCard
+import com.theeclecticwitch.powertothepeople.location.LocationStore
+import androidx.compose.runtime.collectAsState
 import com.theeclecticwitch.powertothepeople.ui.fullWidth
 import com.theeclecticwitch.powertothepeople.ui.PageColumn
 import com.theeclecticwitch.powertothepeople.ui.CardPage
@@ -126,6 +129,7 @@ fun DebtScreen(onBack: () -> Unit) {
     val (debt, debtError, retryDebt) = rememberTreasury { Treasury.debt(it) }
     val (deficit, deficitError, retryDeficit) = rememberTreasury { Treasury.deficit(it) }
     val (history, historyError, retryHistory) = rememberTreasury { Treasury.history(it) }
+    val location by LocationStore.location.collectAsState()
     Scaffold(topBar = { AppTopBar("Debt & Deficit", onBack) }) { padding ->
         PageColumn(Modifier.padding(padding)) {
             CardPage(spacing = 12.dp) {
@@ -150,6 +154,7 @@ fun DebtScreen(onBack: () -> Unit) {
                         else -> LoadingBox()
                     }
                 }
+                location?.let { StateMoneyCard(it.stateAbbr, it.stateName) }
                 InfoCard(title = "What these words mean") {
                     Definition("Deficit", "When the government spends more than it collects in a year. It borrows the difference, which adds to the debt.")
                     Definition("Surplus", "When the government collects more than it spends in a year.")

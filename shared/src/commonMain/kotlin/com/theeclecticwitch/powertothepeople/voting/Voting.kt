@@ -1,5 +1,6 @@
 package com.theeclecticwitch.powertothepeople.voting
 
+import com.theeclecticwitch.powertothepeople.census.WhoVotesCard
 import com.theeclecticwitch.powertothepeople.ui.fullWidth
 import com.theeclecticwitch.powertothepeople.ui.PageColumn
 import com.theeclecticwitch.powertothepeople.ui.CardPage
@@ -239,6 +240,7 @@ fun VotingScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onElections: () 
                 }
                 val loc = location
                 loc?.let { StateDatesCard(it.stateAbbr, day) }
+                WhoVotesCard(loc?.stateAbbr, loc?.stateName)
                 InfoCard(title = "Are you registered?") {
                     Text(
                         "You must be registered to vote, and deadlines can be weeks before Election Day. Each state sets its own " +

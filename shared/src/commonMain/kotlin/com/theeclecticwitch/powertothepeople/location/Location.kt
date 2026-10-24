@@ -46,6 +46,8 @@ data class UserLocation(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val lookedUpOn: String,
+    /** The Census Bureau's own codes for these areas, for its survey figures. Null in lookups saved before 1.1. */
+    val codes: CensusCodes? = null,
 ) {
     val cityOrCounty: String get() = listOfNotNull(place?.let(::communityName), county).firstOrNull() ?: stateName
 
@@ -64,6 +66,21 @@ data class UserLocation(
             else -> "District $congressionalDistrict"
         }
 }
+
+/**
+ * The Census Bureau's codes for the reader's areas, without the state's two digits:
+ * congressional district "05", state senate "029", county "031", town "12345", township "03112345".
+ */
+@Serializable
+data class CensusCodes(
+    val state: String,
+    val cd: String? = null,
+    val sldu: String? = null,
+    val sldl: String? = null,
+    val county: String? = null,
+    val place: String? = null,
+    val cousub: String? = null,
+)
 
 private val electionDistrictPrefix = Regex("""^(Election )?District \d+, """)
 
@@ -139,14 +156,17 @@ object CensusGeocoder {
     private fun JsonObject.field(name: String): String? = this[name]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
 
     /** The Congress a layer's map is for, and the district number in it (0 for at-large or a delegate). */
-    private fun Match.congressionalDistrict(): Triple<Int, Int, String?>? {
+    private class District(val congress: Int, val number: Int, val name: String?, val code: String)
+
+    private fun Match.congressionalDistrict(): District? {
         val entry = layers.entries.firstOrNull { districtLayer.matches(it.key) } ?: return null
         val congress = districtLayer.find(entry.key)!!.groupValues[1].toInt()
         val obj = (entry.value as? JsonArray)?.firstOrNull()?.jsonObject ?: return null
-        val code = obj.field("GEOID")?.takeLast(2)?.toIntOrNull() ?: return null
+        val raw = obj.field("GEOID")?.takeLast(2) ?: return null
+        val code = raw.toIntOrNull() ?: return null
         // 00 is an at-large state; 98 is a non-voting delegate's district (D.C., the territories).
         val district = if (code == 0 || code == 98) 0 else code
-        return Triple(congress, district, obj.field("NAME"))
+        return District(congress, district, obj.field("NAME"), raw)
     }
 
     suspend fun lookup(address: String): UserLocation {
@@ -158,8 +178,8 @@ object CensusGeocoder {
         // The Census Bureau publishes the next Congress's map before that Congress sits. The
         // members serving now were elected on the older map, so that is the one that says who
         // represents this address today.
-        var current = latestDistrict?.takeIf { it.first == sitting }
-        val next = latestDistrict?.takeIf { it.first > sitting }
+        var current = latestDistrict?.takeIf { it.congress == sitting }
+        val next = latestDistrict?.takeIf { it.congress > sitting }
         if (current == null) {
             for (year in date.year downTo date.year - 2) {
                 val older = try {
@@ -168,7 +188,7 @@ object CensusGeocoder {
                     null
                 } ?: continue
                 val d = older.congressionalDistrict()
-                if (d != null && d.first == sitting) {
+                if (d != null && d.congress == sitting) {
                     current = d
                     break
                 }
@@ -178,27 +198,39 @@ object CensusGeocoder {
         val state = latest.layers.layer { it == "States" }
         val upper = latest.layers.layer { it.endsWith("State Legislative Districts - Upper") }
         val lower = latest.layers.layer { it.endsWith("State Legislative Districts - Lower") }
+        val county = latest.layers.layer { it == "Counties" }
+        val town = latest.layers.layer { it == "Incorporated Places" } ?: latest.layers.layer { it == "Census Designated Places" }
+        val cousub = latest.layers.layer { it == "County Subdivisions" }
         return UserLocation(
             enteredAddress = address.trim(),
             matchedAddress = latest.matchedAddress,
             stateAbbr = state?.field("STUSAB") ?: "",
             stateName = state?.field("NAME") ?: "",
-            county = latest.layers.layer { it == "Counties" }?.field("NAME"),
+            county = county?.field("NAME"),
             // A town, then an unincorporated community the Census names (a CDP), then the county's own subdivision.
-            place = latest.layers.layer { it == "Incorporated Places" }?.field("BASENAME")
-                ?: latest.layers.layer { it == "Census Designated Places" }?.field("BASENAME")
-                ?: latest.layers.layer { it == "County Subdivisions" }?.field("NAME")?.let(::communityName),
+            place = town?.field("BASENAME") ?: cousub?.field("NAME")?.let(::communityName),
             schoolDistrict = latest.layers.layer { it.endsWith("School Districts") }?.field("NAME"),
             congress = sitting,
-            congressionalDistrict = current?.second,
-            congressionalDistrictName = current?.third,
-            nextCongress = next?.first?.takeIf { next.second != current?.second },
-            nextCongressionalDistrict = next?.second?.takeIf { it != current?.second },
+            congressionalDistrict = current?.number,
+            congressionalDistrictName = current?.name,
+            nextCongress = next?.congress?.takeIf { next.number != current?.number },
+            nextCongressionalDistrict = next?.number?.takeIf { it != current?.number },
             stateSenateDistrict = upper?.field("NAME"),
             stateHouseDistrict = lower?.field("NAME"),
             latitude = latest.lat,
             longitude = latest.lon,
             lookedUpOn = date.toString(),
+            codes = state?.field("STATE")?.let { fips ->
+                CensusCodes(
+                    state = fips,
+                    cd = current?.code,
+                    sldu = upper?.field("SLDU"),
+                    sldl = lower?.field("SLDL"),
+                    county = county?.field("COUNTY"),
+                    place = town?.field("PLACE"),
+                    cousub = cousub?.let { c -> c.field("COUNTY")?.let { it + (c.field("COUSUB") ?: return@let null) } },
+                )
+            },
         )
     }
 }
