@@ -19,10 +19,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.rememberDatePickerState
+import com.theeclecticwitch.powertothepeople.location.today
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -489,8 +501,8 @@ private fun PromisesCard(officialId: String) {
             Icon(Icons.Default.Add, null); Spacer(Modifier.width(6.dp)); Text("Add a promise")
         }
     }
-    if (adding) AddPromiseDialog(onDismiss = { adding = false }) { text, source ->
-        MyRecords.addPromise(officialId, text, source)
+    if (adding) AddPromiseDialog(onDismiss = { adding = false }) { text, source, promisedOn ->
+        MyRecords.addPromise(officialId, text, source, promisedOn)
         adding = false
     }
 }
@@ -501,6 +513,13 @@ private fun PromiseRow(officialId: String, p: Promise) {
     val uri = LocalUriHandler.current
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(p.text, style = MaterialTheme.typography.bodyLarge)
+        if (p.promisedOn.isNotBlank()) {
+            Text(
+                "Promised ${Format.date(p.promisedOn)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         if (p.source.isNotBlank()) {
             val isLink = p.source.startsWith("http")
             Text(
@@ -530,9 +549,15 @@ private fun PromiseRow(officialId: String, p: Promise) {
 }
 
 @Composable
-private fun AddPromiseDialog(onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
+private fun AddPromiseDialog(onDismiss: () -> Unit, onSave: (String, String, String) -> Unit) {
     var text by remember { mutableStateOf("") }
     var source by remember { mutableStateOf("") }
+    var promisedOn by remember { mutableStateOf("") }
+    var picking by remember { mutableStateOf(false) }
+    if (picking) {
+        PromiseDatePicker(onDismiss = { picking = false }) { promisedOn = it; picking = false }
+        return
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add a campaign promise") },
@@ -545,11 +570,50 @@ private fun AddPromiseDialog(onDismiss: () -> Unit, onSave: (String, String) -> 
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { picking = true }) {
+                        Icon(Icons.Default.DateRange, null); Spacer(Modifier.width(6.dp))
+                        Text(if (promisedOn.isBlank()) "When? (optional)" else Format.date(promisedOn))
+                    }
+                    if (promisedOn.isNotBlank()) {
+                        IconButton(onClick = { promisedOn = "" }) { Icon(Icons.Default.Clear, "Clear the date") }
+                    }
+                }
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(text, source) }, enabled = text.isNotBlank()) { Text("Save") } },
+        confirmButton = { TextButton(onClick = { onSave(text, source, promisedOn) }, enabled = text.isNotBlank()) { Text("Save") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+}
+
+/** A calendar for the day a promise was made. Only past days and today: a promise can't be made tomorrow. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PromiseDatePicker(onDismiss: () -> Unit, onPicked: (String) -> Unit) {
+    val todayMillis = remember { today().atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds() }
+    val state = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= todayMillis
+            override fun isSelectableYear(year: Int) = year <= today().year
+        },
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    // The picker hands back midnight UTC of the chosen day.
+                    state.selectedDateMillis?.let {
+                        onPicked(Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date.toString())
+                    }
+                },
+                enabled = state.selectedDateMillis != null,
+            ) { Text("OK") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    ) {
+        DatePicker(state = state, title = { Text("When was it promised?", Modifier.padding(start = 24.dp, top = 16.dp)) })
+    }
 }
 
 /** Adding or editing an official the reader keeps track of themselves. */

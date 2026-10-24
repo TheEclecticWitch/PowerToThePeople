@@ -36,6 +36,8 @@ data class Promise(
     /** Where the promise was made: a link, or words like "Town hall, March 2026". */
     val source: String = "",
     val added: String,
+    /** The day the promise was made, if the reader knows it; blank otherwise. */
+    val promisedOn: String = "",
 )
 
 @Serializable
@@ -84,8 +86,11 @@ object MyRecords {
 
     fun setNotes(officialId: String, notes: String) = change(officialId) { it.copy(notes = notes) }
 
-    fun addPromise(officialId: String, text: String, source: String) = change(officialId) {
-        it.copy(promises = it.promises + Promise(newId(), text.trim(), source = source.trim(), added = today().toString()))
+    fun addPromise(officialId: String, text: String, source: String, promisedOn: String = "") = change(officialId) {
+        it.copy(
+            promises = it.promises +
+                Promise(newId(), text.trim(), source = source.trim(), added = today().toString(), promisedOn = promisedOn),
+        )
     }
 
     fun setPromiseStatus(officialId: String, promiseId: String, status: PromiseStatus) = change(officialId) { r ->
