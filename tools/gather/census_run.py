@@ -47,9 +47,36 @@ def main():
         traceback.print_exc()
         errors.append(f"{type(e).__name__}: {e}")
 
+    try:
+        write_summary(store, log)
+    except Exception as e:
+        traceback.print_exc()
+        errors.append(f"summary: {type(e).__name__}: {e}")
+
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     store.write("census/run.json", {"at": now, "log": lines, "errors": errors})
     sys.exit(1 if errors else 0)
+
+
+def write_summary(store, log):
+    """
+    Each state's own line from its survey file, in one small file, so the app can show every state
+    in its list of places without downloading all of them.
+    """
+    states, vintage, source = {}, None, None
+    for name in store.list_dir("census/acs"):
+        abbr = name[:-5]
+        if not name.endswith(".json") or len(abbr) != 2 or abbr == "US":
+            continue
+        data = store.read(f"census/acs/{name}")
+        area = (data or {}).get("areas", {}).get("state")
+        if not area:
+            continue
+        vintage, source = data["vintage"], data["source"]
+        states[abbr] = {k: area.get(k) for k in ("name", "pop", "citTotal", "bornUS", "bornTerritories")}
+    if states:
+        store.write("census/acs/summary.json", {"vintage": vintage, "source": source, "states": states})
+        log(f"Summary: {len(states)} states")
 
 
 if __name__ == "__main__":

@@ -60,6 +60,11 @@ data class AreaFigures(
 
     val foreignBorn: Long? get() = if (naturalized == null || notCitizen == null) null else naturalized + notCitizen
 
+    /** Share of everyone born in the U.S., Puerto Rico or a U.S. territory. */
+    val bornHerePct: Double?
+        get() = if (bornUS == null || bornTerritories == null || citTotal == null || citTotal == 0L) null
+        else (bornUS + bornTerritories) * 100.0 / citTotal
+
     val countries: List<Pair<String, Long>>
         get() = bornIn.mapNotNull { pair ->
             val name = (pair.getOrNull(0) as? JsonPrimitive)?.content ?: return@mapNotNull null
@@ -156,7 +161,10 @@ val STATE_FIPS = mapOf(
 private fun sortKey(name: String): String = name.lowercase().replace(Regex("""\d+""")) { it.value.padStart(6, '0') }
 
 /** An area another reader might look up, for the list of places to pick from. */
-data class AreaChoice(val kind: AreaKind, val key: String, val name: String)
+data class AreaChoice(val kind: AreaKind, val key: String, val name: String, val bornHerePct: Double? = null)
+
+@Serializable
+private class SummaryFile(val vintage: Int, val states: Map<String, AreaFigures> = emptyMap())
 
 object CensusData {
     private val lock = Mutex()
@@ -222,9 +230,24 @@ object CensusData {
         val kinds = AreaKind.entries.associateBy { it.prefix }
         return file.areas.mapNotNull { (key, figures) ->
             val kind = kinds[key.substringBefore(":")]?.takeIf { it != AreaKind.State && it != AreaKind.Country }
-            kind?.let { AreaChoice(it, key, figures.shortName()) }
+            kind?.let { AreaChoice(it, key, figures.shortName(), figures.bornHerePct) }
         }.groupBy { it.kind }.mapValues { (_, list) -> list.sortedBy { sortKey(it.name) } }
             .entries.sortedBy { it.key.ordinal }.associate { it.key to it.value }
+    }
+
+    /** Each state's share born in the U.S., for the list of states; empty if the summary can't be had. */
+    suspend fun stateBornHere(): Map<String, Double> = try {
+        Http.json.decodeFromString<SummaryFile>(text("census/acs/summary.json")).states
+            .mapNotNull { (abbr, f) -> f.bornHerePct?.let { abbr to it } }.toMap()
+    } catch (e: Exception) {
+        emptyMap()
+    }
+
+    /** A state's own share born in the U.S., from its file (already downloaded for its list of places). */
+    suspend fun stateBornHere(abbr: String): Double? = try {
+        stateFile(abbr).areas["state"]?.bornHerePct
+    } catch (e: Exception) {
+        null
     }
 
     /** One area anywhere in the country, shown beside its state and the country. */

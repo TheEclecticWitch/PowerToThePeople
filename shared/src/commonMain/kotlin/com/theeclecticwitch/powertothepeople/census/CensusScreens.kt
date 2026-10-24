@@ -224,9 +224,12 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
     var search by remember { mutableStateOf("") }
     var failed by remember { mutableStateOf(false) }
     var attempt by remember { mutableIntStateOf(0) }
+    val statesBorn by produceState(emptyMap<String, Double>()) { value = CensusData.stateBornHere() }
+    var stateBorn by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(state, attempt) {
         val s = state ?: return@LaunchedEffect
         choices = null
+        stateBorn = CensusData.stateBornHere(s)
         failed = false
         try {
             choices = CensusData.choices(s).also { kind = it.keys.firstOrNull() }
@@ -241,15 +244,15 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
             val c = choices
             when {
                 s == null -> LazyColumn(Modifier.fillMaxSize()) {
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item { BornHereNote() }
                     items(StateNames.all.filter { it.first in STATE_FIPS }) { (abbr, name) ->
-                        PickRow(name) { state = abbr }
+                        PickRow(name, statesBorn[abbr]) { state = abbr }
                     }
                 }
                 failed -> ErrorBox("This state's figures couldn't be loaded. Check your connection and try again.") { attempt++ }
                 c == null -> LoadingBox()
                 else -> {
-                    PickRow("All of ${StateNames.of(s)}") { onPicked(s, "state") }
+                    PickRow("All of ${StateNames.of(s)}", stateBorn) { onPicked(s, "state") }
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         c.keys.forEach { k -> FilterChip(selected = k == kind, onClick = { kind = k; search = "" }, label = { Text(k.plural) }) }
                     }
@@ -261,7 +264,8 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
                     )
                     val list = c[kind].orEmpty().filter { search.isBlank() || it.name.contains(search.trim(), ignoreCase = true) }
                     LazyColumn(Modifier.fillMaxSize()) {
-                        items(list, key = { it.key }) { choice -> PickRow(choice.name) { onPicked(s, choice.key) } }
+                        item { BornHereNote() }
+                        items(list, key = { it.key }) { choice -> PickRow(choice.name, choice.bornHerePct) { onPicked(s, choice.key) } }
                         if (list.isEmpty()) item { Note("Nothing by that name here.") }
                     }
                 }
@@ -270,12 +274,28 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
     }
 }
 
+/** A place to pick, with the share of its people born in the U.S. beside it. */
 @Composable
-private fun PickRow(text: String, onClick: () -> Unit) {
+private fun PickRow(text: String, bornHere: Double? = null, onClick: () -> Unit) {
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 12.dp))
+        Row(Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
+            bornHere?.let {
+                Text("${percent(it)} born in U.S.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.End)
+            }
+        }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
+}
+
+@Composable
+private fun BornHereNote() {
+    Text(
+        "Beside each place: the share of its people born in the U.S. (counting Puerto Rico and the U.S. territories), " +
+            "from the Census Bureau's latest American Community Survey.",
+        style = MaterialTheme.typography.bodySmall,
+        modifier = Modifier.padding(vertical = 8.dp),
+    )
 }
 
 @Composable
