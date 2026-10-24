@@ -125,4 +125,12 @@ tasks.named<Test>("desktopTest") {
         systemProperty("user.home", "$shots/home")
         outputs.upToDateWhen { false }
     }
+    // Pictures of the Census screens: `-PcensusShots=<folder>` (CensusShots.kt), with their own data folder too.
+    val census = providers.gradleProperty("censusShots").orNull
+    if (census != null) {
+        systemProperty("censusShots", census)
+        environment("APPDATA", "$census/appdata")
+        systemProperty("user.home", "$census/home")
+        outputs.upToDateWhen { false }
+    }
 }

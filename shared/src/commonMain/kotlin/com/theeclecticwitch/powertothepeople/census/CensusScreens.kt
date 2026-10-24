@@ -43,7 +43,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.theeclecticwitch.powertothepeople.location.LocationStore
-import com.theeclecticwitch.powertothepeople.location.UserLocation
+import com.theeclecticwitch.powertothepeople.officials.StateNames
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.OutlinedTextField
 import com.theeclecticwitch.powertothepeople.ui.AppTopBar
 import com.theeclecticwitch.powertothepeople.ui.CardPage
 import com.theeclecticwitch.powertothepeople.ui.ErrorBox
@@ -109,17 +112,6 @@ fun wholeDollars(value: Long): String = "$" + Format.commas(value)
 
 private fun count(value: Long?): String = value?.let { Format.commas(it) } ?: "not available"
 
-/** "Bowie city, Maryland" -> "Bowie city"; "State Senate District 29 (2024); Maryland" -> "State Senate District 29". */
-private fun AreaFigures.shortName(): String =
-    name?.substringBefore(";")?.substringBefore(",")?.replace(Regex(""" \(\d{4}\)"""), "")
-        ?.replace("State Legislative Subdistrict", "State Legislative District") ?: ""
-
-fun areaLabel(area: Area, location: UserLocation): String = when (area.kind) {
-    AreaKind.Congress -> location.congressionalDistrictLabel
-    AreaKind.State -> location.stateName
-    AreaKind.Country -> "United States"
-    else -> area.figures.shortName()
-}
 
 /** Chart colors: the validated categorical slots 1-3 (blue, orange, aqua), stepped for light and dark. */
 @Composable
@@ -144,27 +136,46 @@ fun CommunityScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onSeats: () -
     var figures by remember { mutableStateOf<CommunityFigures?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var chosen by remember { mutableIntStateOf(0) }
-    LaunchedEffect(location?.enteredAddress, attempt) {
-        val loc = location ?: return@LaunchedEffect
+    /** A place the reader picked, as (state, area key); null shows where they live. */
+    var elsewhere by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var picking by remember { mutableStateOf(false) }
+    LaunchedEffect(location?.enteredAddress, elsewhere, attempt) {
+        val loc = location
+        val other = elsewhere
         error = null
+        figures = null
+        chosen = 0
         try {
-            figures = CensusData.community(loc)
+            figures = when {
+                other != null -> CensusData.elsewhere(other.first, StateNames.of(other.first), other.second)
+                loc != null -> CensusData.community(loc)
+                else -> null
+            }
         } catch (e: Exception) {
             error = "The Census figures couldn't be loaded. Check your connection and try again."
         }
     }
-    Scaffold(topBar = { AppTopBar("Your Community", onBack) }) { padding ->
+    if (picking) {
+        PlacePicker(
+            onBack = { picking = false },
+            onPicked = { state, key -> elsewhere = state to key; picking = false },
+        )
+        return
+    }
+    Scaffold(topBar = { AppTopBar(if (elsewhere != null) "Another Place" else "Your Community", onBack) }) { padding ->
         PageColumn(Modifier.padding(padding)) {
             val loc = location
             val f = figures
             when {
-                loc == null -> CardPage {
+                loc == null && elsewhere == null -> CardPage {
                     InfoCard(title = "Your community by the numbers") {
                         Text(
-                            "Set your location to see the Census Bureau's figures for your town, county, districts and state.",
+                            "Set your location to see the Census Bureau's figures for your town, county, districts and state, " +
+                                "or look at any place in the country.",
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         OutlinedButton(onClick = onSetLocation) { Text("Set my location") }
+                        OutlinedButton(onClick = { picking = true }) { Text("Choose a place") }
                     }
                 }
                 error != null && f == null -> ErrorBox(error!!) { attempt++ }
@@ -172,8 +183,12 @@ fun CommunityScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onSeats: () -
                 else -> {
                     val area = f.areas.getOrNull(chosen) ?: f.areas.first()
                     CardPage(spacing = 12.dp) {
-                        AreaPicker(f.areas, loc, chosen) { chosen = it }
-                        CommunityCards(f, area, loc, onSeats)
+                        AreaPicker(
+                            f.areas, chosen, { chosen = it },
+                            onOther = { picking = true },
+                            onMine = if (f.elsewhere && loc != null) ({ elsewhere = null }) else null,
+                        )
+                        CommunityCards(f, area, onSeats)
                     }
                 }
             }
@@ -182,19 +197,89 @@ fun CommunityScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onSeats: () -
 }
 
 @Composable
-private fun AreaPicker(areas: List<Area>, location: UserLocation, chosen: Int, onPick: (Int) -> Unit) {
+private fun AreaPicker(areas: List<Area>, chosen: Int, onPick: (Int) -> Unit, onOther: () -> Unit, onMine: (() -> Unit)?) {
     Column(Modifier.fullWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("Show the figures for", style = MaterialTheme.typography.labelLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             areas.forEachIndexed { i, a ->
-                FilterChip(selected = i == chosen, onClick = { onPick(i) }, label = { Text(areaLabel(a, location)) })
+                FilterChip(selected = i == chosen, onClick = { onPick(i) }, label = { Text(a.label) })
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onOther) { Text("Choose another place") }
+            onMine?.let { OutlinedButton(onClick = it) { Text("Back to where I live") } }
+        }
+    }
+}
+
+/**
+ * Any state, then any of its districts, counties, towns or townships. The lists are long (Pennsylvania
+ * has over 2,500 townships), so there is a search box and only matching names are shown.
+ */
+@Composable
+private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) {
+    var state by remember { mutableStateOf<String?>(null) }
+    var choices by remember { mutableStateOf<Map<AreaKind, List<AreaChoice>>?>(null) }
+    var kind by remember { mutableStateOf<AreaKind?>(null) }
+    var search by remember { mutableStateOf("") }
+    var failed by remember { mutableStateOf(false) }
+    var attempt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(state, attempt) {
+        val s = state ?: return@LaunchedEffect
+        choices = null
+        failed = false
+        try {
+            choices = CensusData.choices(s).also { kind = it.keys.firstOrNull() }
+        } catch (e: Exception) {
+            failed = true
+        }
+    }
+    val back = { if (state != null) { state = null; search = "" } else onBack() }
+    Scaffold(topBar = { AppTopBar(state?.let { StateNames.of(it) } ?: "Choose a State", back) }) { padding ->
+        Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val s = state
+            val c = choices
+            when {
+                s == null -> LazyColumn(Modifier.fillMaxSize()) {
+                    item { Spacer(Modifier.height(8.dp)) }
+                    items(StateNames.all.filter { it.first in STATE_FIPS }) { (abbr, name) ->
+                        PickRow(name) { state = abbr }
+                    }
+                }
+                failed -> ErrorBox("This state's figures couldn't be loaded. Check your connection and try again.") { attempt++ }
+                c == null -> LoadingBox()
+                else -> {
+                    PickRow("All of ${StateNames.of(s)}") { onPicked(s, "state") }
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        c.keys.forEach { k -> FilterChip(selected = k == kind, onClick = { kind = k; search = "" }, label = { Text(k.plural) }) }
+                    }
+                    OutlinedTextField(
+                        search, { search = it },
+                        label = { Text("Search by name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    val list = c[kind].orEmpty().filter { search.isBlank() || it.name.contains(search.trim(), ignoreCase = true) }
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        items(list, key = { it.key }) { choice -> PickRow(choice.name) { onPicked(s, choice.key) } }
+                        if (list.isEmpty()) item { Note("Nothing by that name here.") }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CommunityCards(f: CommunityFigures, area: Area, location: UserLocation, onSeats: () -> Unit) {
+private fun PickRow(text: String, onClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 12.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+}
+
+@Composable
+private fun CommunityCards(f: CommunityFigures, area: Area, onSeats: () -> Unit) {
     val a = area.figures
     val state = f.state.takeIf { area.kind != AreaKind.State && area.kind != AreaKind.Country }
     val us = f.us.takeIf { area.kind != AreaKind.Country }
@@ -204,26 +289,26 @@ private fun CommunityCards(f: CommunityFigures, area: Area, location: UserLocati
     @Composable
     fun Compare(share: (AreaFigures) -> Double?) {
         val parts = listOfNotNull(
-            state?.let { s -> share(s)?.let { "${location.stateName} ${percent(it)}" } },
+            state?.let { s -> share(s)?.let { "${f.stateName} ${percent(it)}" } },
             us?.let { u -> share(u)?.let { "U.S. ${percent(it)}" } },
         )
         if (parts.isNotEmpty()) Note(parts.joinToString(" · "))
     }
 
     InfoCard(title = "People") {
-        Text(areaLabel(area, location), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(area.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Stat("Population", count(a.pop))
         Stat("Median age", a.age?.let { Format.decimals(it, 1) + " years" } ?: "not available")
         Stat("Veterans", "${count(a.veterans)} (${percent(pct(a.veterans, a.adults18))} of adults)")
         Compare { pct(it.veterans, it.adults18) }
         if (area.kind == AreaKind.State) {
-            TextButton(onClick = onSeats) { Text("${location.stateName}'s seats in the House ›") }
+            TextButton(onClick = onSeats) { Text("${f.stateName}'s seats in the House ›") }
         }
         SourceLine("U.S. Census Bureau, American Community Survey", f.source.url, sourceDetail)
     }
 
-    CitizenshipCard(a, area, location, state, us, f)
-    HistoryCard(area, location)
+    CitizenshipCard(a, state, us, f)
+    HistoryCard(area, f)
 
     if (a.countries.isNotEmpty()) {
         InfoCard(title = "Where people born in other countries were born") {
@@ -239,7 +324,7 @@ private fun CommunityCards(f: CommunityFigures, area: Area, location: UserLocati
     InfoCard(title = "Money") {
         Stat("Median household income", a.income?.let { wholeDollars(it) } ?: "not available")
         val incomes = listOfNotNull(
-            state?.income?.let { "${location.stateName} ${wholeDollars(it)}" },
+            state?.income?.let { "${f.stateName} ${wholeDollars(it)}" },
             us?.income?.let { "U.S. ${wholeDollars(it)}" },
         )
         if (incomes.isNotEmpty()) Note(incomes.joinToString(" · "))
@@ -270,7 +355,7 @@ private fun CommunityCards(f: CommunityFigures, area: Area, location: UserLocati
         Note("People 5 and older. Many who speak another language at home also speak English.")
     }
 
-    LocalGovernmentsCard(area, location)
+    LocalGovernmentsCard(area, f)
 
     InfoCard(title = "About these figures") {
         Text(
@@ -286,8 +371,6 @@ private fun CommunityCards(f: CommunityFigures, area: Area, location: UserLocati
 @Composable
 private fun CitizenshipCard(
     a: AreaFigures,
-    area: Area,
-    location: UserLocation,
     state: AreaFigures?,
     us: AreaFigures?,
     f: CommunityFigures,
@@ -310,7 +393,7 @@ private fun CitizenshipCard(
             }
         }
         val compare = listOfNotNull(
-            state?.let { "${location.stateName}: ${percent(pct(it.notCitizen, it.citTotal))} not citizens" },
+            state?.let { "${f.stateName}: ${percent(pct(it.notCitizen, it.citTotal))} not citizens" },
             us?.let { "U.S.: ${percent(pct(it.notCitizen, it.citTotal))}" },
         )
         if (compare.isNotEmpty()) Note(compare.joinToString(" · "))
@@ -330,7 +413,7 @@ private fun CitizenshipCard(
         estimates?.let { e ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text("Immigrants here without legal permission", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            val mine = e.states.firstOrNull { it.state == location.stateAbbr }?.estimate
+            val mine = e.states.firstOrNull { it.state == f.stateAbbr }?.estimate
             val asOf = e.asOf?.let { " as of ${Format.date("$it-01").ifBlank { it }}" } ?: ""
             e.us?.let { Stat("United States$asOf", "about ${Format.commas(it)}") }
             if (e.usHistory.size > 1) {
@@ -338,9 +421,9 @@ private fun CitizenshipCard(
                     .joinToString(", ") { (y, n) -> "$y about ${Format.commas(n)}" } + ". Homeland Security warns these years aren't fully comparable.")
             }
             if (mine != null) {
-                Stat(location.stateName, "about ${Format.commas(mine)}")
+                Stat(f.stateName, "about ${Format.commas(mine)}")
             } else {
-                Note("The estimate lists only the states with the most; ${location.stateName} isn't one of them.")
+                Note("The estimate lists only the states with the most; ${f.stateName} isn't one of them.")
             }
             Note(
                 "An estimate by the Department of Homeland Security, not a count: no survey can count people living " +
@@ -378,16 +461,14 @@ private fun ShareBar(values: List<Long>) {
  * survey, it shows the county's or the state's.
  */
 @Composable
-private fun HistoryCard(area: Area, location: UserLocation) {
-    val codes = location.codes
-    val history by produceState<Pair<String, List<Pair<Int, Double>>>?>(null, area.key, location.stateAbbr) {
+private fun HistoryCard(area: Area, f: CommunityFigures) {
+    val history by produceState<Pair<String, List<Pair<Int, Double>>>?>(null, area.key, f.stateAbbr) {
         val older = CensusData.foreignBornHistory()
-        val county = if (area.kind == AreaKind.County || area.kind == AreaKind.Town || area.kind == AreaKind.Township) codes?.county else null
-        val countyYears = county?.let { CensusData.citizenshipYears(location.stateAbbr, it) }
+        val countyYears = area.countyCode?.let { CensusData.citizenshipYears(f.stateAbbr, it) }
         val (place, recent, decades) = when {
             area.kind == AreaKind.Country -> Triple("the United States", CensusData.citizenshipYears(null), older?.us)
-            countyYears != null -> Triple(location.county ?: "your county", countyYears, null)
-            else -> Triple(location.stateName, CensusData.citizenshipYears(location.stateAbbr), older?.states?.get(location.stateAbbr))
+            countyYears != null -> Triple(area.countyName ?: "the county", countyYears, null)
+            else -> Triple(f.stateName, CensusData.citizenshipYears(f.stateAbbr), older?.states?.get(f.stateAbbr))
         }
         val points = decades.orEmpty().mapNotNull { y -> y.pct?.let { y.year to it } } +
             recent?.first.orEmpty().map { it.year to it.foreignBorn * 100.0 / it.population }
@@ -396,10 +477,13 @@ private fun HistoryCard(area: Area, location: UserLocation) {
     val (place, points) = history ?: return
     InfoCard(title = "Immigrants over the years") {
         Text("People born in another country, as a share of everyone in $place", style = MaterialTheme.typography.bodyMedium)
-        if (area.kind != AreaKind.Country && !place.equals(areaLabel(area, location), ignoreCase = true)) {
+        if (area.kind != AreaKind.Country && !place.equals(area.label, ignoreCase = true)) {
             Note("Shown for $place: district lines change and towns are too small for yearly figures.")
         }
         LineChart(points)
+        val high = points.maxBy { it.second }
+        val low = points.minBy { it.second }
+        Note("Highest: ${percent(high.second)} in ${high.first} · Lowest: ${percent(low.second)} in ${low.first}")
         var showAll by remember(place) { mutableStateOf(false) }
         val rows = if (showAll) points.reversed() else points.reversed().take(6)
         rows.forEach { (year, p) ->
@@ -458,15 +542,15 @@ private fun LineChart(points: List<Pair<Int, Double>>) {
 }
 
 @Composable
-private fun LocalGovernmentsCard(area: Area, location: UserLocation) {
+private fun LocalGovernmentsCard(area: Area, f: CommunityFigures) {
     val data by produceState<LocalGovernments?>(null) { value = CensusData.table("local-governments.json") }
     val d = data ?: return
-    val countyCode = location.codes?.let { c -> c.county?.let { c.state + it } }
+    val countyCode = area.countyCode?.let { (STATE_FIPS[f.stateAbbr] ?: "") + it }
     val (where, counts) = when {
         area.kind == AreaKind.Country -> "the United States" to d.us
         area.kind == AreaKind.County && countyCode != null && d.counties[countyCode] != null ->
-            (location.county ?: "your county") to d.counties[countyCode]
-        else -> location.stateName to d.states.firstOrNull { it.state == location.stateAbbr }
+            (area.countyName ?: area.label) to d.counties[countyCode]
+        else -> f.stateName to d.states.firstOrNull { it.state == f.stateAbbr }
     }
     val c = counts ?: return
     InfoCard(title = "Local governments") {
@@ -476,7 +560,9 @@ private fun LocalGovernmentsCard(area: Area, location: UserLocation) {
         c.township?.let { Stat("Townships", Format.commas(it.toLong())) }
         c.school?.let { Stat("Independent school districts", Format.commas(it.toLong())) }
         c.special?.let { Stat("Special districts (water, fire, transit, parks…)", Format.commas(it.toLong())) }
-        c.total?.let { Stat("All local governments", Format.commas(it.toLong())) }
+        // The per-county counts have no total of their own.
+        val total = c.total ?: listOfNotNull(c.county, c.municipal, c.township, c.special, c.school).sum()
+        Stat("All local governments", Format.commas(total.toLong()))
         Note("Each one has its own officials, and many have their own taxes or fees.")
         SourceLine(d.source.name, d.source.link)
     }
