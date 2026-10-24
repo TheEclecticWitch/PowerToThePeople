@@ -11,9 +11,9 @@ import kotlin.concurrent.thread
  * the comment. Until all three are filled in, the Windows app doesn't show the Support card.
  */
 private val WINDOWS_STORE_IDS: Map<Tip, String?> = mapOf(
-    Tip.SMALL to null,   // tip_small, $1.99
-    Tip.MEDIUM to null,  // tip_medium, $4.99
-    Tip.LARGE to null,   // tip_large, $9.99
+    Tip.SMALL to "9NK2M9NDZ5X7",  // tip_small, $1.99
+    Tip.MEDIUM to "9NDKM3JG4V85", // tip_medium, $4.99
+    Tip.LARGE to "9NQ88D7WSVJG",  // tip_large, $9.99
 )
 
 private val onWindows = System.getProperty("os.name").startsWith("Windows")
