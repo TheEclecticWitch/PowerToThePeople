@@ -1,6 +1,6 @@
 NOT A GOVERNMENT APP: Power to the People is an independent app. It does not represent, and is not affiliated with, endorsed by, or made by, the U.S. government, Congress, any state, or any political party. Every source it uses is listed at the end of this description.
 
-Keeping up with what the government is doing shouldn't take hours of searching. Power to the People puts it in one place, with the facts and where each one came from, so you can decide for yourself.
+Power to the People puts what your government is doing in one place, with the facts and where each one came from, so you can decide for yourself.
 
 • Your officials: your senators, representative, governor and state legislators, with photos, contact details, committee seats, voting records, campaign money and financial disclosures.
 • Every vote in Congress: how each member voted, in plain words, and how you would have voted.
@@ -11,6 +11,7 @@ Keeping up with what the government is doing shouldn't take hours of searching. 
 • The Constitution and the Bill of Rights, with photos of the originals, and How Our Government Works in plain words.
 • A practice citizenship test with all 128 official civics questions.
 • The national debt, the days Congress has been in session, and what's coming up on the floor and in committees.
+• Your community by the numbers: Census figures for your town, county, districts and state, or any place in the country, including citizenship and immigration since 1850.
 
 Strictly neutral: no ratings, no rankings, no opinions. Every number links to its source.
 
@@ -31,7 +32,8 @@ Government sources:
 • National Archives (archives.gov): the Constitution and Bill of Rights
 • U.S. Citizenship and Immigration Services (uscis.gov): citizenship test questions
 • U.S. Treasury Fiscal Data (fiscaldata.treasury.gov): the national debt
-• U.S. Census Bureau (geocoding.geo.census.gov): your districts from your address
+• U.S. Census Bureau (census.gov): your districts, community figures, House seats, voter turnout, state budgets
+• Homeland Security Statistics (ohss.dhs.gov): unauthorized immigrant estimates
 • Vote.gov (vote.gov): voter registration
 • USA.gov, U.S. Courts (uscourts.gov), FOIA.gov and the Office of Special Counsel (osc.gov): civics guides
 
