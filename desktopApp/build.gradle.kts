@@ -35,7 +35,7 @@ compose.desktop {
             targetFormats(TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Deb)
             packageName = "Power to the People"
             // The Microsoft Store wants a new number for every upload (tools/msix/build_msix.py reads it here).
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
             // Files the installed app carries: resources/windows/StoreHelper.exe, the Microsoft Store
             // donations helper (desktopApp/windows-store, built by tools/windows-store/build_helper.py).
             // Only the Windows build gets the windows/ folder; the Mac build carries nothing extra.
