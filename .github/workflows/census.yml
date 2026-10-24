@@ -1,0 +1,59 @@
+# Publishes the Census Bureau figures to GitHub Pages (tools/gather/census_run.py). The survey comes
+# out once a year, so this runs monthly; it also runs when its scripts or hand-copied tables change.
+name: Census data
+
+on:
+  schedule:
+    - cron: "41 7 3 * *"
+  push:
+    branches: [main]
+    paths:
+      - tools/gather/census.py
+      - tools/gather/census_run.py
+      - tools/gather/census_data/**
+      - .github/workflows/census.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Shares the gather job's group so the two never push to gh-pages at once.
+concurrency:
+  group: gather
+  cancel-in-progress: false
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Get the data published so far
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: site
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Gather
+        env:
+          CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+        run: python tools/gather/census_run.py --out site
+
+      - name: Publish
+        if: ${{ !cancelled() }}
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit --quiet -m "Census data $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
