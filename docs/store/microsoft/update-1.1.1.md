@@ -1,0 +1,74 @@
+# P2P 1.1.1 update for the Microsoft Store (read by StoreTools/ms_submit.py)
+
+The full texts as they go to the store. Everything not here (pictures, pricing, age rating, add-ons) stays as published.
+
+## Description
+NOT A GOVERNMENT APP: Power to the People is an independent app. It does not represent, and is not affiliated with, endorsed by, or made by, the U.S. government, Congress, any state, or any political party. Every source it uses is listed at the end of this description.
+
+Power to the People puts what your government is doing in one place, with the facts and where each one came from, so you can decide for yourself.
+
+• Your officials: your senators, representative, governor and state legislators, with photos, contact details, committee seats, voting records, campaign money and financial disclosures.
+• Every vote in Congress: how each member voted, in plain words, and how you would have voted.
+• Bills: search any bill in Congress, read the official summary, follow it, and see where it is on the road to becoming law. Search your state's bills too.
+• Alerts: see when your members vote, when a bill you follow moves, or when bills on a topic you choose take a step.
+• This Week in Congress: a short spoken briefing each Saturday, read by a computer voice from public records.
+• Elections: Election Day countdown, registration and polling-place links, and every candidate in your federal races shown equally, in a new random order each time.
+• The Constitution and the Bill of Rights, with photos of the originals, and How Our Government Works in plain words.
+• A practice citizenship test with all 128 official civics questions.
+• The national debt, the days Congress has been in session, and what's coming up on the floor and in committees.
+• Your community by the numbers: Census figures for your town, county, districts and state, or any place in the country, including citizenship and immigration since 1850.
+
+Strictly neutral: no ratings, no rankings, no opinions. Every number links to its source.
+
+No accounts, no ads, no tracking. What you enter and follow stays on your device.
+
+ALL SOURCES OF INFORMATION IN THIS APP
+
+Government sources:
+• Congress.gov, Library of Congress (congress.gov): bills, bill summaries, members, Congressional Record, committee schedules
+• Office of the Clerk, U.S. House (clerk.house.gov, docs.house.gov, disclosures-clerk.house.gov): House votes, floor schedule, financial disclosures
+• U.S. Senate (senate.gov, efdsearch.senate.gov): Senate votes, schedule, financial disclosures
+• Members' official websites (house.gov, senate.gov): press releases and contact pages
+• The White House (whitehouse.gov): the President, the Vice President, press briefings, presidential actions, bills signed into law
+• Federal Register (federalregister.gov): executive orders
+• Regulations.gov (regulations.gov): rules open for public comment
+• Lobbying Disclosure (lda.gov): lobbying on bills
+• Federal Election Commission (fec.gov): candidates and campaign money
+• National Archives (archives.gov): the Constitution and Bill of Rights
+• U.S. Citizenship and Immigration Services (uscis.gov): citizenship test questions
+• U.S. Treasury Fiscal Data (fiscaldata.treasury.gov): the national debt
+• U.S. Census Bureau (census.gov): your districts, community figures, House seats, voter turnout, state budgets
+• Homeland Security Statistics (ohss.dhs.gov): unauthorized immigrant estimates
+• Vote.gov (vote.gov): voter registration
+• USA.gov, U.S. Courts (uscourts.gov), FOIA.gov and the Office of Special Counsel (osc.gov): civics guides
+
+Other public sources (not government):
+• Open States (openstates.org): state legislators and state bills
+• Google Civic Information (developers.google.com/civic-information): polling places and ballots
+• The @unitedstates project (github.com/unitedstates): member IDs, committees, official social media accounts
+• Wikidata and Wikimedia Commons (wikidata.org, commons.wikimedia.org): birthplaces and photos
+• Bulletin of the Atomic Scientists (thebulletin.org): the Doomsday Clock
+• Links only: GovTrack (govtrack.us), Ballotpedia (ballotpedia.org), Wikipedia (wikipedia.org)
+
+## Product features (one per line)
+Your senators, representative, governor and state legislators from your address
+Every vote in Congress in plain words, and how you would have voted
+Search and follow any bill in Congress or in your state
+Alerts when your members vote or a bill you follow moves
+This Week in Congress: a short spoken briefing every Saturday
+Election Day countdown, your state's voting dates, and every candidate shown equally
+Your community by the numbers: Census figures for any place, citizenship and immigration since 1850
+The Constitution and Bill of Rights, with photos of the originals
+How Our Government Works in plain words, and a practice citizenship test
+Strictly neutral: every number links to its official source
+No accounts, no ads, no tracking
+
+## What's new in this version
+Tip the Creator: an optional tip through Ko-fi, in Settings and About, replacing the Microsoft Store donations. It unlocks nothing; the app stays the same for everyone. Also new in 1.1: your community by the numbers, the Census Bureau's figures for your town, county, districts and state, or any place in the country, including citizenship and immigration since 1850; seats in the House by state, who votes, and state and local budgets.
+
+## Notes for certification
+No sign-in or test account is needed; everything can be tried straight away.
+Tip the Creator (Settings > Tip the Creator, and More > About, from 1.1.1) is an optional, voluntary donation to the
+developer. It opens https://ko-fi.com/00theeclecticwitch00 in the browser, unlocks no content or features, and changes
+nothing in the app (Microsoft Store Policy 10.8.2: donations through a third-party payment). The three donation add-ons
+from 1.1 (tip_small, tip_medium, tip_large) are no longer used by the app.

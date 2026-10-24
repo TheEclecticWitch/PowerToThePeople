@@ -1,85 +1,67 @@
 package com.theeclecticwitch.powertothepeople.support
 
+import com.sun.jna.NativeLibrary
 import java.io.File
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 /**
- * ===== FILL IN HERE =====
- * Each donation's Store ID from Partner Center (P2P > Add-ons > the add-on: a 12-character code
- * like 9NBLGGH4R315). Make each one a "Developer-managed consumable" with the product ID shown in
- * the comment. Until all three are filled in, the Windows app doesn't show the Support card.
- */
-private val WINDOWS_STORE_IDS: Map<Tip, String?> = mapOf(
-    Tip.SMALL to "9NK2M9NDZ5X7",  // tip_small, $1.99
-    Tip.MEDIUM to "9NDKM3JG4V85", // tip_medium, $4.99
-    Tip.LARGE to "9NQ88D7WSVJG",  // tip_large, $9.99
-)
-
-private val onWindows = System.getProperty("os.name").startsWith("Windows")
-
-/**
- * The Microsoft Store on Windows, through StoreHelper.exe packed beside the app (the JVM cannot
- * reach the Store's Windows Runtime API itself; see desktopApp/windows-store). The helper runs with
- * the app's package identity, so it only works in the copy installed from the Store (or a sideloaded
- * MSIX). The Mac (Mac App Store) offers no donations for now, and neither does `gradlew :desktopApp:run`
- * or the plain .msi installer: the Support card stays hidden there.
+ * One desktop build serves both computers, and each takes a tip its own way (as in Consciousness Theories and the
+ * Book of Shadows):
+ *
+ * - **Windows** sends the person to Ko-fi, any amount (Rod, 2026-10-24: Ko-fi on every Microsoft Store app without a
+ *   purchase to unlock; it replaced three Microsoft Store add-ons and StoreHelper.exe. Store policy 10.8.2 allows a
+ *   voluntary donation that unlocks nothing through an outside payment - say so in the Partner Center notes).
+ * - **The Mac App Store copy** takes the typed amount through StoreKit, as the iPhone does, by way of the small Swift
+ *   library shipped inside it (desktopApp/macos/TipStoreKit.swift). A Mac copy from anywhere else has nowhere to pay,
+ *   so the card hides there.
  */
 actual object Store {
-    actual val available: Boolean by lazy {
-        onWindows && WINDOWS_STORE_IDS.values.all { !it.isNullOrBlank() } && helper != null && inMsixPackage()
+    private val windows = System.getProperty("os.name").orEmpty().startsWith("Windows")
+
+    /** The Swift library, found only in a sandboxed (Mac App Store) copy that carries it. */
+    private val storeKit: NativeLibrary? by lazy {
+        val sandboxed = System.getProperty("os.name").orEmpty().startsWith("Mac") && System.getenv("APP_SANDBOX_CONTAINER_ID") != null
+        if (!sandboxed) return@lazy null
+        val dir = System.getProperty("compose.application.resources.dir") ?: return@lazy null
+        val file = File(dir, "libp2pstorekit.dylib").takeIf { it.isFile } ?: return@lazy null
+        runCatching { NativeLibrary.getInstance(file.absolutePath) }.getOrNull()
     }
-    actual val name: String = "the Microsoft Store"
+
+    actual val way: TipWay = when {
+        windows -> TipWay.KO_FI
+        storeKit != null -> TipWay.STORE
+        else -> TipWay.NONE
+    }
+    actual val name: String = if (windows) "Ko-fi" else "the App Store"
 
     actual fun connect() {
-        if (!available) return
-        val ids = Tip.entries.associateBy { WINDOWS_STORE_IDS[it]!! }
-        ask(listOf("prices") + ids.keys) { answer ->
-            ids.forEach { (storeId, tip) -> answer["price.$storeId"]?.let { Donations.setPrice(tip.productId, it) } }
-        }
-    }
-
-    actual fun donate(tip: Tip) {
-        val storeId = WINDOWS_STORE_IDS[tip]
-        if (!available || storeId == null) return
-        Donations.setMessage(null)
-        ask(listOf("buy", storeId)) { answer ->
-            when (answer["result"]) {
-                "bought" -> Donations.thank()
-                "cancelled" -> Unit
-                null -> Donations.setMessage(UNAVAILABLE)
-                else -> Donations.setMessage("The donation didn't go through. Please try again.")
+        val kit = storeKit ?: return
+        // StoreKit waits on the network: never on the window's thread.
+        thread(isDaemon = true, name = "Tips") {
+            runCatching {
+                if (kit.getFunction("p2p_tip_finish_waiting").invokeInt(arrayOf()) > 0) TipJar.thank()
+                val answer = kit.getFunction("p2p_tip_prices").invokePointer(arrayOf(TipJar.productIds.joinToString("\n")))
+                    ?: return@runCatching
+                val lines = answer.getString(0, "UTF-8")
+                kit.getFunction("p2p_tip_free").invokeVoid(arrayOf(answer))
+                lines.lineSequence().filter { '\t' in it }.forEach { TipJar.setPrice(it.substringBefore('\t'), it.substringAfter('\t')) }
             }
         }
     }
 
-    private const val UNAVAILABLE = "The Microsoft Store isn't available right now. Check your connection and try again."
-
-    private val helper: File?
-        get() = System.getProperty("compose.application.resources.dir")
-            ?.let { File(it, "StoreHelper.exe") }
-            ?.takeIf { it.isFile }
-
-    /**
-     * True when this copy was installed as an MSIX (from the Store, or sideloaded): its folder holds
-     * the package's AppxManifest.xml. jpackage sets `jpackage.app-path` (the launcher) in every packaged copy.
-     */
-    private fun inMsixPackage(): Boolean =
-        System.getProperty("jpackage.app-path")?.let { File(it).parentFile?.resolve("AppxManifest.xml")?.isFile } == true
-
-    /** Runs the helper off the screen's thread and hands back its key=value lines. */
-    private fun ask(args: List<String>, then: (Map<String, String>) -> Unit) {
-        val exe = helper ?: return Donations.setMessage(UNAVAILABLE)
-        thread(isDaemon = true, name = "microsoft-store") {
-            val answer = runCatching {
-                val process = ProcessBuilder(listOf(exe.absolutePath) + args).redirectErrorStream(true).start()
-                // A donation waits on the person, so it gets as long as they need; a price check does not.
-                val lines = process.inputStream.bufferedReader().readLines()
-                process.waitFor(if (args.first() == "buy") 30L else 1L, TimeUnit.MINUTES)
-                lines.mapNotNull { line -> line.split('=', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] } }
-                    .toMap()
-            }.getOrElse { mapOf("error" to (it.message ?: "")) }
-            then(answer)
+    actual fun tip(dollars: Int) {
+        val kit = storeKit ?: return
+        TipJar.setMessage(null)
+        thread(isDaemon = true, name = "Tip") {
+            val answer = runCatching { kit.getFunction("p2p_tip_buy").invokeInt(arrayOf(TipJar.productId(dollars))) }.getOrDefault(4)
+            when (answer) {
+                0 -> TipJar.thank()
+                1 -> Unit
+                2 -> TipJar.setMessage("Your tip is waiting for approval. It will go through on its own; thank you!")
+                3 -> TipJar.setMessage("The App Store couldn't confirm the tip. Please check your App Store purchase history before trying again.")
+                5 -> TipJar.setMessage("The App Store isn't available right now. Check your connection and try again.")
+                else -> TipJar.setMessage("The tip didn't go through. Please try again.")
+            }
         }
     }
 }

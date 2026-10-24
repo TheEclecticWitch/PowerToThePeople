@@ -25,13 +25,12 @@ fun attachStoreActivity(host: Activity) {
 private const val UNAVAILABLE = "Google Play isn't available right now. Check your connection and try again."
 
 /**
- * Google Play Billing. A donation is consumed as soon as it's paid, so the same size can be
- * given again; consuming also acknowledges it, which Play requires within three days. Any paid
- * donation not yet consumed (the app closed mid-purchase, or a pending payment that cleared) is
- * picked up on the next start.
+ * Google Play Billing. A tip is consumed as soon as it's paid, so the same amount can be given again; consuming also
+ * acknowledges it, which Play requires within three days. Any paid tip not yet consumed (the app closed mid-purchase,
+ * or a pending payment that cleared) is picked up on the next start.
  */
 actual object Store {
-    actual val available: Boolean = true
+    actual val way: TipWay = TipWay.STORE
     actual val name: String = "Google Play"
 
     private var client: BillingClient? = null
@@ -43,7 +42,7 @@ actual object Store {
                 BillingClient.BillingResponseCode.OK -> purchases?.let(::take)
                 BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> refresh()
                 BillingClient.BillingResponseCode.USER_CANCELED -> Unit
-                else -> Donations.setMessage("The donation didn't go through. Please try again.")
+                else -> TipJar.setMessage("The tip didn't go through. Please try again.")
             }
         }
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
@@ -69,15 +68,15 @@ actual object Store {
         })
     }
 
-    actual fun donate(tip: Tip) {
-        val details = products[tip.productId]
+    actual fun tip(dollars: Int) {
+        val details = products[TipJar.productId(dollars)]
         val host = activity?.get()
         if (details == null || host == null) {
-            Donations.setMessage(UNAVAILABLE)
+            TipJar.setMessage(UNAVAILABLE)
             connect()
             return
         }
-        Donations.setMessage(null)
+        TipJar.setMessage(null)
         val params = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(
                 listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).build()),
@@ -86,25 +85,28 @@ actual object Store {
         client().launchBillingFlow(host, params)
     }
 
+    /** All hundred amounts, asked for twenty at a time. */
     private fun loadProducts() {
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(
-                Tip.entries.map {
-                    QueryProductDetailsParams.Product.newBuilder()
-                        .setProductId(it.productId)
-                        .setProductType(BillingClient.ProductType.INAPP)
-                        .build()
-                },
-            )
-            .build()
-        client().queryProductDetailsAsync(params) { result, details ->
-            if (result.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
-            products = details.productDetailsList.associateBy { it.productId }
-            products.values.forEach { Donations.setPrice(it.productId, it.oneTimePurchaseOfferDetails?.formattedPrice) }
+        TipJar.productIds.chunked(20).forEach { ids ->
+            val params = QueryProductDetailsParams.newBuilder()
+                .setProductList(
+                    ids.map {
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId(it)
+                            .setProductType(BillingClient.ProductType.INAPP)
+                            .build()
+                    },
+                )
+                .build()
+            client().queryProductDetailsAsync(params) { result, details ->
+                if (result.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
+                synchronized(this) { products = products + details.productDetailsList.associateBy { it.productId } }
+                details.productDetailsList.forEach { TipJar.setPrice(it.productId, it.oneTimePurchaseOfferDetails?.formattedPrice) }
+            }
         }
     }
 
-    /** Picks up any paid donation that wasn't consumed. */
+    /** Picks up any paid tip that wasn't consumed. */
     private fun refresh() {
         val billing = client()
         if (!billing.isReady) return
@@ -115,18 +117,18 @@ actual object Store {
         }
     }
 
-    /** Consumes each paid donation and says thank you. A pending one (paid in cash at a shop, say) waits. */
+    /** Consumes each paid tip (or old donation) and says thank you. A pending one (paid in cash at a shop, say) waits. */
     private fun take(purchases: List<Purchase>) {
-        val ids = Tip.entries.map { it.productId }.toSet()
+        val ids = (TipJar.productIds + TipJar.oldProductIds).toSet()
         val ours = purchases.filter { p -> p.products.any { it in ids } }
         ours.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED }.forEach { purchase ->
             val params = ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
             client().consumeAsync(params) { result, _ ->
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) Donations.thank()
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) TipJar.thank()
             }
         }
         if (ours.any { it.purchaseState == Purchase.PurchaseState.PENDING }) {
-            Donations.setMessage("Your payment is pending. It will go through on its own; thank you!")
+            TipJar.setMessage("Your payment is pending. It will go through on its own; thank you!")
         }
     }
 }

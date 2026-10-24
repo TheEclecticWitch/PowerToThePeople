@@ -92,6 +92,8 @@ kotlin {
             implementation(libs.ktor.client.java)
             implementation(libs.compose.mp.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            // Tip the Creator in the Mac App Store copy reaches its StoreKit library through JNA.
+            implementation("net.java.dev.jna:jna:5.15.0")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
