@@ -38,6 +38,7 @@ import kotlinx.datetime.toLocalDateTime
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -532,7 +534,14 @@ private fun PromiseRow(officialId: String, p: Promise) {
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column {
-                FilterChip(selected = true, onClick = { menu = true }, label = { Text(p.status.label) })
+                FilterChip(
+                    selected = true,
+                    onClick = { menu = true },
+                    label = { Text(p.status.label) },
+                    colors = statusColors(p.status)?.let { (bg, fg) ->
+                        FilterChipDefaults.filterChipColors(selectedContainerColor = bg, selectedLabelColor = fg)
+                    } ?: FilterChipDefaults.filterChipColors(),
+                )
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     PromiseStatus.entries.forEach { s ->
                         DropdownMenuItem(text = { Text(s.label) }, onClick = {
@@ -546,6 +555,13 @@ private fun PromiseRow(officialId: String, p: Promise) {
             IconButton(onClick = { MyRecords.deletePromise(officialId, p.id) }) { Icon(Icons.Default.Delete, "Delete promise") }
         }
     }
+}
+
+/** Kept shows green and Not kept red; the others keep the usual chip colors. */
+private fun statusColors(status: PromiseStatus): Pair<Color, Color>? = when (status) {
+    PromiseStatus.Kept -> Color(0xFF2E7D32) to Color.White
+    PromiseStatus.NotKept -> Color(0xFFC62828) to Color.White
+    else -> null
 }
 
 @Composable
