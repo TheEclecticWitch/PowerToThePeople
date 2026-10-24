@@ -87,7 +87,12 @@ private class HistoryFile(
     val us: List<List<JsonElement>> = emptyList(),
     val states: Map<String, List<List<JsonElement>>> = emptyMap(),
     val counties: Map<String, List<List<JsonElement>>> = emptyMap(),
+    /** Counties whose figures after 2000 come from the 5-year survey. */
+    val fiveYear: List<String> = emptyList(),
 )
+
+/** Citizenship year by year for one place; [fiveYear] when each figure after 2000 pools five years. */
+data class CitizenshipHistory(val years: List<CitizenshipYear>, val source: HistorySource, val fiveYear: Boolean = false)
 
 @Serializable
 data class HistorySource(val name: String, val url: String, val notes: List<String> = emptyList())
@@ -276,13 +281,14 @@ object CensusData {
     }
 
     /** Citizenship year by year for the country, a state, or one county ("031"), from 2005 on. */
-    suspend fun citizenshipYears(state: String?, county: String? = null): Pair<List<CitizenshipYear>, HistorySource>? = try {
+    suspend fun citizenshipYears(state: String?, county: String? = null): CitizenshipHistory? = try {
         if (county != null && state != null) {
             val f = Http.json.decodeFromString<HistoryFile>(text("census/history-counties/$state.json"))
-            f.counties[county]?.years()?.let { it to f.source }
+            f.counties[county]?.years()?.let { CitizenshipHistory(it, f.source, county in f.fiveYear) }
         } else {
             val f = Http.json.decodeFromString<HistoryFile>(text("census/history.json"))
-            (if (state == null) f.us else f.states[state].orEmpty()).years().takeIf { it.isNotEmpty() }?.let { it to f.source }
+            (if (state == null) f.us else f.states[state].orEmpty()).years().takeIf { it.isNotEmpty() }
+                ?.let { CitizenshipHistory(it, f.source) }
         }
     } catch (e: Exception) {
         null

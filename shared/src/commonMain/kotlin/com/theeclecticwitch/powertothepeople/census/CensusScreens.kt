@@ -1,6 +1,12 @@
 package com.theeclecticwitch.powertothepeople.census
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -216,8 +222,27 @@ private fun AreaPicker(areas: List<Area>, chosen: Int, onPick: (Int) -> Unit, on
  * Any state, then any of its districts, counties, towns or townships. The lists are long (Pennsylvania
  * has over 2,500 townships), so there is a search box and only matching names are shown.
  */
+/** How the place lists are ordered. */
+private enum class PlaceOrder(val label: String) { Name("A to Z"), MostBornHere("Most born in U.S."), FewestBornHere("Fewest born in U.S.") }
+
+private fun <T> List<T>.ordered(order: PlaceOrder, pct: (T) -> Double?): List<T> = when (order) {
+    PlaceOrder.Name -> this
+    // Places with no figure go last either way.
+    PlaceOrder.MostBornHere -> sortedWith(compareBy<T> { pct(it) == null }.thenByDescending { pct(it) })
+    PlaceOrder.FewestBornHere -> sortedWith(compareBy<T> { pct(it) == null }.thenBy { pct(it) })
+}
+
+@Composable
+private fun OrderChips(order: PlaceOrder, onOrder: (PlaceOrder) -> Unit) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Sort:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.CenterVertically))
+        PlaceOrder.entries.forEach { o -> FilterChip(selected = o == order, onClick = { onOrder(o) }, label = { Text(o.label) }) }
+    }
+}
+
 @Composable
 private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) {
+    var order by remember { mutableStateOf(PlaceOrder.Name) }
     var state by remember { mutableStateOf<String?>(null) }
     var choices by remember { mutableStateOf<Map<AreaKind, List<AreaChoice>>?>(null) }
     var kind by remember { mutableStateOf<AreaKind?>(null) }
@@ -245,7 +270,8 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
             when {
                 s == null -> LazyColumn(Modifier.fillMaxSize()) {
                     item { BornHereNote() }
-                    items(StateNames.all.filter { it.first in STATE_FIPS }) { (abbr, name) ->
+                    item { OrderChips(order) { order = it } }
+                    items(StateNames.all.filter { it.first in STATE_FIPS }.ordered(order) { statesBorn[it.first] }) { (abbr, name) ->
                         PickRow(name, statesBorn[abbr]) { state = abbr }
                     }
                 }
@@ -262,7 +288,9 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    OrderChips(order) { order = it }
                     val list = c[kind].orEmpty().filter { search.isBlank() || it.name.contains(search.trim(), ignoreCase = true) }
+                        .ordered(order) { it.bornHerePct }
                     LazyColumn(Modifier.fillMaxSize()) {
                         item { BornHereNote() }
                         items(list, key = { it.key }) { choice -> PickRow(choice.name, choice.bornHerePct) { onPicked(s, choice.key) } }
@@ -480,62 +508,116 @@ private fun ShareBar(values: List<Long>) {
  * then the yearly survey. For a district or town, whose lines are redrawn or too small for the yearly
  * survey, it shows the county's or the state's.
  */
+private class ShareOverTime(val place: String, val points: List<Pair<Int, Double>>, val county: Boolean, val fiveYear: Boolean)
+
 @Composable
 private fun HistoryCard(area: Area, f: CommunityFigures) {
-    val history by produceState<Pair<String, List<Pair<Int, Double>>>?>(null, area.key, f.stateAbbr) {
+    val history by produceState<ShareOverTime?>(null, area.key, f.stateAbbr) {
         val older = CensusData.foreignBornHistory()
-        val countyYears = area.countyCode?.let { CensusData.citizenshipYears(f.stateAbbr, it) }
-        val (place, recent, decades) = when {
-            area.kind == AreaKind.Country -> Triple("the United States", CensusData.citizenshipYears(null), older?.us)
-            countyYears != null -> Triple(area.countyName ?: "the county", countyYears, null)
-            else -> Triple(f.stateName, CensusData.citizenshipYears(f.stateAbbr), older?.states?.get(f.stateAbbr))
-        }
-        val points = decades.orEmpty().mapNotNull { y -> y.pct?.let { y.year to it } } +
-            recent?.first.orEmpty().map { it.year to it.foreignBorn * 100.0 / it.population }
-        value = if (points.size >= 2) place to points.sortedBy { it.first } else null
+        fun shares(recent: CitizenshipHistory?) = recent?.years.orEmpty().map { it.year to it.foreignBorn * 100.0 / it.population }
+        val county = area.countyCode?.let { CensusData.citizenshipYears(f.stateAbbr, it) }
+            ?.takeIf { it.years.size >= 2 }
+        value = when {
+            area.kind == AreaKind.Country -> ShareOverTime(
+                "the United States",
+                older?.us.orEmpty().mapNotNull { y -> y.pct?.let { y.year to it } } + shares(CensusData.citizenshipYears(null)),
+                county = false, fiveYear = false,
+            )
+            county != null -> ShareOverTime(area.countyName ?: "the county", shares(county), county = true, fiveYear = county.fiveYear)
+            else -> ShareOverTime(
+                f.stateName,
+                older?.states?.get(f.stateAbbr).orEmpty().mapNotNull { y -> y.pct?.let { y.year to it } } +
+                    shares(CensusData.citizenshipYears(f.stateAbbr)),
+                county = false, fiveYear = false,
+            )
+        }?.takeIf { it.points.size >= 2 }?.let { ShareOverTime(it.place, it.points.sortedBy { p -> p.first }, it.county, it.fiveYear) }
     }
-    val (place, points) = history ?: return
+    val h = history ?: return
+    val place = h.place
+    val points = h.points
     InfoCard(title = "Immigrants over the years") {
         Text("People born in another country, as a share of everyone in $place", style = MaterialTheme.typography.bodyMedium)
         if (area.kind != AreaKind.Country && !place.equals(area.label, ignoreCase = true)) {
             Note("Shown for $place: district lines change and towns are too small for yearly figures.")
         }
-        LineChart(points)
+        var picked by remember(place) { mutableStateOf<Int?>(null) }
+        LineChart(points, picked) { picked = if (picked == it) null else it }
         val high = points.maxBy { it.second }
         val low = points.minBy { it.second }
         Note("Highest: ${percent(high.second)} in ${high.first} · Lowest: ${percent(low.second)} in ${low.first}")
         var showAll by remember(place) { mutableStateOf(false) }
         val rows = if (showAll) points.reversed() else points.reversed().take(6)
+        Note("Tap a year, or the chart, to mark it on the chart.")
         rows.forEach { (year, p) ->
-            Stat("$year", "${percent(p)} immigrants · ${percent(100 - p)} born citizens")
+            val on = year == picked
+            Box(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (on) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                    .clickable { picked = if (on) null else year }
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
+            ) {
+                Stat("$year", "${percent(p)} immigrants · ${percent(100 - p)} born citizens")
+            }
         }
         if (points.size > 6) {
             TextButton(onClick = { showAll = !showAll }) { Text(if (showAll) "Show fewer years" else "Show every year") }
         }
         Note(
             "Immigrants here means everyone born in another country to non-American parents: naturalized citizens and " +
-                "non-citizens alike. Every ten years from 1850 to 2000 the figure is from the census; from 2005 on, from " +
-                "the yearly survey (none for 2020, when the pandemic cut the survey short).",
+                "non-citizens alike. " + when {
+                    h.fiveYear -> "2000 is from the census. After that the county is too small for a figure from one " +
+                        "year's survey alone, so each year's figure pools the five years ending then (2009 is 2005-2009)."
+                    h.county -> "2000 is from the census; from 2005 on, from the yearly survey (none for 2020, when the " +
+                        "pandemic cut the survey short). The yearly figures come from a sample of households, so in a " +
+                        "smaller county they can swing from one year to the next. The Census Bureau's county figures " +
+                        "from before 2000 are only in printed reports."
+                    else -> "Every ten years from 1850 to 2000 the figure is from the census; from 2005 on, from the " +
+                        "yearly survey (none for 2020, when the pandemic cut the survey short)."
+                },
         )
         SourceLine("U.S. Census Bureau", "https://www.census.gov/topics/population/foreign-born.html")
     }
 }
 
-/** One line, years along the bottom at their true spacing, with the first and last values labeled. */
+/**
+ * One line, years along the bottom at their true spacing, with the first and last values labeled.
+ * Tapping picks the nearest year, which is marked with a guide line and named above the chart.
+ */
 @Composable
-private fun LineChart(points: List<Pair<Int, Double>>) {
+private fun LineChart(points: List<Pair<Int, Double>>, picked: Int?, onPick: (Int) -> Unit) {
     val line = seriesColors()[0]
     val grid = MaterialTheme.colorScheme.outlineVariant
+    val guide = MaterialTheme.colorScheme.onSurfaceVariant
     val surface = MaterialTheme.colorScheme.surfaceContainerLow
     val first = points.first()
     val last = points.last()
     val top = (points.maxOf { it.second } * 1.15).coerceAtLeast(5.0)
+    val chosen = points.firstOrNull { it.first == picked }
+    val pick by rememberUpdatedState(onPick)
     Column {
+        if (chosen != null) {
+            Text(
+                "${chosen.first}: ${percent(chosen.second)} immigrants",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        }
         Row(Modifier.fillMaxWidth()) {
             Text("${percent(first.second)}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
             Text("${percent(last.second)}", style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
         }
-        Canvas(Modifier.fillMaxWidth().height(140.dp)) {
+        Canvas(
+            Modifier.fillMaxWidth().height(140.dp).pointerInput(points) {
+                detectTapGestures { tap ->
+                    val span = (last.first - first.first).coerceAtLeast(1)
+                    val year = first.first + tap.x / size.width * span
+                    pick(points.minBy { kotlin.math.abs(it.first - year) }.first)
+                }
+            },
+        ) {
             val minYear = first.first
             val span = (last.first - minYear).coerceAtLeast(1)
             fun at(p: Pair<Int, Double>) = Offset(
@@ -552,6 +634,12 @@ private fun LineChart(points: List<Pair<Int, Double>>) {
             listOf(first, last).forEach {
                 drawCircle(surface, radius = 6.dp.toPx(), center = at(it))
                 drawCircle(line, radius = 4.dp.toPx(), center = at(it))
+            }
+            chosen?.let {
+                val c = at(it)
+                drawLine(guide, Offset(c.x, 0f), Offset(c.x, size.height), strokeWidth = 1.dp.toPx())
+                drawCircle(surface, radius = 8.dp.toPx(), center = c)
+                drawCircle(line, radius = 6.dp.toPx(), center = c)
             }
         }
         Row(Modifier.fillMaxWidth()) {
