@@ -26,6 +26,9 @@ fun SupportCard() {
     val message by Donations.message.collectAsState()
     val thanked by Donations.thanked.collectAsState()
     LaunchedEffect(Unit) { if (prices.isEmpty()) Store.connect() }
+    // Only once the store has priced all three: a button for a product the store doesn't have would do nothing
+    // (and Apple rejects apps with buttons that don't work).
+    if (Tip.entries.any { it.productId !in prices }) return
     InfoCard(title = "Support the app") {
         Text(
             "Power to the People is free, with no ads. If you find it useful, a donation helps pay for its data, " +
@@ -36,7 +39,7 @@ fun SupportCard() {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Tip.entries.forEach { tip ->
                 Button(onClick = { Store.donate(tip) }, modifier = Modifier.weight(1f)) {
-                    Text(prices[tip.productId] ?: tip.usualPrice, maxLines = 1)
+                    Text(prices.getValue(tip.productId), maxLines = 1)
                 }
             }
         }

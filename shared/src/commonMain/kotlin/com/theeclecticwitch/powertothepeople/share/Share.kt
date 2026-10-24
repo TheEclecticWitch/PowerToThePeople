@@ -15,7 +15,8 @@ expect val shareCopies: Boolean
  */
 object StoreReviewLinks {
     const val MICROSOFT_STORE = "ms-windows-store://review/?ProductId=9N1XKML0JKQJ"
-    val GOOGLE_PLAY: String? = null // e.g. "market://details?id=<the app's Play id>"
+    // Live on Google Play since 2026-10-22. The web address opens the Play Store app on a phone that has it.
+    val GOOGLE_PLAY: String? = "https://play.google.com/store/apps/details?id=com.theeclecticwitch.powertothepeople"
     val APP_STORE: String? = null // iPhone, iPad and Mac: "https://apps.apple.com/app/id<number>?action=write-review"
 }
 

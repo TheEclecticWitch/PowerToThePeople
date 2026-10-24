@@ -149,6 +149,7 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
                 }
                 SupportCard()
                 SuggestionCard()
+                AppCards()
             }
         }
     }

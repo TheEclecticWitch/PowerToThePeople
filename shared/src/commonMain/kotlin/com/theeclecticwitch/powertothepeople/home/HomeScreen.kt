@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +50,7 @@ import com.theeclecticwitch.powertothepeople.doomsday.DoomsdayCard
 import com.theeclecticwitch.powertothepeople.location.LocationStore
 import com.theeclecticwitch.powertothepeople.location.today
 import com.theeclecticwitch.powertothepeople.officials.Official
+import com.theeclecticwitch.powertothepeople.officials.FederalOfficials
 import com.theeclecticwitch.powertothepeople.officials.OfficialPhoto
 import com.theeclecticwitch.powertothepeople.officials.rememberDelegation
 import com.theeclecticwitch.powertothepeople.officials.rememberStateDelegation
@@ -85,6 +87,12 @@ fun HomeScreen(
 ) {
     val location by LocationStore.location.collectAsState()
     val (delegation, _, _) = rememberDelegation(location)
+    // The President and Vice President show before any address is set (Rod, 2026-10-18).
+    val executives by produceState<Pair<Official?, Official?>?>(null) {
+        value = try { FederalOfficials.executives() } catch (e: Exception) { null }
+    }
+    val president = delegation?.president ?: executives?.first
+    val vicePresident = delegation?.vicePresident ?: executives?.second
     val (state, _, _) = rememberStateDelegation(location)
     val now = today()
     val header: @Composable () -> Unit = {
@@ -160,8 +168,8 @@ fun HomeScreen(
                     TileRow(gap = 8.dp, tiles = buildList {
                         add { m -> DocumentTile("Constitution", Originals.pages.first().thumbnail, m, onConstitution) }
                         add { m -> DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, m, onBillOfRights) }
-                        add { m -> PersonTile(delegation?.president, "President", m, onOfficial) }
-                        add { m -> PersonTile(delegation?.vicePresident, "Vice President", m, onOfficial) }
+                        add { m -> PersonTile(president, "President", m, onOfficial) }
+                        add { m -> PersonTile(vicePresident, "Vice President", m, onOfficial) }
                         if (location != null) {
                             delegation?.senators.orEmpty().forEach { o -> add { m -> PersonTile(o, "Senator", m, onOfficial) } }
                             delegation?.representative?.let { o -> add { m -> PersonTile(o, roleOf(o), m, onOfficial) } }
@@ -203,8 +211,8 @@ fun HomeScreen(
                         TileRow(
                             listOf(
                                 { m -> DocumentTile("Constitution", Originals.pages.first().thumbnail, m, onConstitution) },
-                                { m -> PersonTile(delegation?.president, "President", m, onOfficial) },
-                                { m -> PersonTile(delegation?.vicePresident, "Vice President", m, onOfficial) },
+                                { m -> PersonTile(president, "President", m, onOfficial) },
+                                { m -> PersonTile(vicePresident, "Vice President", m, onOfficial) },
                                 { m -> DocumentTile("Bill of Rights", Originals.pages[Originals.billOfRightsIndex].thumbnail, m, onBillOfRights) },
                             ),
                         )

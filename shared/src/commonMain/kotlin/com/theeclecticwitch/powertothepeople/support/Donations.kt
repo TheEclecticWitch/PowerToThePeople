@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.update
  * The three donation sizes (Rod, 2026-10-04). Each is a consumable in-app product with this ID in
  * both the Play Console and App Store Connect, so people can give more than once. Apple and Google
  * both require their own payment for gifts to an app's maker; a web link isn't allowed in the app.
- * [usualPrice] is shown only until the store answers with the price in the person's own currency.
+ * [usualPrice] is the US price set in each store; the card shows the price the store answers with, in the
+ * person's own currency, and stays hidden until it has all three.
  */
 enum class Tip(val productId: String, val usualPrice: String) {
     SMALL("tip_small", "$1.99"),

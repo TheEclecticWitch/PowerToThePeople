@@ -16,6 +16,7 @@ import datetime
 import os
 import sys
 import traceback
+import urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -76,6 +77,30 @@ SOURCES = [
 ]
 
 
+# How long senate.gov may turn the gatherer away before the run counts it as a failure (and GitHub emails).
+SENATE_GRACE_DAYS = 7
+
+
+def senate_votes(net, store, state, today, congress, session, senate_ids, log):
+    """
+    senate.gov is the only official source of Senate roll calls. When it refuses the gatherer (HTTP 403,
+    seen from 2026-10-23), the votes already published stay as they are and the run carries on; only a
+    block lasting more than a week is reported as a failure.
+    """
+    try:
+        votes.gather_senate(net, store, congress, session, senate_ids, log)
+        state.pop("senateBlockedSince", None)
+    except urllib.error.HTTPError as e:
+        if e.code != 403:
+            raise
+        since = state.setdefault("senateBlockedSince", today.isoformat())
+        days = (today - datetime.date.fromisoformat(since)).days
+        log(f"Senate votes {congress}-{session}: senate.gov refused the request (HTTP 403) since {since}; "
+            "the votes already published are kept")
+        if days > SENATE_GRACE_DAYS:
+            raise
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, help="folder that is published to GitHub Pages")
@@ -112,7 +137,7 @@ def main():
     senate_ids = votes.SenateIds(net)
     sessions = [s for s, year in sessions_of(congress) if year <= today.year][::-1]
     for session in sessions:
-        step(f"Senate votes {congress}-{session}", votes.gather_senate, net, store, congress, session, senate_ids, log)
+        step(f"Senate votes {congress}-{session}", senate_votes, net, store, state, today, congress, session, senate_ids, log)
     for session in sessions:
         step(f"House votes {congress}-{session}", votes.gather_house, net, store, congress, session, log)
     for session in sessions:

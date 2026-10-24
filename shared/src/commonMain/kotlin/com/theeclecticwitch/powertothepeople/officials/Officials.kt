@@ -229,6 +229,12 @@ object FederalOfficials {
         )
     }
 
+    /** The President and Vice President: national, so they need no address. */
+    suspend fun executives(): Pair<Official?, Official?> {
+        ensureLoaded(false)
+        return currentExecutive("prez") to currentExecutive("viceprez")
+    }
+
     suspend fun byId(id: String): Official? {
         ensureLoaded(false)
         if (id.startsWith("exec:")) {
