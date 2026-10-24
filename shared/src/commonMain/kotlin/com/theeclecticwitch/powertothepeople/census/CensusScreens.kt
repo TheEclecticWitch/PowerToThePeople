@@ -8,8 +8,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -202,16 +203,17 @@ fun CommunityScreen(onBack: () -> Unit, onSetLocation: () -> Unit, onSeats: () -
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AreaPicker(areas: List<Area>, chosen: Int, onPick: (Int) -> Unit, onOther: () -> Unit, onMine: (() -> Unit)?) {
     Column(Modifier.fullWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("Show the figures for", style = MaterialTheme.typography.labelLarge)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             areas.forEachIndexed { i, a ->
                 FilterChip(selected = i == chosen, onClick = { onPick(i) }, label = { Text(a.label) })
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onOther) { Text("Choose another place") }
             onMine?.let { OutlinedButton(onClick = it) { Text("Back to where I live") } }
         }
@@ -232,14 +234,16 @@ private fun <T> List<T>.ordered(order: PlaceOrder, pct: (T) -> Double?): List<T>
     PlaceOrder.FewestBornHere -> sortedWith(compareBy<T> { pct(it) == null }.thenBy { pct(it) })
 }
 
+/** The three ways to order a list. They wrap onto a second line on a narrow phone rather than run off the edge. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OrderChips(order: PlaceOrder, onOrder: (PlaceOrder) -> Unit) {
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Sort:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.CenterVertically))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         PlaceOrder.entries.forEach { o -> FilterChip(selected = o == order, onClick = { onOrder(o) }, label = { Text(o.label) }) }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) {
     var order by remember { mutableStateOf(PlaceOrder.Name) }
@@ -279,7 +283,7 @@ private fun PlacePicker(onBack: () -> Unit, onPicked: (String, String) -> Unit) 
                 c == null -> LoadingBox()
                 else -> {
                     PickRow("All of ${StateNames.of(s)}", stateBorn) { onPicked(s, "state") }
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         c.keys.forEach { k -> FilterChip(selected = k == kind, onClick = { kind = k; search = "" }, label = { Text(k.plural) }) }
                     }
                     OutlinedTextField(

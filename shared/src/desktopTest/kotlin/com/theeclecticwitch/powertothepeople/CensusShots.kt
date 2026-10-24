@@ -30,7 +30,7 @@ import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Pictures of the Census screens at phone size, to check them by eye:
+ * Pictures of the Census screens at iPhone width (393 points, the narrowest common phone), to check them by eye:
  * `gradlew :shared:desktopTest --tests "*CensusShots*" -PcensusShots=<folder>`.
  * Like the store pictures, it runs with its own data folder and the Independence Hall address.
  */
@@ -52,10 +52,10 @@ class CensusShots {
     }
 
     private fun tour(out: File) {
-        runDesktopComposeUiTest(width = 824, height = 1800, testTimeout = 10.minutes) {
+        runDesktopComposeUiTest(width = 786, height = 1800, testTimeout = 10.minutes) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(2f), LocalLifecycleOwner provides Resumed) {
-                    Box(Modifier.size(412.dp, 900.dp)) { App() }
+                    Box(Modifier.size(393.dp, 900.dp)) { App() }
                 }
             }
             fun settle(seconds: Int) {
