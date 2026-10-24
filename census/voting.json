@@ -1,0 +1,1433 @@
+{
+ "source": {
+  "name": "U.S. Census Bureau, Current Population Survey, November Voting and Registration Supplement",
+  "url": "https://www.census.gov/topics/public-sector/voting/data/tables.html",
+  "table": "Table 4b. Reported Voting and Registration ... for States (TOTAL row of each state); Table 1. Reported Voting and Registration, by Sex and Single Years of Age (BOTH SEXES age groups)"
+ },
+ "unit": {
+  "citizens18Thousands": "thousands of U.S. citizens age 18 and over",
+  "registeredPct": "percent of citizens 18+ who reported being registered",
+  "votedPct": "percent of citizens 18+ who reported voting"
+ },
+ "notes": [
+  "These are survey answers: people reported whether they registered and voted (self-reported), as the Census Bureau states. They are not official vote counts and usually differ from turnout computed from certified election results.",
+  "Figures are estimates from a sample survey (the Current Population Survey) and carry sampling error; the Census publishes a margin of error (90 percent confidence) for each state percentage, kept here as registeredMoe and votedMoe (percentage points).",
+  "Population figures are in thousands, as published. Percentages are of the U.S.-citizen population age 18 and over.",
+  "State figures sum to the U.S. figure only approximately because each is rounded to the nearest thousand."
+ ],
+ "elections": [
+  {
+   "year": 2024,
+   "kind": "Presidential",
+   "url": "https://www.census.gov/data/tables/time-series/demo/voting-and-registration/p20-590.html",
+   "pageRevised": "2026-08-10",
+   "files": {
+    "national": "https://www2.census.gov/programs-surveys/cps/tables/p20/587/vote01_2024.xlsx",
+    "states": "https://www2.census.gov/programs-surveys/cps/tables/p20/587/vote04b_2024.xlsx"
+   },
+   "us": {
+    "citizens18Thousands": 236138,
+    "registeredPct": 73.6,
+    "registeredMoe": 0.5,
+    "votedPct": 65.3,
+    "votedMoe": 0.5
+   },
+   "byAge": [
+    {
+     "ages": "18 to 24",
+     "citizensThousands": 27548,
+     "registeredPct": 58.3,
+     "votedPct": 47.7
+    },
+    {
+     "ages": "25 to 34",
+     "citizensThousands": 38963,
+     "registeredPct": 68.4,
+     "votedPct": 56.8
+    },
+    {
+     "ages": "35 to 44",
+     "citizensThousands": 38229,
+     "registeredPct": 73,
+     "votedPct": 63.7
+    },
+    {
+     "ages": "45 to 54",
+     "citizensThousands": 35422,
+     "registeredPct": 76.5,
+     "votedPct": 68.7
+    },
+    {
+     "ages": "55 to 64",
+     "citizensThousands": 37982,
+     "registeredPct": 77.9,
+     "votedPct": 71.1
+    },
+    {
+     "ages": "65 to 74",
+     "citizensThousands": 33753,
+     "registeredPct": 80.5,
+     "votedPct": 75.2
+    },
+    {
+     "ages": "75 and over",
+     "citizensThousands": 24242,
+     "registeredPct": 80.1,
+     "votedPct": 74
+    }
+   ],
+   "states": [
+    {
+     "state": "AL",
+     "citizens18Thousands": 3779,
+     "registeredPct": 68.9,
+     "registeredMoe": 4.5,
+     "votedPct": 58.7,
+     "votedMoe": 4.5
+    },
+    {
+     "state": "AK",
+     "citizens18Thousands": 521,
+     "registeredPct": 78.3,
+     "registeredMoe": 3.4,
+     "votedPct": 62.1,
+     "votedMoe": 4.1
+    },
+    {
+     "state": "AZ",
+     "citizens18Thousands": 5186,
+     "registeredPct": 69,
+     "registeredMoe": 3.2,
+     "votedPct": 61.7,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "AR",
+     "citizens18Thousands": 2274,
+     "registeredPct": 64.7,
+     "registeredMoe": 2.3,
+     "votedPct": 52.8,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "CA",
+     "citizens18Thousands": 25327,
+     "registeredPct": 72.9,
+     "registeredMoe": 1.5,
+     "votedPct": 64.7,
+     "votedMoe": 1.6
+    },
+    {
+     "state": "CO",
+     "citizens18Thousands": 4277,
+     "registeredPct": 73.8,
+     "registeredMoe": 5.2,
+     "votedPct": 70.1,
+     "votedMoe": 5
+    },
+    {
+     "state": "CT",
+     "citizens18Thousands": 2608,
+     "registeredPct": 72.2,
+     "registeredMoe": 3.4,
+     "votedPct": 66.3,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "DE",
+     "citizens18Thousands": 746,
+     "registeredPct": 77.4,
+     "registeredMoe": 3.6,
+     "votedPct": 69.8,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "DC",
+     "citizens18Thousands": 507,
+     "registeredPct": 85.1,
+     "registeredMoe": 2.8,
+     "votedPct": 79.5,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "FL",
+     "citizens18Thousands": 16092,
+     "registeredPct": 67,
+     "registeredMoe": 2.2,
+     "votedPct": 60.3,
+     "votedMoe": 1.9
+    },
+    {
+     "state": "GA",
+     "citizens18Thousands": 7624,
+     "registeredPct": 70.8,
+     "registeredMoe": 2.8,
+     "votedPct": 64.4,
+     "votedMoe": 2.6
+    },
+    {
+     "state": "HI",
+     "citizens18Thousands": 1004,
+     "registeredPct": 67.6,
+     "registeredMoe": 3,
+     "votedPct": 58.5,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "ID",
+     "citizens18Thousands": 1428,
+     "registeredPct": 71.2,
+     "registeredMoe": 2.1,
+     "votedPct": 65.2,
+     "votedMoe": 2.2
+    },
+    {
+     "state": "IL",
+     "citizens18Thousands": 8830,
+     "registeredPct": 76.8,
+     "registeredMoe": 2.6,
+     "votedPct": 65.9,
+     "votedMoe": 3
+    },
+    {
+     "state": "IN",
+     "citizens18Thousands": 4801,
+     "registeredPct": 73.7,
+     "registeredMoe": 3.3,
+     "votedPct": 60.7,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "IA",
+     "citizens18Thousands": 2310,
+     "registeredPct": 80.6,
+     "registeredMoe": 3.7,
+     "votedPct": 71.8,
+     "votedMoe": 4.4
+    },
+    {
+     "state": "KS",
+     "citizens18Thousands": 2041,
+     "registeredPct": 79.8,
+     "registeredMoe": 4.5,
+     "votedPct": 70.7,
+     "votedMoe": 5.6
+    },
+    {
+     "state": "KY",
+     "citizens18Thousands": 3178,
+     "registeredPct": 80.5,
+     "registeredMoe": 3.2,
+     "votedPct": 67.7,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "LA",
+     "citizens18Thousands": 3273,
+     "registeredPct": 66,
+     "registeredMoe": 3.6,
+     "votedPct": 58,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "ME",
+     "citizens18Thousands": 1123,
+     "registeredPct": 74,
+     "registeredMoe": 4,
+     "votedPct": 67.1,
+     "votedMoe": 3.5
+    },
+    {
+     "state": "MD",
+     "citizens18Thousands": 4350,
+     "registeredPct": 80.4,
+     "registeredMoe": 3.2,
+     "votedPct": 71.1,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "MA",
+     "citizens18Thousands": 4947,
+     "registeredPct": 75.4,
+     "registeredMoe": 3,
+     "votedPct": 68.9,
+     "votedMoe": 3.1
+    },
+    {
+     "state": "MI",
+     "citizens18Thousands": 7534,
+     "registeredPct": 80.8,
+     "registeredMoe": 2.5,
+     "votedPct": 72.3,
+     "votedMoe": 2.9
+    },
+    {
+     "state": "MN",
+     "citizens18Thousands": 4208,
+     "registeredPct": 83.6,
+     "registeredMoe": 2.3,
+     "votedPct": 75.9,
+     "votedMoe": 2.9
+    },
+    {
+     "state": "MS",
+     "citizens18Thousands": 2162,
+     "registeredPct": 81,
+     "registeredMoe": 2.2,
+     "votedPct": 68.9,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "MO",
+     "citizens18Thousands": 4664,
+     "registeredPct": 79.5,
+     "registeredMoe": 2.7,
+     "votedPct": 69.5,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "MT",
+     "citizens18Thousands": 881,
+     "registeredPct": 73.8,
+     "registeredMoe": 2.5,
+     "votedPct": 69.2,
+     "votedMoe": 2.5
+    },
+    {
+     "state": "NE",
+     "citizens18Thousands": 1377,
+     "registeredPct": 73.8,
+     "registeredMoe": 4,
+     "votedPct": 67.4,
+     "votedMoe": 4
+    },
+    {
+     "state": "NV",
+     "citizens18Thousands": 2230,
+     "registeredPct": 73.5,
+     "registeredMoe": 2.6,
+     "votedPct": 66.9,
+     "votedMoe": 2.9
+    },
+    {
+     "state": "NH",
+     "citizens18Thousands": 1096,
+     "registeredPct": 78.1,
+     "registeredMoe": 3.4,
+     "votedPct": 71.9,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "NJ",
+     "citizens18Thousands": 6323,
+     "registeredPct": 81.9,
+     "registeredMoe": 2.7,
+     "votedPct": 72.5,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "NM",
+     "citizens18Thousands": 1491,
+     "registeredPct": 76.1,
+     "registeredMoe": 3.3,
+     "votedPct": 66,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "NY",
+     "citizens18Thousands": 13667,
+     "registeredPct": 66.2,
+     "registeredMoe": 2.7,
+     "votedPct": 59.2,
+     "votedMoe": 2.6
+    },
+    {
+     "state": "NC",
+     "citizens18Thousands": 7695,
+     "registeredPct": 69.8,
+     "registeredMoe": 2.7,
+     "votedPct": 64.6,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "ND",
+     "citizens18Thousands": 563,
+     "registeredPct": 78.6,
+     "registeredMoe": 2.9,
+     "votedPct": 71.2,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "OH",
+     "citizens18Thousands": 8782,
+     "registeredPct": 75.1,
+     "registeredMoe": 2.2,
+     "votedPct": 67.4,
+     "votedMoe": 2.5
+    },
+    {
+     "state": "OK",
+     "citizens18Thousands": 2924,
+     "registeredPct": 70.5,
+     "registeredMoe": 3,
+     "votedPct": 59.7,
+     "votedMoe": 3.1
+    },
+    {
+     "state": "OR",
+     "citizens18Thousands": 3138,
+     "registeredPct": 83,
+     "registeredMoe": 3,
+     "votedPct": 75.3,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "PA",
+     "citizens18Thousands": 9789,
+     "registeredPct": 75.7,
+     "registeredMoe": 2.3,
+     "votedPct": 69.7,
+     "votedMoe": 2.3
+    },
+    {
+     "state": "RI",
+     "citizens18Thousands": 811,
+     "registeredPct": 79.5,
+     "registeredMoe": 3.2,
+     "votedPct": 70,
+     "votedMoe": 4
+    },
+    {
+     "state": "SC",
+     "citizens18Thousands": 4006,
+     "registeredPct": 73.3,
+     "registeredMoe": 3,
+     "votedPct": 62.7,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "SD",
+     "citizens18Thousands": 669,
+     "registeredPct": 70.7,
+     "registeredMoe": 3.7,
+     "votedPct": 58.9,
+     "votedMoe": 3.8
+    },
+    {
+     "state": "TN",
+     "citizens18Thousands": 5300,
+     "registeredPct": 75.1,
+     "registeredMoe": 2.6,
+     "votedPct": 64.8,
+     "votedMoe": 2.6
+    },
+    {
+     "state": "TX",
+     "citizens18Thousands": 19754,
+     "registeredPct": 69.1,
+     "registeredMoe": 2.3,
+     "votedPct": 57.9,
+     "votedMoe": 2.3
+    },
+    {
+     "state": "UT",
+     "citizens18Thousands": 2324,
+     "registeredPct": 74.7,
+     "registeredMoe": 3.1,
+     "votedPct": 66.9,
+     "votedMoe": 3.1
+    },
+    {
+     "state": "VT",
+     "citizens18Thousands": 520,
+     "registeredPct": 77.2,
+     "registeredMoe": 3.4,
+     "votedPct": 71.7,
+     "votedMoe": 3.1
+    },
+    {
+     "state": "VA",
+     "citizens18Thousands": 6259,
+     "registeredPct": 79.6,
+     "registeredMoe": 2.2,
+     "votedPct": 72.9,
+     "votedMoe": 2.4
+    },
+    {
+     "state": "WA",
+     "citizens18Thousands": 5516,
+     "registeredPct": 77.1,
+     "registeredMoe": 3.5,
+     "votedPct": 70,
+     "votedMoe": 4
+    },
+    {
+     "state": "WV",
+     "citizens18Thousands": 1355,
+     "registeredPct": 73.8,
+     "registeredMoe": 4.4,
+     "votedPct": 59.5,
+     "votedMoe": 5.5
+    },
+    {
+     "state": "WI",
+     "citizens18Thousands": 4431,
+     "registeredPct": 76.3,
+     "registeredMoe": 3.2,
+     "votedPct": 72.2,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "WY",
+     "citizens18Thousands": 443,
+     "registeredPct": 69.3,
+     "registeredMoe": 2.5,
+     "votedPct": 63.8,
+     "votedMoe": 2.4
+    }
+   ]
+  },
+  {
+   "year": 2022,
+   "kind": "Midterm",
+   "url": "https://www.census.gov/data/tables/time-series/demo/voting-and-registration/p20-586.html",
+   "pageRevised": "2023-05-02",
+   "files": {
+    "national": "https://www2.census.gov/programs-surveys/cps/tables/p20/586/vote01_2022.xlsx",
+    "states": "https://www2.census.gov/programs-surveys/cps/tables/p20/586/vote04b_2022.xlsx"
+   },
+   "us": {
+    "citizens18Thousands": 233546,
+    "registeredPct": 69.1,
+    "registeredMoe": 0.5,
+    "votedPct": 52.2,
+    "votedMoe": 0.5
+   },
+   "byAge": [
+    {
+     "ages": "18 to 24",
+     "citizensThousands": 26749,
+     "registeredPct": 49.1,
+     "votedPct": 27.6
+    },
+    {
+     "ages": "25 to 34",
+     "citizensThousands": 38879,
+     "registeredPct": 62.7,
+     "votedPct": 39.6
+    },
+    {
+     "ages": "35 to 44",
+     "citizensThousands": 37491,
+     "registeredPct": 69.3,
+     "votedPct": 49.1
+    },
+    {
+     "ages": "45 to 54",
+     "citizensThousands": 35770,
+     "registeredPct": 72.3,
+     "votedPct": 54.6
+    },
+    {
+     "ages": "55 to 64",
+     "citizensThousands": 39174,
+     "registeredPct": 74.4,
+     "votedPct": 61.6
+    },
+    {
+     "ages": "65 to 74",
+     "citizensThousands": 32912,
+     "registeredPct": 77.9,
+     "votedPct": 68
+    },
+    {
+     "ages": "75 and over",
+     "citizensThousands": 22571,
+     "registeredPct": 76.6,
+     "votedPct": 65.2
+    }
+   ],
+   "states": [
+    {
+     "state": "AL",
+     "citizens18Thousands": 3716,
+     "registeredPct": 67.3,
+     "registeredMoe": 2.7,
+     "votedPct": 45.4,
+     "votedMoe": 3
+    },
+    {
+     "state": "AK",
+     "citizens18Thousands": 516,
+     "registeredPct": 72.2,
+     "registeredMoe": 2.9,
+     "votedPct": 54.6,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "AZ",
+     "citizens18Thousands": 5093,
+     "registeredPct": 69.9,
+     "registeredMoe": 3.3,
+     "votedPct": 55.8,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "AR",
+     "citizens18Thousands": 2188,
+     "registeredPct": 62.2,
+     "registeredMoe": 2.8,
+     "votedPct": 43.9,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "CA",
+     "citizens18Thousands": 25315,
+     "registeredPct": 67.3,
+     "registeredMoe": 1.6,
+     "votedPct": 51.5,
+     "votedMoe": 1.6
+    },
+    {
+     "state": "CO",
+     "citizens18Thousands": 4384,
+     "registeredPct": 72.1,
+     "registeredMoe": 3.5,
+     "votedPct": 61.3,
+     "votedMoe": 4.1
+    },
+    {
+     "state": "CT",
+     "citizens18Thousands": 2527,
+     "registeredPct": 70.4,
+     "registeredMoe": 3.8,
+     "votedPct": 49.6,
+     "votedMoe": 4.2
+    },
+    {
+     "state": "DE",
+     "citizens18Thousands": 754,
+     "registeredPct": 76.6,
+     "registeredMoe": 4,
+     "votedPct": 54.2,
+     "votedMoe": 3.9
+    },
+    {
+     "state": "DC",
+     "citizens18Thousands": 476,
+     "registeredPct": 82.4,
+     "registeredMoe": 2.5,
+     "votedPct": 62.9,
+     "votedMoe": 3
+    },
+    {
+     "state": "FL",
+     "citizens18Thousands": 15449,
+     "registeredPct": 63.2,
+     "registeredMoe": 1.9,
+     "votedPct": 49,
+     "votedMoe": 2.1
+    },
+    {
+     "state": "GA",
+     "citizens18Thousands": 7601,
+     "registeredPct": 69.4,
+     "registeredMoe": 3.6,
+     "votedPct": 56.9,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "HI",
+     "citizens18Thousands": 1019,
+     "registeredPct": 63.9,
+     "registeredMoe": 4,
+     "votedPct": 50,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "ID",
+     "citizens18Thousands": 1417,
+     "registeredPct": 64.7,
+     "registeredMoe": 4,
+     "votedPct": 48.3,
+     "votedMoe": 2.4
+    },
+    {
+     "state": "IL",
+     "citizens18Thousands": 8824,
+     "registeredPct": 69.2,
+     "registeredMoe": 2.6,
+     "votedPct": 52.1,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "IN",
+     "citizens18Thousands": 4903,
+     "registeredPct": 66.5,
+     "registeredMoe": 3.2,
+     "votedPct": 41.9,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "IA",
+     "citizens18Thousands": 2345,
+     "registeredPct": 73.9,
+     "registeredMoe": 3.7,
+     "votedPct": 51.8,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "KS",
+     "citizens18Thousands": 2087,
+     "registeredPct": 76.1,
+     "registeredMoe": 3.4,
+     "votedPct": 59.4,
+     "votedMoe": 4
+    },
+    {
+     "state": "KY",
+     "citizens18Thousands": 3233,
+     "registeredPct": 71.8,
+     "registeredMoe": 4.6,
+     "votedPct": 52.3,
+     "votedMoe": 6
+    },
+    {
+     "state": "LA",
+     "citizens18Thousands": 3263,
+     "registeredPct": 67.9,
+     "registeredMoe": 3.3,
+     "votedPct": 48.2,
+     "votedMoe": 3.8
+    },
+    {
+     "state": "ME",
+     "citizens18Thousands": 1131,
+     "registeredPct": 75.6,
+     "registeredMoe": 2.8,
+     "votedPct": 63.8,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "MD",
+     "citizens18Thousands": 4364,
+     "registeredPct": 75.6,
+     "registeredMoe": 3.4,
+     "votedPct": 57.9,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "MA",
+     "citizens18Thousands": 4892,
+     "registeredPct": 74,
+     "registeredMoe": 2.3,
+     "votedPct": 56.7,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "MI",
+     "citizens18Thousands": 7517,
+     "registeredPct": 77.1,
+     "registeredMoe": 2.7,
+     "votedPct": 63.3,
+     "votedMoe": 2.9
+    },
+    {
+     "state": "MN",
+     "citizens18Thousands": 4210,
+     "registeredPct": 77.3,
+     "registeredMoe": 3.7,
+     "votedPct": 63.7,
+     "votedMoe": 4
+    },
+    {
+     "state": "MS",
+     "citizens18Thousands": 2166,
+     "registeredPct": 72.6,
+     "registeredMoe": 2.6,
+     "votedPct": 46.4,
+     "votedMoe": 2.6
+    },
+    {
+     "state": "MO",
+     "citizens18Thousands": 4655,
+     "registeredPct": 75.9,
+     "registeredMoe": 3.9,
+     "votedPct": 52.9,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "MT",
+     "citizens18Thousands": 878,
+     "registeredPct": 69.8,
+     "registeredMoe": 3.6,
+     "votedPct": 56.5,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "NE",
+     "citizens18Thousands": 1351,
+     "registeredPct": 69.1,
+     "registeredMoe": 3.8,
+     "votedPct": 48.8,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "NV",
+     "citizens18Thousands": 2206,
+     "registeredPct": 65.1,
+     "registeredMoe": 3.4,
+     "votedPct": 50.9,
+     "votedMoe": 3.5
+    },
+    {
+     "state": "NH",
+     "citizens18Thousands": 1106,
+     "registeredPct": 72.6,
+     "registeredMoe": 3.3,
+     "votedPct": 59.1,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "NJ",
+     "citizens18Thousands": 6241,
+     "registeredPct": 70.5,
+     "registeredMoe": 3.3,
+     "votedPct": 50.5,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "NM",
+     "citizens18Thousands": 1511,
+     "registeredPct": 67.9,
+     "registeredMoe": 3.4,
+     "votedPct": 54.1,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "NY",
+     "citizens18Thousands": 13516,
+     "registeredPct": 65.8,
+     "registeredMoe": 2.5,
+     "votedPct": 49.1,
+     "votedMoe": 2.5
+    },
+    {
+     "state": "NC",
+     "citizens18Thousands": 7533,
+     "registeredPct": 60.8,
+     "registeredMoe": 3.2,
+     "votedPct": 45.7,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "ND",
+     "citizens18Thousands": 554,
+     "registeredPct": 75.6,
+     "registeredMoe": 2.7,
+     "votedPct": 52,
+     "votedMoe": 3
+    },
+    {
+     "state": "OH",
+     "citizens18Thousands": 8708,
+     "registeredPct": 67.6,
+     "registeredMoe": 2.9,
+     "votedPct": 47.8,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "OK",
+     "citizens18Thousands": 2841,
+     "registeredPct": 68.1,
+     "registeredMoe": 2.9,
+     "votedPct": 47,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "OR",
+     "citizens18Thousands": 3122,
+     "registeredPct": 82.7,
+     "registeredMoe": 2.3,
+     "votedPct": 70,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "PA",
+     "citizens18Thousands": 9741,
+     "registeredPct": 72,
+     "registeredMoe": 2.2,
+     "votedPct": 60,
+     "votedMoe": 2.4
+    },
+    {
+     "state": "RI",
+     "citizens18Thousands": 843,
+     "registeredPct": 74.3,
+     "registeredMoe": 3.5,
+     "votedPct": 54.4,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "SC",
+     "citizens18Thousands": 3868,
+     "registeredPct": 64.4,
+     "registeredMoe": 3.9,
+     "votedPct": 44.9,
+     "votedMoe": 3.5
+    },
+    {
+     "state": "SD",
+     "citizens18Thousands": 658,
+     "registeredPct": 70,
+     "registeredMoe": 4.4,
+     "votedPct": 53.4,
+     "votedMoe": 4
+    },
+    {
+     "state": "TN",
+     "citizens18Thousands": 5145,
+     "registeredPct": 67.4,
+     "registeredMoe": 2.6,
+     "votedPct": 44.5,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "TX",
+     "citizens18Thousands": 19029,
+     "registeredPct": 65.2,
+     "registeredMoe": 2,
+     "votedPct": 47,
+     "votedMoe": 2.1
+    },
+    {
+     "state": "UT",
+     "citizens18Thousands": 2278,
+     "registeredPct": 67.4,
+     "registeredMoe": 3.3,
+     "votedPct": 52.8,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "VT",
+     "citizens18Thousands": 521,
+     "registeredPct": 75.4,
+     "registeredMoe": 3.1,
+     "votedPct": 62.2,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "VA",
+     "citizens18Thousands": 6043,
+     "registeredPct": 74.3,
+     "registeredMoe": 2.7,
+     "votedPct": 53.2,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "WA",
+     "citizens18Thousands": 5511,
+     "registeredPct": 75.1,
+     "registeredMoe": 2.6,
+     "votedPct": 59.7,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "WV",
+     "citizens18Thousands": 1400,
+     "registeredPct": 62.6,
+     "registeredMoe": 5.1,
+     "votedPct": 38.4,
+     "votedMoe": 5.3
+    },
+    {
+     "state": "WI",
+     "citizens18Thousands": 4461,
+     "registeredPct": 72.3,
+     "registeredMoe": 3.2,
+     "votedPct": 60.9,
+     "votedMoe": 2.9
+    },
+    {
+     "state": "WY",
+     "citizens18Thousands": 437,
+     "registeredPct": 62.8,
+     "registeredMoe": 3.5,
+     "votedPct": 49,
+     "votedMoe": 3.5
+    }
+   ]
+  },
+  {
+   "year": 2020,
+   "kind": "Presidential",
+   "url": "https://www.census.gov/data/tables/time-series/demo/voting-and-registration/p20-585.html",
+   "pageRevised": "2021-10-28",
+   "files": {
+    "national": "https://www2.census.gov/programs-surveys/cps/tables/p20/585/table01.xlsx",
+    "states": "https://www2.census.gov/programs-surveys/cps/tables/p20/585/table04b.xlsx"
+   },
+   "us": {
+    "citizens18Thousands": 231593,
+    "registeredPct": 72.7,
+    "registeredMoe": 0.4,
+    "votedPct": 66.8,
+    "votedMoe": 0.4
+   },
+   "byAge": [
+    {
+     "ages": "18 to 24",
+     "citizensThousands": 26737,
+     "registeredPct": 59.8,
+     "votedPct": 51.4
+    },
+    {
+     "ages": "25 to 34",
+     "citizensThousands": 39962,
+     "registeredPct": 68.4,
+     "votedPct": 60.3
+    },
+    {
+     "ages": "35 to 44",
+     "citizensThousands": 35977,
+     "registeredPct": 71.9,
+     "votedPct": 65.1
+    },
+    {
+     "ages": "45 to 54",
+     "citizensThousands": 35914,
+     "registeredPct": 74.4,
+     "votedPct": 69
+    },
+    {
+     "ages": "55 to 64",
+     "citizensThousands": 39676,
+     "registeredPct": 76.9,
+     "votedPct": 72.7
+    },
+    {
+     "ages": "65 to 74",
+     "citizensThousands": 31649,
+     "registeredPct": 79.1,
+     "votedPct": 76
+    },
+    {
+     "ages": "75 and over",
+     "citizensThousands": 21677,
+     "registeredPct": 77.8,
+     "votedPct": 72.3
+    }
+   ],
+   "states": [
+    {
+     "state": "AL",
+     "citizens18Thousands": 3716,
+     "registeredPct": 68,
+     "registeredMoe": 3.1,
+     "votedPct": 60.5,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "AK",
+     "citizens18Thousands": 516,
+     "registeredPct": 74.2,
+     "registeredMoe": 3.1,
+     "votedPct": 63.8,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "AZ",
+     "citizens18Thousands": 5075,
+     "registeredPct": 76.4,
+     "registeredMoe": 2.5,
+     "votedPct": 71.9,
+     "votedMoe": 2.6
+    },
+    {
+     "state": "AR",
+     "citizens18Thousands": 2195,
+     "registeredPct": 62,
+     "registeredMoe": 3.4,
+     "votedPct": 54,
+     "votedMoe": 3.5
+    },
+    {
+     "state": "CA",
+     "citizens18Thousands": 25946,
+     "registeredPct": 69.4,
+     "registeredMoe": 1.2,
+     "votedPct": 65.1,
+     "votedMoe": 1.2
+    },
+    {
+     "state": "CO",
+     "citizens18Thousands": 4200,
+     "registeredPct": 71.3,
+     "registeredMoe": 2.9,
+     "votedPct": 67.6,
+     "votedMoe": 3
+    },
+    {
+     "state": "CT",
+     "citizens18Thousands": 2524,
+     "registeredPct": 73.3,
+     "registeredMoe": 3.2,
+     "votedPct": 66.6,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "DE",
+     "citizens18Thousands": 722,
+     "registeredPct": 75.1,
+     "registeredMoe": 3,
+     "votedPct": 67.7,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "DC",
+     "citizens18Thousands": 534,
+     "registeredPct": 86.9,
+     "registeredMoe": 2.4,
+     "votedPct": 84,
+     "votedMoe": 2.6
+    },
+    {
+     "state": "FL",
+     "citizens18Thousands": 15645,
+     "registeredPct": 67.1,
+     "registeredMoe": 1.5,
+     "votedPct": 62.1,
+     "votedMoe": 1.6
+    },
+    {
+     "state": "GA",
+     "citizens18Thousands": 7400,
+     "registeredPct": 70.7,
+     "registeredMoe": 2.2,
+     "votedPct": 66.1,
+     "votedMoe": 2.3
+    },
+    {
+     "state": "HI",
+     "citizens18Thousands": 980,
+     "registeredPct": 68.7,
+     "registeredMoe": 3.3,
+     "votedPct": 64.3,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "ID",
+     "citizens18Thousands": 1299,
+     "registeredPct": 69.3,
+     "registeredMoe": 3.1,
+     "votedPct": 64.9,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "IL",
+     "citizens18Thousands": 8860,
+     "registeredPct": 74.4,
+     "registeredMoe": 1.9,
+     "votedPct": 68.4,
+     "votedMoe": 2
+    },
+    {
+     "state": "IN",
+     "citizens18Thousands": 4921,
+     "registeredPct": 69.3,
+     "registeredMoe": 2.7,
+     "votedPct": 61,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "IA",
+     "citizens18Thousands": 2293,
+     "registeredPct": 76,
+     "registeredMoe": 3,
+     "votedPct": 70.5,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "KS",
+     "citizens18Thousands": 1975,
+     "registeredPct": 70.8,
+     "registeredMoe": 3.5,
+     "votedPct": 65.7,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "KY",
+     "citizens18Thousands": 3227,
+     "registeredPct": 75.9,
+     "registeredMoe": 3.1,
+     "votedPct": 68.5,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "LA",
+     "citizens18Thousands": 3299,
+     "registeredPct": 69.3,
+     "registeredMoe": 3.2,
+     "votedPct": 61.9,
+     "votedMoe": 3.3
+    },
+    {
+     "state": "ME",
+     "citizens18Thousands": 1075,
+     "registeredPct": 77.4,
+     "registeredMoe": 3.2,
+     "votedPct": 71.3,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "MD",
+     "citizens18Thousands": 4303,
+     "registeredPct": 78.6,
+     "registeredMoe": 2.6,
+     "votedPct": 73.6,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "MA",
+     "citizens18Thousands": 4897,
+     "registeredPct": 72.4,
+     "registeredMoe": 2.6,
+     "votedPct": 66.3,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "MI",
+     "citizens18Thousands": 7467,
+     "registeredPct": 73.8,
+     "registeredMoe": 2.1,
+     "votedPct": 66.9,
+     "votedMoe": 2.2
+    },
+    {
+     "state": "MN",
+     "citizens18Thousands": 4142,
+     "registeredPct": 82.9,
+     "registeredMoe": 2.4,
+     "votedPct": 77.9,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "MS",
+     "citizens18Thousands": 2177,
+     "registeredPct": 80.4,
+     "registeredMoe": 2.7,
+     "votedPct": 70.3,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "MO",
+     "citizens18Thousands": 4475,
+     "registeredPct": 75.7,
+     "registeredMoe": 2.7,
+     "votedPct": 66.8,
+     "votedMoe": 2.9
+    },
+    {
+     "state": "MT",
+     "citizens18Thousands": 827,
+     "registeredPct": 77.5,
+     "registeredMoe": 2.6,
+     "votedPct": 73.5,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "NE",
+     "citizens18Thousands": 1369,
+     "registeredPct": 70.9,
+     "registeredMoe": 3.4,
+     "votedPct": 65.2,
+     "votedMoe": 3.5
+    },
+    {
+     "state": "NV",
+     "citizens18Thousands": 2198,
+     "registeredPct": 66.2,
+     "registeredMoe": 3.3,
+     "votedPct": 61.5,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "NH",
+     "citizens18Thousands": 1077,
+     "registeredPct": 78.3,
+     "registeredMoe": 2.8,
+     "votedPct": 74,
+     "votedMoe": 3
+    },
+    {
+     "state": "NJ",
+     "citizens18Thousands": 5921,
+     "registeredPct": 84.6,
+     "registeredMoe": 1.9,
+     "votedPct": 78.3,
+     "votedMoe": 2.2
+    },
+    {
+     "state": "NM",
+     "citizens18Thousands": 1498,
+     "registeredPct": 68.6,
+     "registeredMoe": 3,
+     "votedPct": 62.6,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "NY",
+     "citizens18Thousands": 13298,
+     "registeredPct": 70.5,
+     "registeredMoe": 1.7,
+     "votedPct": 64.7,
+     "votedMoe": 1.7
+    },
+    {
+     "state": "NC",
+     "citizens18Thousands": 7391,
+     "registeredPct": 69.8,
+     "registeredMoe": 2.2,
+     "votedPct": 64.7,
+     "votedMoe": 2.3
+    },
+    {
+     "state": "ND",
+     "citizens18Thousands": 556,
+     "registeredPct": 77.3,
+     "registeredMoe": 2.9,
+     "votedPct": 67.1,
+     "votedMoe": 3.2
+    },
+    {
+     "state": "OH",
+     "citizens18Thousands": 8740,
+     "registeredPct": 77,
+     "registeredMoe": 1.8,
+     "votedPct": 70.1,
+     "votedMoe": 2
+    },
+    {
+     "state": "OK",
+     "citizens18Thousands": 2800,
+     "registeredPct": 67.3,
+     "registeredMoe": 3.5,
+     "votedPct": 58.3,
+     "votedMoe": 3.7
+    },
+    {
+     "state": "OR",
+     "citizens18Thousands": 3242,
+     "registeredPct": 79.9,
+     "registeredMoe": 2.8,
+     "votedPct": 74.1,
+     "votedMoe": 3
+    },
+    {
+     "state": "PA",
+     "citizens18Thousands": 9621,
+     "registeredPct": 76.3,
+     "registeredMoe": 1.8,
+     "votedPct": 70.2,
+     "votedMoe": 1.9
+    },
+    {
+     "state": "RI",
+     "citizens18Thousands": 776,
+     "registeredPct": 74.1,
+     "registeredMoe": 3.2,
+     "votedPct": 66.3,
+     "votedMoe": 3.4
+    },
+    {
+     "state": "SC",
+     "citizens18Thousands": 3878,
+     "registeredPct": 70,
+     "registeredMoe": 3,
+     "votedPct": 63.4,
+     "votedMoe": 3.1
+    },
+    {
+     "state": "SD",
+     "citizens18Thousands": 649,
+     "registeredPct": 67.4,
+     "registeredMoe": 3.4,
+     "votedPct": 58.5,
+     "votedMoe": 3.5
+    },
+    {
+     "state": "TN",
+     "citizens18Thousands": 5038,
+     "registeredPct": 74.3,
+     "registeredMoe": 2.5,
+     "votedPct": 66.4,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "TX",
+     "citizens18Thousands": 18581,
+     "registeredPct": 71.8,
+     "registeredMoe": 1.4,
+     "votedPct": 63.9,
+     "votedMoe": 1.5
+    },
+    {
+     "state": "UT",
+     "citizens18Thousands": 2178,
+     "registeredPct": 67.4,
+     "registeredMoe": 2.7,
+     "votedPct": 63.6,
+     "votedMoe": 2.8
+    },
+    {
+     "state": "VT",
+     "citizens18Thousands": 500,
+     "registeredPct": 73,
+     "registeredMoe": 3.4,
+     "votedPct": 68.4,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "VA",
+     "citizens18Thousands": 5974,
+     "registeredPct": 76,
+     "registeredMoe": 2.3,
+     "votedPct": 71.5,
+     "votedMoe": 2.4
+    },
+    {
+     "state": "WA",
+     "citizens18Thousands": 5389,
+     "registeredPct": 74.8,
+     "registeredMoe": 2.4,
+     "votedPct": 71.5,
+     "votedMoe": 2.5
+    },
+    {
+     "state": "WV",
+     "citizens18Thousands": 1379,
+     "registeredPct": 67.3,
+     "registeredMoe": 3.4,
+     "votedPct": 56.1,
+     "votedMoe": 3.6
+    },
+    {
+     "state": "WI",
+     "citizens18Thousands": 4421,
+     "registeredPct": 76.7,
+     "registeredMoe": 2.6,
+     "votedPct": 73.6,
+     "votedMoe": 2.7
+    },
+    {
+     "state": "WY",
+     "citizens18Thousands": 427,
+     "registeredPct": 69.3,
+     "registeredMoe": 3.4,
+     "votedPct": 65.5,
+     "votedMoe": 3.5
+    }
+   ]
+  }
+ ]
+}

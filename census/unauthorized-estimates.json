@@ -1,0 +1,133 @@
+{
+ "source": {
+  "name": "U.S. Department of Homeland Security, Office of Homeland Security Statistics (OHSS): Estimates of the Unauthorized Immigrant Population Residing in the United States: January 2018–January 2022 (Bryan Baker and Robert Warren)",
+  "url": "https://ohss.dhs.gov/sites/default/files/2024-06/2024_0418_ohss_estimates-of-the-unauthorized-immigrant-population-residing-in-the-united-states-january-2018%25E2%2580%2593january-2022.pdf",
+  "page": "https://ohss.dhs.gov/topics/immigration/illegal/population-estimates",
+  "table": "Table 3. Unauthorized Immigrant Population Estimates by Top 10 States of Residence: 2018–2020 and 2022"
+ },
+ "asOf": "2022-01",
+ "referenceDate": "2022-01-01",
+ "published": "2024-04",
+ "definition": "\"The resident unauthorized immigrant population is defined as all foreign-born noncitizens who are not legal residents as defined above. Most unauthorized immigrants either entered the United States without inspection or were admitted temporarily and remained past the date they were required to depart.\" The report also counts people with Temporary Protected Status (TPS), DACA or other prosecutorial discretion, people awaiting removal proceedings, and parolees as unauthorized until they are granted lawful status.",
+ "us": 10990000,
+ "usHeadline": "11.0 million",
+ "usHistory": {
+  "2018": 11570000,
+  "2019": 11110000,
+  "2020": 10510000,
+  "2022": 10990000
+ },
+ "states": [
+  {
+   "state": "CA",
+   "estimate": 2600000,
+   "history": {
+    "2018": 2640000,
+    "2019": 2620000,
+    "2020": 2410000,
+    "2022": 2600000
+   }
+  },
+  {
+   "state": "TX",
+   "estimate": 2060000,
+   "history": {
+    "2018": 1950000,
+    "2019": 1950000,
+    "2020": 1900000,
+    "2022": 2060000
+   }
+  },
+  {
+   "state": "FL",
+   "estimate": 590000,
+   "history": {
+    "2018": 680000,
+    "2019": 650000,
+    "2020": 610000,
+    "2022": 590000
+   }
+  },
+  {
+   "state": "NJ",
+   "estimate": 490000,
+   "history": {
+    "2018": 460000,
+    "2019": 390000,
+    "2020": 400000,
+    "2022": 490000
+   }
+  },
+  {
+   "state": "IL",
+   "estimate": 420000,
+   "history": {
+    "2018": 460000,
+    "2019": 440000,
+    "2020": 370000,
+    "2022": 420000
+   }
+  },
+  {
+   "state": "NY",
+   "estimate": 410000,
+   "history": {
+    "2018": 600000,
+    "2019": 510000,
+    "2020": 370000,
+    "2022": 410000
+   }
+  },
+  {
+   "state": "NC",
+   "estimate": 360000,
+   "history": {
+    "2018": 360000,
+    "2019": 340000,
+    "2020": 360000,
+    "2022": 360000
+   }
+  },
+  {
+   "state": "GA",
+   "estimate": 340000,
+   "history": {
+    "2018": 390000,
+    "2019": 360000,
+    "2020": 360000,
+    "2022": 340000
+   }
+  },
+  {
+   "state": "WA",
+   "estimate": 340000,
+   "history": {
+    "2018": 310000,
+    "2019": 330000,
+    "2020": 340000,
+    "2022": 340000
+   }
+  },
+  {
+   "state": "AZ",
+   "estimate": 290000,
+   "history": {
+    "2018": 340000,
+    "2019": 330000,
+    "2020": 340000,
+    "2022": 290000
+   }
+  }
+ ],
+ "otherStatesCombined": 3090000,
+ "otherStatesLabel": "Other or Unknown",
+ "uncertainty": "The report gives no margin of error for the estimate itself. It says the estimates are 'subject to sampling error in the ACS and considerable non-sampling error because of uncertainty in some of the assumptions required for estimation', and that the margin of error for the total foreign-born population in the 2021 ACS PUMS is 'plus or minus approximately 165,000' (90 percent confidence). OHSS 'does not have a methodology to evaluate the statistical significance' of year-to-year changes.",
+ "notes": [
+  "Estimates are for January 1 of each year and are rounded to the nearest 10,000; detail may not sum to totals because of rounding (for 2022 the 10 states plus 'Other or Unknown' add exactly to the total; for 2019 and 2020 they differ from it by 10,000).",
+  "This is the newest OHSS report as of 2026-10-24. The report lists only the 10 leading states individually; all other states are combined in 'Other or Unknown'.",
+  "Estimates are made by the residual method: the legally resident foreign-born population (from DHS records) is subtracted from the total foreign-born population (from the Census Bureau's American Community Survey). There is no survey or census that asks legal status.",
+  "No estimate exists for January 2021 (the 2020 ACS did not meet Census quality standards). The 2018 figure was revised in this edition. The report says comparisons across years 'should be interpreted with caution' because the series is not fully consistent.",
+  "history holds the report's figures for 2018 (revised), 2019, 2020 and 2022.",
+  "The OHSS web page that lists this report (updated August 2025) is now titled 'Estimates of the Illegal Alien Population Residing in the United States'; the report itself uses 'unauthorized immigrant'. The figures are the same report."
+ ]
+}
