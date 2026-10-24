@@ -15,7 +15,7 @@ import os
 import urllib.parse
 
 API = "https://api.census.gov/data"
-VERSION = 2
+VERSION = 3
 # Citizenship by year from the 1-year survey, which began in 2005. 2020's was never released as
 # usual: the pandemic cut its responses, so the Census Bureau published it only as experimental.
 HISTORY_START = 2005
@@ -90,6 +90,16 @@ class Census:
             return []  # 204: no such areas here (Nebraska has one house, D.C. no districts).
         if text.startswith("<"):
             raise RuntimeError("the Census API refused the key")
+        rows = json.loads(text)
+        return [dict(zip(rows[0], r)) for r in rows[1:]]
+
+    def get_2000(self, get, geo, within):
+        """The 2000 census long form (Summary File 3), the last census to ask where people were born."""
+        params = [("get", get), ("for", geo), ("in", within)]
+        url = f"{API}/2000/dec/sf3?{urllib.parse.urlencode(params)}&key={self.key}"
+        text = self.net.text(url).strip()
+        if not text or text.startswith("<"):
+            return []
         rows = json.loads(text)
         return [dict(zip(rows[0], r)) for r in rows[1:]]
 
@@ -215,9 +225,11 @@ def history_row(year, row):
 def gather_history(census, store, today, log):
     """
     How many people were born citizens, became citizens, or are not citizens, year by year: the
-    country, every state, and every county big enough for the 1-year survey (65,000 people or more).
+    country and every state from the 1-year survey. Every county gets the 2000 census, then the
+    1-year survey if it has 65,000 people or more, or else the 5-year survey, whose figure for a year
+    pools the five years ending then.
     """
-    us, states, counties = [], {}, {}
+    us, states, big, small = [], {}, {}, {}
     get = ",".join(HISTORY_VARIABLES)
     for year in range(HISTORY_START, today.year):
         if year in HISTORY_SKIP:
@@ -238,8 +250,37 @@ def gather_history(census, store, today, log):
             abbr = STATES.get(r["state"])
             row = history_row(year, r)
             if abbr and row:
-                counties.setdefault(abbr, {}).setdefault(r["county"], []).append(row)
+                big.setdefault(abbr, {}).setdefault(r["county"], []).append(row)
         log(f"Census: citizenship {year}")
+
+    # The 5-year survey began with 2005-2009.
+    for year in range(2009, today.year):
+        try:
+            rows = census.get(year, get, "county:*", "state:*")
+        except Exception:
+            break
+        for r in rows:
+            abbr = STATES.get(r["state"])
+            row = history_row(year, r)
+            if abbr and row:
+                small.setdefault(abbr, {}).setdefault(r["county"], []).append(row)
+        log(f"Census: 5-year citizenship {year}")
+
+    census2000 = gather_2000(census, log)
+
+    counties, five_year = {}, {}
+    for abbr in set(big) | set(small) | set(census2000):
+        out = {}
+        for county in set(big.get(abbr, {})) | set(small.get(abbr, {})) | set(census2000.get(abbr, {})):
+            yearly = big.get(abbr, {}).get(county)
+            # A county counts as "big" only if the 1-year survey covers it in most years.
+            rows = yearly if yearly and len(yearly) >= 5 else small.get(abbr, {}).get(county, [])
+            if rows is not yearly:
+                five_year.setdefault(abbr, []).append(county)
+            first = census2000.get(abbr, {}).get(county)
+            out[county] = ([first] if first else []) + rows
+        counties[abbr] = out
+
     source = {
         "name": "U.S. Census Bureau, American Community Survey 1-year estimates, table B05001",
         "url": "https://data.census.gov/table/ACSDT1Y2024.B05001",
@@ -248,5 +289,31 @@ def gather_history(census, store, today, log):
                   "Bureau released 2020 only as experimental estimates."],
     }
     store.write("census/history.json", {"source": source, "us": us, "states": states})
+    county_source = {
+        **source,
+        "name": "U.S. Census Bureau: Census 2000 (Summary File 3, table P021), then the American Community Survey "
+                "(table B05001), 1-year estimates for counties of 65,000 or more and 5-year estimates for the rest",
+        "notes": source["notes"] + [
+            "Counties listed in fiveYear use the 5-year survey: the figure for a year pools the five years ending then."],
+    }
     for abbr, by_county in counties.items():
-        store.write(f"census/history-counties/{abbr}.json", {"source": source, "counties": by_county})
+        store.write(f"census/history-counties/{abbr}.json",
+                    {"source": county_source, "counties": by_county, "fiveYear": sorted(five_year.get(abbr, []))})
+
+
+def gather_2000(census, log):
+    """Every county in the 2000 census (Summary File 3, P021): native, naturalized, not a citizen."""
+    out = {}
+    get = "P021001,P021002,P021014,P021015"
+    for fips, abbr in STATES.items():
+        try:
+            rows = census.get_2000(get, "county:*", f"state:{fips}")
+        except Exception as e:
+            log(f"Census: 2000 counties {abbr} not available ({type(e).__name__})")
+            continue
+        for r in rows:
+            n = [number(r.get(v)) for v in get.split(",")]
+            if None not in n:
+                out.setdefault(abbr, {})[r["county"]] = [2000, n[0], n[1], n[2], n[3]]
+    log(f"Census: 2000 counties for {len(out)} states")
+    return out
