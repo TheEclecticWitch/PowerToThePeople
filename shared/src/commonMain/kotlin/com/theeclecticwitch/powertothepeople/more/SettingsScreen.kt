@@ -171,7 +171,7 @@ fun SettingsScreen(onBack: () -> Unit, onLocation: () -> Unit) {
 }
 
 /** The app's version, as the stores know it - keep in step with versionName and MARKETING_VERSION. */
-const val APP_VERSION = "1.0"
+const val APP_VERSION = "1.1"
 
 private const val SUGGESTIONS = "submissions@00theeclecticwitch00.com"
 
