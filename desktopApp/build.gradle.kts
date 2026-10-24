@@ -36,6 +36,10 @@ compose.desktop {
             packageName = "Power to the People"
             // The Microsoft Store wants a new number for every upload (tools/msix/build_msix.py reads it here).
             packageVersion = "1.0.0"
+            // Files the installed app carries: resources/windows/StoreHelper.exe, the Microsoft Store
+            // donations helper (desktopApp/windows-store, built by tools/windows-store/build_helper.py).
+            // Only the Windows build gets the windows/ folder; the Mac build carries nothing extra.
+            appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             vendor = "The Eclectic Witch"
             copyright = "© 2026 The Eclectic Witch"
 

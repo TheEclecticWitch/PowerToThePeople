@@ -29,6 +29,10 @@ for old in glob.glob(os.path.join(OUT, "*.msix")):
     os.remove(old)
 os.makedirs(OUT, exist_ok=True)
 shutil.copytree(APP, STAGE)
+# The Microsoft Store donations helper rides along in app/resources (appResourcesRootDir in desktopApp/build.gradle.kts).
+if not os.path.isfile(os.path.join(STAGE, "app", "resources", "StoreHelper.exe")):
+    raise SystemExit("StoreHelper.exe is missing from the app: run `python tools/windows-store/build_helper.py`, then "
+                     "`gradlew :desktopApp:createDistributable`, then this again.")
 shutil.copytree(os.path.join(ROOT, "desktopApp", "msix", "Assets"), os.path.join(STAGE, "Assets"))
 manifest = open(os.path.join(ROOT, "desktopApp", "msix", "AppxManifest.xml"), encoding="utf-8").read()
 if "IDENTITY_NAME" in manifest:
