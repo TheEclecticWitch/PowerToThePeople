@@ -92,7 +92,8 @@ def _senate(net, people, since):
     def fetch(url, data=None, headers=None):
         net.check_time()
         net.other_requests += 1
-        req = urllib.request.Request(url, data=data, headers={**UA, **(headers or {})})
+        # Signed per request (botauth.py), as senate.gov's bot manager asks.
+        req = urllib.request.Request(url, data=data, headers={**net.signer.headers(url, data), **(headers or {})})
         with opener.open(req, timeout=60) as r:
             return r.read().decode("utf-8")
 

@@ -11,6 +11,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import botauth
+
 USER_AGENT = "PowerToThePeople-gatherer/0.1 (+https://github.com/TheEclecticWitch/PowerToThePeople)"
 CONGRESS_API = "https://api.congress.gov/v3"
 FEC_API = "https://api.open.fec.gov/v1"
@@ -34,6 +36,7 @@ class Net:
         self.seconds = {"congress": 0.0, "fec": 0.0, "other": 0.0}
         self.slowest = (0.0, None)
         self.retries = {}
+        self.signer = botauth.Signer()
 
     def stats(self):
         def avg(kind, n):
@@ -78,9 +81,14 @@ class Net:
         return self._get(url, {"X-Api-Key": self.key}, "other")
 
     def text(self, url, browser=False):
-        """GET any other public source. senate.gov turns away non-browser user agents."""
+        """
+        GET any other public source. Some sites turn away non-browser user agents (browser=True). senate.gov
+        gets the gatherer's registered bot name and a signature instead (botauth.py).
+        """
         self.check_time()
         self.other_requests += 1
+        if urllib.parse.urlsplit(url).hostname.endswith("senate.gov"):
+            return self._get(url, self.signer.headers(url), "other")
         agent = "Mozilla/5.0 (compatible; PowerToThePeople-gatherer)" if browser else USER_AGENT
         return self._get(url, {"User-Agent": agent}, "other")
 
