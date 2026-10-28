@@ -43,6 +43,7 @@ class Net:
             return round(self.seconds[kind] / n, 2) if n else None
         return {
             "keySet": self.key != "DEMO_KEY",
+            "senateSigned": self.signer.key is not None,
             "avgSecondsCongress": avg("congress", self.congress_requests),
             "avgSecondsFec": avg("fec", self.fec_requests),
             "avgSecondsOther": avg("other", self.other_requests),
