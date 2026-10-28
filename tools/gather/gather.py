@@ -78,14 +78,15 @@ SOURCES = [
 
 
 # How long senate.gov may turn the gatherer away before the run counts it as a failure (and GitHub emails).
-SENATE_GRACE_DAYS = 7
+# A month, to leave time for the Akamai known-bot review (registered 2026-10-28; see botauth.py).
+SENATE_GRACE_DAYS = 30
 
 
 def senate_votes(net, store, state, today, congress, session, senate_ids, log):
     """
     senate.gov is the only official source of Senate roll calls. When it refuses the gatherer (HTTP 403,
     seen from 2026-10-23), the votes already published stay as they are and the run carries on; only a
-    block lasting more than a week is reported as a failure.
+    block lasting more than SENATE_GRACE_DAYS is reported as a failure.
     """
     try:
         votes.gather_senate(net, store, congress, session, senate_ids, log)
