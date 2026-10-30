@@ -39,6 +39,7 @@ const val DEVELOPER_URL = "https://00theeclecticwitch00.com/"
 
 private const val SHARE_APP_TEXT = "P2P: Power to the People - your government in plain words, neutral, sourced and free. " +
     "Get it on Android: https://play.google.com/store/apps/details?id=com.theeclecticwitch.powertothepeople - " +
+    "on iPhone and iPad: https://apps.apple.com/app/id6818878317 - " +
     "on Windows: https://apps.microsoft.com/detail/9N1XKML0JKQJ - and for every platform: " +
     "https://00theeclecticwitch00.com/power-to-the-people/"
 
