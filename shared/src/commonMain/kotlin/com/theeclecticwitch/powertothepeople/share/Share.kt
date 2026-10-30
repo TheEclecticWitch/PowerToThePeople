@@ -17,7 +17,8 @@ object StoreReviewLinks {
     const val MICROSOFT_STORE = "ms-windows-store://review/?ProductId=9N1XKML0JKQJ"
     // Live on Google Play since 2026-10-22. The web address opens the Play Store app on a phone that has it.
     val GOOGLE_PLAY: String? = "https://play.google.com/store/apps/details?id=com.theeclecticwitch.powertothepeople"
-    val APP_STORE: String? = null // iPhone, iPad and Mac: "https://apps.apple.com/app/id<number>?action=write-review"
+    // Live on the App Store (iPhone, iPad) by 2026-10-30; the Mac shares the same listing.
+    val APP_STORE: String? = "https://apps.apple.com/app/id6818878317?action=write-review"
 }
 
 /** The review page for the store this copy came from, or null where the app isn't in a store yet. */
