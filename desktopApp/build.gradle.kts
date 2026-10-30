@@ -72,7 +72,7 @@ compose.desktop {
             targetFormats(TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Deb)
             packageName = "Power to the People"
             // The Microsoft Store wants a new number for every upload (tools/msix/build_msix.py reads it here).
-            packageVersion = "1.1.1"
+            packageVersion = "1.1.2"
             // A folder of per-platform folders (macos-arm64, ...), filled by prepareNativesForMac: Tip the Creator's
             // StoreKit library for the Mac. Windows carries nothing extra (it tips through Ko-fi).
             appResourcesRootDir.set(layout.dir(nativesForMac.map { it.destinationDir }))

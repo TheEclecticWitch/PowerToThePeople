@@ -17,8 +17,8 @@ android {
         applicationId = "com.theeclecticwitch.powertothepeople"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.1.1"
     }
 
     // The Google Play upload key lives outside the project (never in git): ~/.ptp-signing/keystore.properties.
