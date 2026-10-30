@@ -1,6 +1,6 @@
 [versions]
 billing = "8.3.0"
-agp = "9.4.1"
+agp = "9.5.0"
 # Held at the Kotlin that Compose Multiplatform 1.12.0's iOS klibs were built with.
 # Kotlin/Native refuses a klib from a newer compiler, and Android never notices - so a
 # mismatch only shows up on the first Mac build. Bump the two together or not at all.
