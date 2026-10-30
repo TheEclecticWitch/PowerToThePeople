@@ -4,6 +4,8 @@ Copy each part into the 1.1 version page in App Store Connect. Everything else (
 
 ## What's New in This Version
 Version 1.1
+• The White House: news, press briefings and presidential actions from whitehouse.gov.
+• Elections: an Election Day countdown and your state's election dates.
 • Your community by the numbers: Census figures for your town, county, districts and state, or any place in the country, including citizenship and immigration since 1850.
 • House seats by state, who votes, and state budgets, each linked to its source.
 • The President and Vice President show right away, before you enter an address.
