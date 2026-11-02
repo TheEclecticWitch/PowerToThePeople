@@ -37,11 +37,9 @@ fun AppCards() {
 
 const val DEVELOPER_URL = "https://00theeclecticwitch00.com/"
 
+// One link, to the app's website page, which carries every store's button (Rod, 2026-11-01: the default for every app).
 private const val SHARE_APP_TEXT = "P2P: Power to the People - your government in plain words, neutral, sourced and free. " +
-    "Get it on Android: https://play.google.com/store/apps/details?id=com.theeclecticwitch.powertothepeople - " +
-    "on iPhone and iPad: https://apps.apple.com/app/id6818878317 - " +
-    "on Windows: https://apps.microsoft.com/detail/9N1XKML0JKQJ - and for every platform: " +
-    "https://00theeclecticwitch00.com/power-to-the-people/"
+    "Get it here: https://00theeclecticwitch00.com/power-to-the-people/"
 
 /** Tells a friend about the app. A computer has no share sheet, so there it copies and says so for a moment. */
 @Composable
